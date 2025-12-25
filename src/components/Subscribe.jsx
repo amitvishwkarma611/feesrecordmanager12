@@ -45,15 +45,16 @@ const Subscribe = () => {
     const trialUser = isTrialUser;
     const trialExpired = isTrialExpired;
     
-    // PAYMENT BUTTON RULE (CRITICAL): Block payment if user already has active access
+    // PAYMENT BUTTON RULE (CRITICAL): Block payment if user already has active PAID subscription
+    // hasActiveSubscription = (isPaid && expiresAt > now) OR (isTrial && !trialExpired)
     const now = new Date();
     
-    // Check if user has active access (trial or paid)
-    const hasActiveAccess = trialUser || (paidUser && subscription?.validTill && now <= subscription.validTill.toDate());
+    // Check if user has active PAID subscription
+    const hasActivePaidSubscription = paidUser; // isPaidUser already checks for isPaid && expiresAt > now
     
-    if (hasActiveAccess) {
-      console.log('Payment blocked: user already has active access');
-      setError('You already have active PRO access. No payment required until validity expires.');
+    if (hasActivePaidSubscription) {
+      console.log('Payment blocked: user already has active subscription');
+      setError('You already have an active subscription. No payment required.');
       return;
     }
     

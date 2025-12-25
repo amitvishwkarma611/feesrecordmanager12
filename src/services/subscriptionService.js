@@ -14,17 +14,12 @@ export const createSubscription = async (uid, userData = {}) => {
     trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
 
     const subscriptionData = {
-      plan: 'monthly',
-      status: 'active',
+      plan: 'trial',
       isPaid: false,
+      status: 'active',
       trialStartDate: Timestamp.fromDate(now),
-      trialEndDate: Timestamp.fromDate(trialEndDate),
-      paidAt: null,
-      validTill: null, // Will be set after first payment
-      amount: 499,
-      currency: 'INR',
+      trialEndsAt: Timestamp.fromDate(trialEndDate), // Use trialEndsAt as required
       createdAt: Timestamp.fromDate(now),
-      updatedAt: Timestamp.fromDate(now),
       userId: uid, // Add userId for easier querying
       ...userData
     };
@@ -32,7 +27,7 @@ export const createSubscription = async (uid, userData = {}) => {
     const subscriptionRef = doc(db, `subscriptions/${uid}`);
     await setDoc(subscriptionRef, subscriptionData);
 
-    console.log('Monthly subscription created successfully for user:', uid);
+    console.log('Trial subscription created successfully for user:', uid);
     return subscriptionData;
   } catch (error) {
     console.error('Error creating subscription:', error);
@@ -73,25 +68,23 @@ export const updateSubscriptionOnPaymentSuccess = async (uid, amount = 499) => {
     const subscriptionRef = doc(db, `subscriptions/${uid}`);
     const now = new Date();
     
-    // Calculate validTill date: 30 days from now
-    const validTill = new Date();
-    validTill.setDate(validTill.getDate() + 30);
+    // Calculate expiresAt date: 30 days from now
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
     
     const updatedData = {
       plan: 'monthly',
-      status: 'active',
       isPaid: true,
+      status: 'active',
       paidAt: serverTimestamp(),
-      validTill: Timestamp.fromDate(validTill),
-      amount: amount,
-      currency: 'INR',
-      updatedAt: serverTimestamp()
+      expiresAt: Timestamp.fromDate(expiresAt),
+      lastUpdated: serverTimestamp()
     };
 
     await updateDoc(subscriptionRef, updatedData);
 
     console.log('Monthly subscription updated successfully for user:', uid);
-    console.log('Subscription valid till:', validTill);
+    console.log('Subscription expires at:', expiresAt);
     
     // Return the updated subscription data
     return {
@@ -120,59 +113,59 @@ export const hasActiveSubscription = async (uid) => {
 
     const now = new Date();
     
-    // Check if trial is still valid
-    if (subscription.isPaid === false && subscription.status === 'active') {
-      // Check trial period
-      if (subscription.trialEndDate) {
-        let trialEnd;
-        if (subscription.trialEndDate && typeof subscription.trialEndDate.toDate === 'function') {
-          // Firestore Timestamp
-          trialEnd = subscription.trialEndDate.toDate();
-        } else if (subscription.trialEndDate instanceof Date) {
-          // Regular Date object
-          trialEnd = subscription.trialEndDate;
-        } else {
-          // String or number, convert to Date
-          trialEnd = new Date(subscription.trialEndDate);
-        }
-
-        if (now <= trialEnd) {
-          return true; // Still in trial period
-        }
-      }
-      
-      // Trial expired, update status
-      await updateDoc(doc(db, `subscriptions/${uid}`), {
-        status: 'expired',
-        updatedAt: Timestamp.now()
-      });
-      return false;
-    }
+    // Derive flags safely:
+    const isPaid = subscription.isPaid === true;
+    const isTrial = subscription.plan === "trial";
     
-    // Check if paid subscription is still valid
-    if (subscription.isPaid === true && subscription.validTill) {
-      let validTill;
-      if (subscription.validTill && typeof subscription.validTill.toDate === 'function') {
+    // Check if trial has expired
+    let trialExpired = false;
+    if (subscription.trialEndsAt) {
+      let trialEnd;
+      if (subscription.trialEndsAt && typeof subscription.trialEndsAt.toDate === 'function') {
         // Firestore Timestamp
-        validTill = subscription.validTill.toDate();
-      } else if (subscription.validTill instanceof Date) {
+        trialEnd = subscription.trialEndsAt.toDate();
+      } else if (subscription.trialEndsAt instanceof Date) {
         // Regular Date object
-        validTill = subscription.validTill;
+        trialEnd = subscription.trialEndsAt;
       } else {
         // String or number, convert to Date
-        validTill = new Date(subscription.validTill);
+        trialEnd = new Date(subscription.trialEndsAt);
       }
       
-      if (now <= validTill) {
-        return true; // Still within validity period
+      trialExpired = now > trialEnd;
+    }
+    
+    // hasActiveSubscription logic:
+    // (isPaid && expiresAt > now) OR (isTrial && !trialExpired)
+    if (isPaid && subscription.expiresAt) {
+      let expiresAt;
+      if (subscription.expiresAt && typeof subscription.expiresAt.toDate === 'function') {
+        // Firestore Timestamp
+        expiresAt = subscription.expiresAt.toDate();
+      } else if (subscription.expiresAt instanceof Date) {
+        // Regular Date object
+        expiresAt = subscription.expiresAt;
       } else {
-        // Subscription expired, update status
-        await updateDoc(doc(db, `subscriptions/${uid}`), {
-          status: 'expired',
-          updatedAt: Timestamp.now()
-        });
-        return false;
+        // String or number, convert to Date
+        expiresAt = new Date(subscription.expiresAt);
       }
+      
+      if (now <= expiresAt) {
+        return true; // Still within paid validity period
+      }
+    }
+    
+    if (isTrial && !trialExpired) {
+      return true; // Still in trial period
+    }
+    
+    // If we reach here, subscription is not active
+    // Update status if expired
+    if ((isTrial && trialExpired) || (isPaid && subscription.expiresAt && now > new Date(subscription.expiresAt.toDate()))) {
+      await updateDoc(doc(db, `subscriptions/${uid}`), {
+        status: 'expired',
+        lastUpdated: Timestamp.now()
+      });
     }
 
     return false;
@@ -192,25 +185,23 @@ export const upgradeToPro = async (uid) => {
     const subscriptionRef = doc(db, `subscriptions/${uid}`);
     const now = new Date();
     
-    // Calculate validTill date: 30 days from now
-    const validTill = new Date();
-    validTill.setDate(validTill.getDate() + 30);
+    // Calculate expiresAt date: 30 days from now
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
     
     const updatedData = {
       plan: 'monthly',
-      status: 'active',
       isPaid: true,
+      status: 'active',
       paidAt: serverTimestamp(),
-      validTill: Timestamp.fromDate(validTill),
-      amount: 499,
-      currency: 'INR',
-      updatedAt: serverTimestamp()
+      expiresAt: Timestamp.fromDate(expiresAt),
+      lastUpdated: serverTimestamp()
     };
 
     await updateDoc(subscriptionRef, updatedData);
 
     console.log('Monthly subscription upgraded to PRO successfully for user:', uid);
-    console.log('Subscription valid till:', validTill);
+    console.log('Subscription expires at:', expiresAt);
     
     return {
       ...updatedData,
@@ -224,22 +215,22 @@ export const upgradeToPro = async (uid) => {
 
 /**
  * Calculates remaining trial days for a subscription
- * @param {any} trialEndDate - Trial end date (can be Timestamp, Date, or string)
+ * @param {any} trialEndsAt - Trial end date (can be Timestamp, Date, or string)
  * @returns {number} - Number of days remaining in trial
  */
-export const getTrialDaysRemaining = (trialEndDate) => {
-  if (!trialEndDate) return 0;
+export const getTrialDaysRemaining = (trialEndsAt) => {
+  if (!trialEndsAt) return 0;
 
   let endDate;
-  if (trialEndDate && typeof trialEndDate.toDate === 'function') {
+  if (trialEndsAt && typeof trialEndsAt.toDate === 'function') {
     // Firestore Timestamp
-    endDate = trialEndDate.toDate();
-  } else if (trialEndDate instanceof Date) {
+    endDate = trialEndsAt.toDate();
+  } else if (trialEndsAt instanceof Date) {
     // Regular Date object
-    endDate = trialEndDate;
+    endDate = trialEndsAt;
   } else {
     // String or number, convert to Date
-    endDate = new Date(trialEndDate);
+    endDate = new Date(trialEndsAt);
   }
 
   const now = new Date();
@@ -251,22 +242,22 @@ export const getTrialDaysRemaining = (trialEndDate) => {
 
 /**
  * Calculates remaining validity days for a paid subscription
- * @param {any} validTill - Valid till date (can be Timestamp, Date, or string)
+ * @param {any} expiresAt - Expires at date (can be Timestamp, Date, or string)
  * @returns {number} - Number of days remaining in validity
  */
-export const getValidityDaysRemaining = (validTill) => {
-  if (!validTill) return 0;
+export const getValidityDaysRemaining = (expiresAt) => {
+  if (!expiresAt) return 0;
 
   let endDate;
-  if (validTill && typeof validTill.toDate === 'function') {
+  if (expiresAt && typeof expiresAt.toDate === 'function') {
     // Firestore Timestamp
-    endDate = validTill.toDate();
-  } else if (validTill instanceof Date) {
+    endDate = expiresAt.toDate();
+  } else if (expiresAt instanceof Date) {
     // Regular Date object
-    endDate = validTill;
+    endDate = expiresAt;
   } else {
     // String or number, convert to Date
-    endDate = new Date(validTill);
+    endDate = new Date(expiresAt);
   }
 
   const now = new Date();
@@ -284,11 +275,14 @@ export const getValidityDaysRemaining = (validTill) => {
 export const isPaidUser = (subscription) => {
   if (!subscription) return false;
   
-  // User is a paid user if isPaid is true and within validity period
-  if (subscription.isPaid === true && subscription.validTill) {
-    const validTill = subscription.validTill.toDate();
+  // isPaid = subscription.isPaid === true
+  const isPaid = subscription.isPaid === true;
+  
+  // Check if paid subscription is still valid
+  if (isPaid && subscription.expiresAt) {
+    const expiresAt = subscription.expiresAt.toDate();
     const now = new Date();
-    return now <= validTill;
+    return now <= expiresAt;
   }
   return false;
 };
@@ -301,14 +295,16 @@ export const isPaidUser = (subscription) => {
 export const isTrialUser = (subscription) => {
   if (!subscription) return false;
   
-  // User is a trial user if:
-  // - isPaid is false (not paid)
-  // - status is active
-  // - trial has not expired
-  if (subscription.isPaid === false && subscription.status === 'active' && subscription.trialEndDate) {
-    const trialEndDate = subscription.trialEndDate.toDate();
+  // isTrial = subscription.plan === "trial"
+  const isTrial = subscription.plan === "trial";
+  
+  // Check if trial has not expired
+  if (isTrial && subscription.trialEndsAt) {
+    const trialEndAt = subscription.trialEndsAt.toDate();
     const now = new Date();
-    return now <= trialEndDate;
+    const trialExpired = now > trialEndAt;
+    
+    return !trialExpired;
   }
   return false;
 };
@@ -321,14 +317,15 @@ export const isTrialUser = (subscription) => {
 export const isTrialExpired = (subscription) => {
   if (!subscription) return false;
   
-  // Trial is expired if:
-  // - isPaid is false (not paid)
-  // - status is active
-  // - trial has expired
-  if (subscription.isPaid === false && subscription.status === 'active' && subscription.trialEndDate) {
-    const trialEndDate = subscription.trialEndDate.toDate();
+  // isTrial = subscription.plan === "trial"
+  const isTrial = subscription.plan === "trial";
+  
+  // Check if trial has expired
+  if (isTrial && subscription.trialEndsAt) {
+    const trialEndAt = subscription.trialEndsAt.toDate();
     const now = new Date();
-    return now > trialEndDate;
+    
+    return now > trialEndAt;
   }
   return false;
 };
