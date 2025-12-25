@@ -29,7 +29,13 @@ export const openRazorpayCheckout = async (uid, amount = 499) => {
       const order = await res.json();
       
       // Log received order in console
-      console.log('Received order from backend:', order);
+      console.log("✅ Received order from backend FULL:", JSON.stringify(order, null, 2));
+
+       if (!order || !order.id) {
+       console.error("❌ Invalid order received:", order);
+       throw new Error("Invalid order object from backend");
+      }
+
 
       // Check if Razorpay SDK is loaded
       if (!window.Razorpay) {
@@ -37,7 +43,13 @@ export const openRazorpayCheckout = async (uid, amount = 499) => {
         reject(new Error('Razorpay SDK not loaded'));
         return;
       }
-      
+         console.log("🧾 Razorpay options about to be used:", {
+             key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+             amount: order.amount,
+             currency: order.currency,
+             order_id: order.id,
+        });
+
       // Create Razorpay options with ONLY data from backend
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Use environment variable for key
@@ -45,7 +57,7 @@ export const openRazorpayCheckout = async (uid, amount = 499) => {
         currency: order.currency, // Currency from backend order
         order_id: order.id, // Order ID from backend
         name: "Fees Management System",
-        description: "PRO Plan Subscription - ₹499",
+        description: "Manual Monthly PRO Subscription - ₹499",
         // Remove image/logo property entirely as requested
         handler: async function (response) {
           // This function is called when payment is successful
@@ -116,11 +128,8 @@ export const verifyPayment = async (paymentData) => {
 
 // Function to handle payment button click
 export const handlePaymentClick = async (uid, isPaidUser = false) => {
-  // Check if user is already a paid user
-  if (isPaidUser) {
-    console.log('Paid PRO user detected. Payment blocked.');
-    return Promise.reject(new Error('User already has paid subscription'));
-  }
+  // Payment check is now handled in the component, so we allow this to proceed
+  // The actual check is done before calling this function
   
   try {
     console.log('Payment button clicked for user:', uid);

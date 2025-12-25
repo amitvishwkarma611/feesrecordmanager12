@@ -14,13 +14,15 @@ export const createSubscription = async (uid, userData = {}) => {
     trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
 
     const subscriptionData = {
-      plan: 'trial',
+      plan: 'monthly',
       status: 'active',
-      trialEndsAt: Timestamp.fromDate(trialEndDate),
       isPaid: false,
-      paidAt: null,
       trialStartDate: Timestamp.fromDate(now),
-      amount: 0,
+      trialEndDate: Timestamp.fromDate(trialEndDate),
+      paidAt: null,
+      validTill: null, // Will be set after first payment
+      amount: 499,
+      currency: 'INR',
       createdAt: Timestamp.fromDate(now),
       updatedAt: Timestamp.fromDate(now),
       userId: uid, // Add userId for easier querying
@@ -30,7 +32,7 @@ export const createSubscription = async (uid, userData = {}) => {
     const subscriptionRef = doc(db, `subscriptions/${uid}`);
     await setDoc(subscriptionRef, subscriptionData);
 
-    console.log('Subscription created successfully for user:', uid);
+    console.log('Monthly subscription created successfully for user:', uid);
     return subscriptionData;
   } catch (error) {
     console.error('Error creating subscription:', error);
@@ -71,18 +73,25 @@ export const updateSubscriptionOnPaymentSuccess = async (uid, amount = 499) => {
     const subscriptionRef = doc(db, `subscriptions/${uid}`);
     const now = new Date();
     
+    // Calculate validTill date: 30 days from now
+    const validTill = new Date();
+    validTill.setDate(validTill.getDate() + 30);
+    
     const updatedData = {
-      plan: 'paid',
+      plan: 'monthly',
       status: 'active',
       isPaid: true,
       paidAt: serverTimestamp(),
+      validTill: Timestamp.fromDate(validTill),
       amount: amount,
+      currency: 'INR',
       updatedAt: serverTimestamp()
     };
 
     await updateDoc(subscriptionRef, updatedData);
 
-    console.log('Subscription updated successfully for user:', uid);
+    console.log('Monthly subscription updated successfully for user:', uid);
+    console.log('Subscription valid till:', validTill);
     
     // Return the updated subscription data
     return {
@@ -109,31 +118,55 @@ export const hasActiveSubscription = async (uid) => {
       return false;
     }
 
-    // Check if user has paid access
-    if (subscription.isPaid === true) {
-      return true; // Paid users always have access
-    }
-
+    const now = new Date();
+    
     // Check if trial is still valid
-    if (subscription.plan === 'trial') {
-      const now = new Date();
-      // Handle both Timestamp objects and regular Date objects
-      let trialEndsAt;
-      if (subscription.trialEndsAt && typeof subscription.trialEndsAt.toDate === 'function') {
+    if (subscription.isPaid === false && subscription.status === 'active') {
+      // Check trial period
+      if (subscription.trialEndDate) {
+        let trialEnd;
+        if (subscription.trialEndDate && typeof subscription.trialEndDate.toDate === 'function') {
+          // Firestore Timestamp
+          trialEnd = subscription.trialEndDate.toDate();
+        } else if (subscription.trialEndDate instanceof Date) {
+          // Regular Date object
+          trialEnd = subscription.trialEndDate;
+        } else {
+          // String or number, convert to Date
+          trialEnd = new Date(subscription.trialEndDate);
+        }
+
+        if (now <= trialEnd) {
+          return true; // Still in trial period
+        }
+      }
+      
+      // Trial expired, update status
+      await updateDoc(doc(db, `subscriptions/${uid}`), {
+        status: 'expired',
+        updatedAt: Timestamp.now()
+      });
+      return false;
+    }
+    
+    // Check if paid subscription is still valid
+    if (subscription.isPaid === true && subscription.validTill) {
+      let validTill;
+      if (subscription.validTill && typeof subscription.validTill.toDate === 'function') {
         // Firestore Timestamp
-        trialEndsAt = subscription.trialEndsAt.toDate();
-      } else if (subscription.trialEndsAt instanceof Date) {
+        validTill = subscription.validTill.toDate();
+      } else if (subscription.validTill instanceof Date) {
         // Regular Date object
-        trialEndsAt = subscription.trialEndsAt;
+        validTill = subscription.validTill;
       } else {
         // String or number, convert to Date
-        trialEndsAt = new Date(subscription.trialEndsAt);
+        validTill = new Date(subscription.validTill);
       }
-
-      if (now <= trialEndsAt) {
-        return true; // Still in trial period
+      
+      if (now <= validTill) {
+        return true; // Still within validity period
       } else {
-        // Trial expired, update status
+        // Subscription expired, update status
         await updateDoc(doc(db, `subscriptions/${uid}`), {
           status: 'expired',
           updatedAt: Timestamp.now()
@@ -158,19 +191,26 @@ export const upgradeToPro = async (uid) => {
   try {
     const subscriptionRef = doc(db, `subscriptions/${uid}`);
     const now = new Date();
-
+    
+    // Calculate validTill date: 30 days from now
+    const validTill = new Date();
+    validTill.setDate(validTill.getDate() + 30);
+    
     const updatedData = {
-      plan: 'PRO_499_MONTHLY',
+      plan: 'monthly',
       status: 'active',
       isPaid: true,
       paidAt: serverTimestamp(),
+      validTill: Timestamp.fromDate(validTill),
       amount: 499,
+      currency: 'INR',
       updatedAt: serverTimestamp()
     };
 
     await updateDoc(subscriptionRef, updatedData);
 
-    console.log('Subscription upgraded to PRO successfully for user:', uid);
+    console.log('Monthly subscription upgraded to PRO successfully for user:', uid);
+    console.log('Subscription valid till:', validTill);
     
     return {
       ...updatedData,
@@ -184,22 +224,49 @@ export const upgradeToPro = async (uid) => {
 
 /**
  * Calculates remaining trial days for a subscription
- * @param {any} trialEndsAt - Trial end date (can be Timestamp, Date, or string)
+ * @param {any} trialEndDate - Trial end date (can be Timestamp, Date, or string)
  * @returns {number} - Number of days remaining in trial
  */
-export const getTrialDaysRemaining = (trialEndsAt) => {
-  if (!trialEndsAt) return 0;
+export const getTrialDaysRemaining = (trialEndDate) => {
+  if (!trialEndDate) return 0;
 
   let endDate;
-  if (trialEndsAt && typeof trialEndsAt.toDate === 'function') {
+  if (trialEndDate && typeof trialEndDate.toDate === 'function') {
     // Firestore Timestamp
-    endDate = trialEndsAt.toDate();
-  } else if (trialEndsAt instanceof Date) {
+    endDate = trialEndDate.toDate();
+  } else if (trialEndDate instanceof Date) {
     // Regular Date object
-    endDate = trialEndsAt;
+    endDate = trialEndDate;
   } else {
     // String or number, convert to Date
-    endDate = new Date(trialEndsAt);
+    endDate = new Date(trialEndDate);
+  }
+
+  const now = new Date();
+  const diffTime = endDate - now;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return Math.max(0, diffDays); // Return at least 0
+};
+
+/**
+ * Calculates remaining validity days for a paid subscription
+ * @param {any} validTill - Valid till date (can be Timestamp, Date, or string)
+ * @returns {number} - Number of days remaining in validity
+ */
+export const getValidityDaysRemaining = (validTill) => {
+  if (!validTill) return 0;
+
+  let endDate;
+  if (validTill && typeof validTill.toDate === 'function') {
+    // Firestore Timestamp
+    endDate = validTill.toDate();
+  } else if (validTill instanceof Date) {
+    // Regular Date object
+    endDate = validTill;
+  } else {
+    // String or number, convert to Date
+    endDate = new Date(validTill);
   }
 
   const now = new Date();
@@ -217,8 +284,13 @@ export const getTrialDaysRemaining = (trialEndsAt) => {
 export const isPaidUser = (subscription) => {
   if (!subscription) return false;
   
-  // User is a paid user if isPaid is true
-  return subscription.isPaid === true;
+  // User is a paid user if isPaid is true and within validity period
+  if (subscription.isPaid === true && subscription.validTill) {
+    const validTill = subscription.validTill.toDate();
+    const now = new Date();
+    return now <= validTill;
+  }
+  return false;
 };
 
 /**
@@ -233,20 +305,10 @@ export const isTrialUser = (subscription) => {
   // - isPaid is false (not paid)
   // - status is active
   // - trial has not expired
-  if (subscription.isPaid === false && subscription.status === 'active') {
-    // If trialEndsAt exists, use that
-    if (subscription.trialEndsAt) {
-      const trialEndDate = subscription.trialEndsAt.toDate();
-      const now = new Date();
-      return now <= trialEndDate;
-    }
-    // Otherwise, calculate based on trialStartDate
-    else if (subscription.trialStartDate) {
-      const trialEndDate = new Date(subscription.trialStartDate.toDate());
-      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
-      const now = new Date();
-      return now <= trialEndDate;
-    }
+  if (subscription.isPaid === false && subscription.status === 'active' && subscription.trialEndDate) {
+    const trialEndDate = subscription.trialEndDate.toDate();
+    const now = new Date();
+    return now <= trialEndDate;
   }
   return false;
 };
@@ -263,20 +325,10 @@ export const isTrialExpired = (subscription) => {
   // - isPaid is false (not paid)
   // - status is active
   // - trial has expired
-  if (subscription.isPaid === false && subscription.status === 'active') {
-    // If trialEndsAt exists, use that
-    if (subscription.trialEndsAt) {
-      const trialEndDate = subscription.trialEndsAt.toDate();
-      const now = new Date();
-      return now > trialEndDate;
-    }
-    // Otherwise, calculate based on trialStartDate
-    else if (subscription.trialStartDate) {
-      const trialEndDate = new Date(subscription.trialStartDate.toDate());
-      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
-      const now = new Date();
-      return now > trialEndDate;
-    }
+  if (subscription.isPaid === false && subscription.status === 'active' && subscription.trialEndDate) {
+    const trialEndDate = subscription.trialEndDate.toDate();
+    const now = new Date();
+    return now > trialEndDate;
   }
   return false;
 };

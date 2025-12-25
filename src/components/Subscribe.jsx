@@ -45,10 +45,15 @@ const Subscribe = () => {
     const trialUser = isTrialUser;
     const trialExpired = isTrialExpired;
     
-    // Block payment only for paid users
-    if (paidUser) {
-      console.log('Paid PRO user detected. Payment blocked.');
-      setError('You already have a paid subscription. No payment required.');
+    // PAYMENT BUTTON RULE (CRITICAL): Block payment if user already has active access
+    const now = new Date();
+    
+    // Check if user has active access (trial or paid)
+    const hasActiveAccess = trialUser || (paidUser && subscription?.validTill && now <= subscription.validTill.toDate());
+    
+    if (hasActiveAccess) {
+      console.log('Payment blocked: user already has active access');
+      setError('You already have active PRO access. No payment required until validity expires.');
       return;
     }
     
@@ -62,8 +67,8 @@ const Subscribe = () => {
       }
 
       // Open Razorpay checkout immediately as requested
-      await handlePaymentClick(auth.currentUser.uid, paidUser);
-      setSuccessMessage('Payment successful! You now have full access to all features.');
+      await handlePaymentClick(auth.currentUser.uid, false); // Pass false since we're handling the check above
+      setSuccessMessage('Payment successful! Your PRO access is now renewed for 30 days.');
 
       // Refresh subscription data through context
       await refreshSubscription();
@@ -265,7 +270,7 @@ const Subscribe = () => {
               color: '#2c3e50', 
               margin: '0 0 10px 0',
               fontSize: '1.3rem'
-            }}>One-Time Payment</h3>
+            }}>Monthly Payment</h3>
             <div style={{ 
               fontSize: '2.5rem', 
               fontWeight: '700', 
@@ -279,7 +284,7 @@ const Subscribe = () => {
               fontSize: '0.9rem',
               marginBottom: '15px'
             }}>
-              Lifetime access to all PRO features
+              30 days access to all PRO features
             </div>
             <p style={{ 
               color: '#e74c3c', 
@@ -287,7 +292,7 @@ const Subscribe = () => {
               fontStyle: 'italic',
               margin: 0
             }}>
-              No recurring charges - one payment, lifetime access
+              Manual monthly payment - pay every 30 days
             </p>
           </div>
 
@@ -362,11 +367,11 @@ const Subscribe = () => {
                 Processing...
               </span>
             ) : isPaidUser ? (
-              '✅ PRO Activated'
+              '✅ PRO Active'
             ) : isTrialExpired ? (
-              '💳 Subscribe to Continue - ₹499'
+              '💳 Renew PRO – ₹499'
             ) : (
-              '🚀 Upgrade to PRO - ₹499'
+              '💳 Upgrade to PRO – ₹499'
             )}
           </button>
 
