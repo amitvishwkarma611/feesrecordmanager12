@@ -1,11 +1,22 @@
 import { updateSubscriptionOnPaymentSuccess } from '../services/subscriptionService';
 
+// API base URL from environment variables
+const API_BASE = import.meta.env.VITE_API_BASE;
+
+// Safety check for API_BASE
+if (!API_BASE) {
+  console.error('VITE_API_BASE environment variable is not defined. Please check your .env file configuration.');
+  throw new Error('API configuration error: VITE_API_BASE is not defined');
+}
+
+console.log('API_BASE configured as:', API_BASE);
+
 // Function to open Razorpay checkout
 export const openRazorpayCheckout = async (uid, amount = 499) => {
   return new Promise(async (resolve, reject) => {
     try {
-      // Call backend to create order via localhost
-      const res = await fetch("http://localhost:5000/create-order", {
+      // Call backend to create order via environment-configured API base
+      const res = await fetch(`${API_BASE}/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: amount })
@@ -82,7 +93,7 @@ export const openRazorpayCheckout = async (uid, amount = 499) => {
 // Function to verify payment with backend
 export const verifyPayment = async (paymentData) => {
   try {
-    const response = await fetch('http://localhost:5000/verify-payment', {
+    const response = await fetch(`${API_BASE}/verify-payment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -104,9 +115,9 @@ export const verifyPayment = async (paymentData) => {
 };
 
 // Function to handle payment button click
-export const handlePaymentClick = async (uid, hasActiveSubscription = false) => {
-  // Check if user already has active subscription
-  if (hasActiveSubscription) {
+export const handlePaymentClick = async (uid, isPaidUser = false) => {
+  // Check if user is already a paid user
+  if (isPaidUser) {
     console.log('Paid PRO user detected. Payment blocked.');
     return Promise.reject(new Error('User already has paid subscription'));
   }

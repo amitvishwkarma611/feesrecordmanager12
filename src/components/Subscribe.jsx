@@ -6,7 +6,7 @@ import { handlePaymentClick } from '../utils/paymentService';
 import { getTrialDaysRemaining } from '../services/subscriptionService';
 
 const Subscribe = () => {
-  const { subscription, loading, refreshSubscription } = useSubscription();
+  const { subscription, loading, refreshSubscription, isPaidUser, isTrialUser, isTrialExpired } = useSubscription();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -14,12 +14,12 @@ const Subscribe = () => {
 
   useEffect(() => {
     // If user already has an active paid subscription, redirect to dashboard
-    if (subscription && subscription.isPaid === true && subscription.status === 'active') {
+    if (isPaidUser) {
       // Paid users get full access, redirect to dashboard
       navigate('/dashboard');
       return;
     }
-  }, [subscription, navigate]);
+  }, [isPaidUser, navigate]);
 
   useEffect(() => {
     // Show subscription options if subscription is active (new trial)
@@ -40,10 +40,13 @@ const Subscribe = () => {
   }, [subscription, loading]);
 
   const handleUpgrade = async () => {
-    // Check if user already has active subscription
-    const hasActiveSubscription = subscription?.status === 'active' && subscription?.isPaid === true;
+    // Check subscription status using new functions
+    const paidUser = isPaidUser;
+    const trialUser = isTrialUser;
+    const trialExpired = isTrialExpired;
     
-    if (hasActiveSubscription) {
+    // Block payment only for paid users
+    if (paidUser) {
       console.log('Paid PRO user detected. Payment blocked.');
       setError('You already have a paid subscription. No payment required.');
       return;
@@ -59,7 +62,7 @@ const Subscribe = () => {
       }
 
       // Open Razorpay checkout immediately as requested
-      await handlePaymentClick(auth.currentUser.uid, hasActiveSubscription);
+      await handlePaymentClick(auth.currentUser.uid, paidUser);
       setSuccessMessage('Payment successful! You now have full access to all features.');
 
       // Refresh subscription data through context
@@ -318,25 +321,24 @@ const Subscribe = () => {
 
           <button
             onClick={handleUpgrade}
-            disabled={processing || (subscription?.status === 'active' && subscription?.isPaid === true)}
+            disabled={processing || isPaidUser}
             style={{
               width: '100%',
               padding: '15px',
               fontSize: '1.1rem',
               fontWeight: '600',
               borderRadius: '8px',
-              background: (subscription?.status === 'active' && subscription?.isPaid === true) 
+              background: isPaidUser 
                 ? 'linear-gradient(90deg, #95a5a6, #7f8c8d)' 
                 : 'linear-gradient(90deg, #667eea, #764ba2)',
               border: 'none',
               color: 'white',
-              cursor: (processing || (subscription?.status === 'active' && subscription?.isPaid === true)) ? 'not-allowed' : 'pointer',
+              cursor: (processing || isPaidUser) ? 'not-allowed' : 'pointer',
               boxShadow: '0 3px 10px rgba(102, 126, 234, 0.3)',
               transition: 'all 0.2s ease'
             }}
             onMouseOver={(e) => {
-              const isSubscribed = subscription?.status === 'active' && subscription?.isPaid === true;
-              if (!processing && !isSubscribed) {
+              if (!processing && !isPaidUser) {
                 e.target.style.transform = 'translateY(-1px)';
               }
             }}
@@ -359,8 +361,10 @@ const Subscribe = () => {
                 }}></span>
                 Processing...
               </span>
-            ) : (subscription?.status === 'active' && subscription?.isPaid === true) ? (
+            ) : isPaidUser ? (
               '✅ PRO Activated'
+            ) : isTrialExpired ? (
+              '💳 Subscribe to Continue - ₹499'
             ) : (
               '🚀 Upgrade to PRO - ₹499'
             )}

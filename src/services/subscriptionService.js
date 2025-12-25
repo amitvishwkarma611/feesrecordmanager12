@@ -19,10 +19,10 @@ export const createSubscription = async (uid, userData = {}) => {
       trialEndsAt: Timestamp.fromDate(trialEndDate),
       isPaid: false,
       paidAt: null,
-      trialStartDate: now,
+      trialStartDate: Timestamp.fromDate(now),
       amount: 0,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: Timestamp.fromDate(now),
+      updatedAt: Timestamp.fromDate(now),
       userId: uid, // Add userId for easier querying
       ...userData
     };
@@ -207,4 +207,76 @@ export const getTrialDaysRemaining = (trialEndsAt) => {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   return Math.max(0, diffDays); // Return at least 0
+};
+
+/**
+ * Checks if user is a paid user
+ * @param {Object} subscription - Subscription object
+ * @returns {boolean} - True if user is a paid user
+ */
+export const isPaidUser = (subscription) => {
+  if (!subscription) return false;
+  
+  // User is a paid user if isPaid is true
+  return subscription.isPaid === true;
+};
+
+/**
+ * Checks if user is a trial user (trial active and not paid)
+ * @param {Object} subscription - Subscription object
+ * @returns {boolean} - True if user is a trial user
+ */
+export const isTrialUser = (subscription) => {
+  if (!subscription) return false;
+  
+  // User is a trial user if:
+  // - isPaid is false (not paid)
+  // - status is active
+  // - trial has not expired
+  if (subscription.isPaid === false && subscription.status === 'active') {
+    // If trialEndsAt exists, use that
+    if (subscription.trialEndsAt) {
+      const trialEndDate = subscription.trialEndsAt.toDate();
+      const now = new Date();
+      return now <= trialEndDate;
+    }
+    // Otherwise, calculate based on trialStartDate
+    else if (subscription.trialStartDate) {
+      const trialEndDate = new Date(subscription.trialStartDate.toDate());
+      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
+      const now = new Date();
+      return now <= trialEndDate;
+    }
+  }
+  return false;
+};
+
+/**
+ * Checks if user's trial has expired
+ * @param {Object} subscription - Subscription object
+ * @returns {boolean} - True if user's trial has expired
+ */
+export const isTrialExpired = (subscription) => {
+  if (!subscription) return false;
+  
+  // Trial is expired if:
+  // - isPaid is false (not paid)
+  // - status is active
+  // - trial has expired
+  if (subscription.isPaid === false && subscription.status === 'active') {
+    // If trialEndsAt exists, use that
+    if (subscription.trialEndsAt) {
+      const trialEndDate = subscription.trialEndsAt.toDate();
+      const now = new Date();
+      return now > trialEndDate;
+    }
+    // Otherwise, calculate based on trialStartDate
+    else if (subscription.trialStartDate) {
+      const trialEndDate = new Date(subscription.trialStartDate.toDate());
+      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
+      const now = new Date();
+      return now > trialEndDate;
+    }
+  }
+  return false;
 };

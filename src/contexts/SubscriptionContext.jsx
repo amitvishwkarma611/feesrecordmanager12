@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { auth } from '../firebase/firebaseConfig';
-import { hasActiveSubscription, getSubscription, createSubscription } from '../services/subscriptionService';
+import { hasActiveSubscription, getSubscription, createSubscription, isPaidUser, isTrialUser, isTrialExpired } from '../services/subscriptionService';
 
 const SubscriptionContext = createContext();
 
@@ -66,11 +66,17 @@ export const SubscriptionProvider = ({ children }) => {
               
             setSubscription(subData);
               
-            // Compute hasActiveSubscription based on status and isPaid
-            const hasActiveSub = subData?.status === "active" && subData?.isPaid === true;
-            console.log('Subscription context: Has active subscription:', hasActiveSub);
+            // Compute subscription status booleans
+            const paidUser = isPaidUser(subData);
+            const trialUser = isTrialUser(subData);
+            const trialExpired = isTrialExpired(subData);
+            
+            console.log('Subscription context: Paid user:', paidUser);
+            console.log('Subscription context: Trial user:', trialUser);
+            console.log('Subscription context: Trial expired:', trialExpired);
             console.log('Subscription context: Subscription data:', subData);
-            setHasActiveSub(hasActiveSub);
+            
+            setHasActiveSub(paidUser || trialUser);
           } catch (err) {
             console.error('Error fetching/creating subscription for user:', user?.uid, err);
             console.error('Error details:', err.message, err.stack);
@@ -125,8 +131,15 @@ export const SubscriptionProvider = ({ children }) => {
       
       setSubscription(subData);
       
-      const hasActiveSub = subData?.status === "active" && subData?.isPaid === true;
-      setHasActiveSub(hasActiveSub);
+      const paidUser = isPaidUser(subData);
+      const trialUser = isTrialUser(subData);
+      const trialExpired = isTrialExpired(subData);
+      
+      console.log('Refresh subscription: Paid user:', paidUser);
+      console.log('Refresh subscription: Trial user:', trialUser);
+      console.log('Refresh subscription: Trial expired:', trialExpired);
+      
+      setHasActiveSub(paidUser || trialUser);
     } catch (err) {
       console.error('Error refreshing/creating subscription:', err);
       setError(err.message);
@@ -136,12 +149,20 @@ export const SubscriptionProvider = ({ children }) => {
     }
   }, [auth.currentUser]);
 
+    // Compute subscription status booleans for the context
+  const paidUser = isPaidUser(subscription);
+  const trialUser = isTrialUser(subscription);
+  const trialExpired = isTrialExpired(subscription);
+
   const value = {
     subscription,
     hasActiveSub,
     loading,
     error,
-    refreshSubscription
+    refreshSubscription,
+    isPaidUser: paidUser,
+    isTrialUser: trialUser,
+    isTrialExpired: trialExpired
   };
 
   return (
