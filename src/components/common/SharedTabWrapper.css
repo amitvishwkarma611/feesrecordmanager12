@@ -1,0 +1,7 @@
+.shared-tab-wrapper {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 24px;
+  box-sizing: border-box;
+}

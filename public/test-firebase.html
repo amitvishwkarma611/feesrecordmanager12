@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Collection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .log {
+            background-color: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Firebase Collection Test</h1>
+        <p>This page tests Firebase collection generation and security rules.</p>
+        
+        <div>
+            <h3>User Authentication</h3>
+            <input type="email" id="email" placeholder="Email" value="test@example.com">
+            <input type="password" id="password" placeholder="Password" value="test123456">
+            <br>
+            <button onclick="createUser()">Create User</button>
+            <button onclick="signInUser()">Sign In</button>
+            <button onclick="signOutUser()">Sign Out</button>
+        </div>
+        
+        <div>
+            <h3>Collection Operations</h3>
+            <button onclick="addTestStudent()" id="addStudentBtn" disabled>Add Test Student</button>
+            <button onclick="getStudents()" id="getStudentsBtn" disabled>Get Students</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Your web app's Firebase configuration (replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM Elements
+        const logElement = document.getElementById('log');
+        const addStudentBtn = document.getElementById('addStudentBtn');
+        const getStudentsBtn = document.getElementById('getStudentsBtn');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+
+        // Log function
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // Auth state listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                log(`User signed in: ${user.email} (${user.uid})`);
+                addStudentBtn.disabled = false;
+                getStudentsBtn.disabled = false;
+            } else {
+                log('No user signed in');
+                addStudentBtn.disabled = true;
+                getStudentsBtn.disabled = true;
+            }
+        });
+
+        // Create user
+        async function createUser() {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            if (!email || !password) {
+                log('Please enter email and password');
+                return;
+            }
+            
+            try {
+                log('Creating user...');
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                log(`User created successfully: ${userCredential.user.email}`);
+            } catch (error) {
+                log(`Error creating user: ${error.message}`);
+            }
+        }
+
+        // Sign in user
+        async function signInUser() {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            if (!email || !password) {
+                log('Please enter email and password');
+                return;
+            }
+            
+            try {
+                log('Signing in user...');
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                log(`User signed in successfully: ${userCredential.user.email}`);
+            } catch (error) {
+                log(`Error signing in: ${error.message}`);
+            }
+        }
+
+        // Sign out user
+        async function signOutUser() {
+            try {
+                log('Signing out user...');
+                await signOut(auth);
+                log('User signed out successfully');
+            } catch (error) {
+                log(`Error signing out: ${error.message}`);
+            }
+        }
+
+        // Add test student
+        async function addTestStudent() {
+            if (!auth.currentUser) {
+                log('Please sign in first');
+                return;
+            }
+            
+            try {
+                log('Adding test student...');
+                
+                const testStudent = {
+                    name: 'Test Student',
+                    email: 'test@example.com',
+                    phone: '1234567890',
+                    studentId: 'TEST001',
+                    totalFees: 1000,
+                    feesPaid: 500,
+                    feesDue: 500,
+                    feesStructure: 'Annual',
+                    ownerId: auth.currentUser.uid,  // Required for security rules
+                    createdAt: new Date()
+                };
+                
+                const docRef = await addDoc(collection(db, 'students'), testStudent);
+                log(`Student added successfully with ID: ${docRef.id}`);
+                
+                // Store the document ID for cleanup
+                window.lastStudentId = docRef.id;
+            } catch (error) {
+                log(`Error adding student: ${error.message}`);
+                log('Make sure your Firestore security rules allow this operation');
+            }
+        }
+
+        // Get students
+        async function getStudents() {
+            if (!auth.currentUser) {
+                log('Please sign in first');
+                return;
+            }
+            
+            try {
+                log('Retrieving students...');
+                const querySnapshot = await getDocs(collection(db, 'students'));
+                log(`Found ${querySnapshot.size} students`);
+                
+                querySnapshot.forEach((doc) => {
+                    const student = doc.data();
+                    log(`Student: ${student.name} (${doc.id}) - Owner: ${student.ownerId}`);
+                });
+            } catch (error) {
+                log(`Error retrieving students: ${error.message}`);
+            }
+        }
+
+        // Clear log
+        function clearLog() {
+            logElement.innerHTML = '';
+        }
+
+        log('Firebase test page loaded. Please configure your Firebase credentials in the code.');
+    </script>
+</body>
+</html>

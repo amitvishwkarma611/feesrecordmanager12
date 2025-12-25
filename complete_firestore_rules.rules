@@ -1,0 +1,92 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 🔐 Users can only access their own profile
+    match /userProfiles/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+    
+    // 📁 User-specific data - each user has their own namespace
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+    
+    // 🎓 Students collection (within user namespace)
+    match /users/{userId}/students/{studentId} {
+      allow create, read, update, delete: if request.auth != null
+                                         && request.auth.uid == userId;
+    }
+    
+    // 💰 Payments collection (within user namespace)
+    match /users/{userId}/payments/{paymentId} {
+      allow create, read, update, delete: if request.auth != null
+                                         && request.auth.uid == userId;
+    }
+    
+    // 📉 Expenditures collection (within user namespace)
+    match /users/{userId}/expenditures/{expenditureId} {
+      allow create, read, update, delete: if request.auth != null
+                                         && request.auth.uid == userId;
+    }
+    
+    // 📅 Attendance collection (within user namespace)
+    match /users/{userId}/attendance/{attendanceId} {
+      allow create, read, update, delete: if request.auth != null
+                                         && request.auth.uid == userId;
+    }
+    
+    // 👨‍🏫 Staff collection (within user namespace)
+    match /users/{userId}/staff/{staffId} {
+      allow create, read, update, delete: if request.auth != null
+                                         && request.auth.uid == userId;
+    }
+    
+    // 📝 Feedback collection (within user namespace)
+    match /users/{userId}/feedback/{feedbackId} {
+      allow create, read, update, delete: if request.auth != null
+                                         && request.auth.uid == userId;
+    }
+    
+    // ❓ Support queries collection (within user namespace)
+    match /users/{userId}/supportQueries/{queryId} {
+      allow create, read, update, delete: if request.auth != null
+                                         && request.auth.uid == userId;
+    }
+    
+    // 🕐 Staff attendance collection (within user namespace)
+    match /users/{userId}/staffAttendance/{attendanceId} {
+      allow create, read, update, delete: if request.auth != null
+                                         && request.auth.uid == userId;
+    }
+    
+    // 📋 Subscriptions collection (top-level, user-specific documents)
+    match /subscriptions/{subscriptionId} {
+      // Users can only read their own subscription
+      allow read: if request.auth != null
+                   && request.auth.uid == subscriptionId;
+      
+      // Users can only create their own subscription (typically done once)
+      allow create: if request.auth != null
+                     && request.auth.uid == subscriptionId;
+      
+      // Users can only update their own subscription
+      allow update: if request.auth != null
+                     && request.auth.uid == subscriptionId;
+      
+      // Users cannot delete their subscription
+      allow delete: if false;
+      
+      // Additional field validation
+      allow write: if request.auth != null
+                    && request.auth.uid == subscriptionId
+                    && (request.resource.data.keys().hasOnly([
+                      'plan', 'status', 'trialStartDate', 'trialEndDate', 
+                      'amount', 'createdAt', 'updatedAt', 'userId', 'activatedAt', 'nextBillingDate'
+                    ]));
+    }
+  }
+}

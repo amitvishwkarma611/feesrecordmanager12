@@ -1,0 +1,850 @@
+.student-details-container {
+  padding: 20px;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+.details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: linear-gradient(90deg, #6366f1, #3b82f6);
+  padding: 25px 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.details-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+  transform: rotate(30deg);
+}
+
+.details-header h1 {
+  margin: 0;
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  z-index: 2;
+}
+
+.back-button, .edit-button {
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.edit-button {
+  background: linear-gradient(90deg, var(--success-color), var(--success-color-dark)); /* Green for success/collected */
+  border: none;
+  backdrop-filter: none;
+}
+
+.back-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.back-button:hover, .edit-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:hover::before {
+  left: 100%;
+}
+
+.back-button:active, .edit-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
+}
+
+.edit-button:hover {
+  box-shadow: 0 8px 20px rgba(28, 200, 138, 0.3);
+}
+
+.student-profile-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+  margin-bottom: 30px;
+  border: 1px solid var(--border-color);
+}
+
+.student-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 25px;
+  margin-bottom: 30px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.student-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.student-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--info-color), var(--info-color-darker)); /* Blue for neutral info */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 36px;
+  font-weight: 600;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(78, 115, 223, 0.2);
+}
+
+.photo-upload-area {
+  background: var(--bg-primary);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px dashed var(--info-color); /* Blue for neutral info */
+  width: 120px;
+}
+
+.photo-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  height: 90px; /* Matched height to photo preview size (90px) */
+  justify-content: center;
+}
+
+.student-photo-preview {
+  width: 90px;
+  height: 90px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: none;
+}
+
+.photo-placeholder {
+  font-size: 24px;
+  color: var(--info-color); /* Blue for neutral info */
+}
+
+.photo-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-align: center;
+}
+
+.upload-photo-btn {
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker)); /* Blue for neutral info */
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.upload-photo-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(78, 115, 223, 0.3);
+}
+
+.upload-photo-btn.uploading {
+  background: linear-gradient(90deg, var(--text-secondary) 0%, var(--text-secondary-dark) 100%);
+  cursor: not-allowed;
+}
+
+.upload-success-message {
+  color: var(--success-color); /* Green for success/collected */
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 5px;
+  animation: fadeInOut 3s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.upload-photo-btn input[type="file"] {
+  display: none;
+}
+
+.student-basic-info h2 {
+  margin: 0 0 12px 0;
+  color: var(--info-color); /* Blue for neutral info */
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.student-id {
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin: 8px 0;
+  font-size: 16px;
+  background: var(--bg-primary);
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.student-class {
+  color: var(--info-color); /* Blue for neutral info */
+  font-weight: 700;
+  margin: 8px 0;
+  font-size: 18px;
+  background: rgba(78, 115, 223, 0.1);
+  padding: 6px 15px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 22px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+}
+
+.summary-card:nth-child(1)::before {
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker)); /* Blue for neutral info */
+}
+
+.summary-card:nth-child(2)::before {
+  background: linear-gradient(90deg, var(--success-color), var(--success-color-dark)); /* Green for success/collected */
+}
+
+.summary-card:nth-child(3)::before {
+  background: linear-gradient(90deg, var(--warning-color), var(--warning-color-dark)); /* Orange for pending */
+}
+
+.summary-card:nth-child(4)::before {
+  background: linear-gradient(90deg, var(--text-secondary), var(--text-secondary-dark));
+}
+
+.summary-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+}
+
+.summary-card-title {
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-card-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.fee-total {
+  color: var(--info-color); /* Blue for neutral info */
+}
+
+.fee-paid {
+  color: var(--success-color); /* Green for success/collected */
+}
+
+.fee-pending {
+  color: var(--warning-color); /* Orange for pending */
+}
+
+.fee-structure {
+  color: var(--text-secondary);
+}
+
+.payment-progress-section {
+  margin-bottom: 30px;
+  background: white;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.payment-progress-section h3 {
+  color: var(--info-color); /* Blue for neutral info */
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.progress-bar {
+  height: 12px;
+  background-color: var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker)); /* Blue for neutral info */
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Enhanced Personal Information Section */
+.personal-info-section {
+  margin-bottom: 35px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.personal-info-section h3 {
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker)); /* Blue for neutral info */
+  color: white;
+  margin: 0;
+  padding: 20px 25px;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.personal-info-content {
+  padding: 25px;
+}
+
+.info-category {
+  margin-bottom: 30px;
+}
+
+.info-category:last-child {
+  margin-bottom: 0;
+}
+
+.info-category h4 {
+  color: var(--info-color); /* Blue for neutral info */
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-category h4::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--info-color);
+  border-radius: 50%;
+}
+
+/* Traditional form-like layout for student details and contact information */
+.student-details-grid, .contact-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.student-detail-item, .contact-detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-detail-item label, .contact-detail-item label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.student-detail-item span, .contact-detail-item span {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 12px 15px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+/* Address Information - Single line format */
+.address-detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.address-detail-item label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.address-detail-item .address-value {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 12px 15px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Family Information - Removed card format */
+.family-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.family-detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.family-detail-item label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.family-detail-item span {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 12px 15px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+/* Family Information with card-style (as requested to keep) */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: var(--bg-primary);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.info-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  border-color: var(--info-color);
+}
+
+.info-item label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.address-value {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+/* Enhanced System Information Section */
+.system-info-section {
+  margin-bottom: 35px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.system-info-section h3 {
+  background: linear-gradient(90deg, var(--success-color), var(--success-color-dark));
+  color: white;
+  margin: 0;
+  padding: 20px 25px;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.system-info-content {
+  padding: 25px;
+}
+
+.system-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.system-item {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: var(--bg-primary);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.system-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  border-color: var(--success-color);
+}
+
+.system-item label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.system-item span {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.payments-table {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.payments-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.payments-table th,
+.payments-table td {
+  padding: 15px 20px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.payments-table th {
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payments-table td {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.payments-table .amount {
+  font-weight: 700;
+  color: var(--info-color);
+  font-size: 16px;
+}
+
+.payments-table tr:hover {
+  background-color: var(--bg-primary);
+}
+
+.payments-table tr:last-child td {
+  border-bottom: none;
+}
+
+.no-payments {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 16px;
+}
+
+.loading, .error-message {
+  text-align: center;
+  padding: 50px 20px;
+  font-size: 18px;
+  color: var(--info-color);
+  font-weight: 600;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.error-message {
+  color: var(--danger-color);
+}
+
+.error-message h2 {
+  margin-top: 0;
+  color: var(--danger-color);
+}
+
+.error-message p {
+  margin: 15px 0;
+}
+
+.status-badge {
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-paid, .status-paid {
+  background: rgba(28, 200, 138, 0.15);
+  color: var(--success-color);
+}
+
+.status-pending, .status-pending {
+  background: rgba(246, 194, 62, 0.15);
+  color: var(--warning-color);
+}
+
+.status-overdue, .status-overdue {
+  background: rgba(231, 74, 59, 0.15);
+  color: var(--danger-color);
+}
+
+.status-not-started {
+  background: rgba(133, 135, 150, 0.15);
+  color: var(--text-secondary);
+}
+
+/* Address Information Styling */
+.address-info-item {
+  padding: 20px;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  border-radius: 10px;
+  border: 1px solid var(--info-color);
+  margin-bottom: 25px;
+}
+
+.address-info-item label {
+  font-weight: 700;
+  color: var(--info-color);
+  margin-bottom: 12px;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: block;
+}
+
+.address-info-item .address-value {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 17px;
+  line-height: 1.7;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px dashed var(--info-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .student-details-container {
+    padding: 15px;
+  }
+  
+  .details-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 20px;
+  }
+  
+  .details-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .back-button, .edit-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .student-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .info-grid, .system-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .payments-table {
+    font-size: 14px;
+  }
+  
+  .payments-table th,
+  .payments-table td {
+    padding: 12px 15px;
+  }
+  
+  .student-basic-info h2 {
+    font-size: 24px;
+  }
+  
+  .summary-card {
+    padding: 20px;
+  }
+  
+  .summary-card-value {
+    font-size: 20px;
+  }
+  
+  .personal-info-content, .system-info-content {
+    padding: 20px;
+  }
+  
+  .info-item, .system-item {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .details-header {
+    padding: 20px;
+  }
+  
+  .details-header h1 {
+    font-size: 1.7rem;
+  }
+  
+  .back-button, .edit-button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}

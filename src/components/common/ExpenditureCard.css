@@ -1,0 +1,197 @@
+.expenditure-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 14px; /* Match dashboard card border radius */
+  padding: 18px 22px; /* Match dashboard card padding */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04); /* Match dashboard card shadow */
+  backdrop-filter: blur(10px);
+  border: none; /* Match dashboard card border */
+  height: fit-content;
+  transition: all 0.25s ease; /* Add transition to match dashboard cards */
+  margin-bottom: 28px; /* Add margin to match dashboard cards */
+}
+
+.expenditure-card:hover {
+  transform: translateY(-3px); /* Add hover effect to match dashboard cards */
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08); /* Enhance shadow on hover */
+}
+
+.expenditure-card h3 {
+  color: var(--text-primary);
+  margin-bottom: 15px;
+  font-weight: 700;
+  position: relative;
+  display: inline-block;
+  font-size: 1.2rem;
+}
+
+.expenditure-card h3::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--danger-color), var(--warning-color));
+  border-radius: 3px;
+}
+
+.expenditure-header {
+  margin-bottom: 20px;
+}
+
+.expenditure-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 15px;
+}
+
+.expenditure-total .label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.expenditure-total .amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--danger-color); /* Red for alert/drop */
+}
+
+.expenditure-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.expenditure-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.no-expenditures {
+  text-align: center;
+  padding: 30px 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+.no-expenditures-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.no-expenditures-text {
+  font-size: 18px;
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.no-expenditures-subtext {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-style: normal;
+}
+
+.loading-message {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 20px 0;
+  font-size: 16px;
+}
+
+.expenditure-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--danger-color); /* Red for alert/drop */
+}
+
+.expenditure-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.expenditure-amount.negative {
+  color: var(--danger-color); /* Red for alert/drop */
+}
+
+.expenditure-amount.positive {
+  color: var(--success-color); /* Green for success/collected */
+}
+
+.save-button, .add-expense-btn, .view-monthly-btn {
+  background: linear-gradient(90deg, var(--success-color), var(--success-color-dark)); /* Green for success/collected */
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 5px rgba(28, 200, 138, 0.3);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.add-expense-btn {
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker));
+  box-shadow: 0 2px 5px rgba(78, 115, 223, 0.3);
+}
+
+.view-monthly-btn {
+  background: linear-gradient(90deg, var(--warning-color), var(--warning-color-dark));
+  box-shadow: 0 2px 5px rgba(246, 194, 62, 0.3);
+}
+
+.save-button:hover, .add-expense-btn:hover, .view-monthly-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(28, 200, 138, 0.4);
+}
+
+.add-expense-btn:hover {
+  box-shadow: 0 4px 15px rgba(78, 115, 223, 0.4);
+}
+
+.view-monthly-btn:hover {
+  box-shadow: 0 4px 15px rgba(246, 194, 62, 0.4);
+}
+
+/* Responsive design */
+@media (max-width: 767px) {
+  .expenditure-card {
+    min-width: 100%;
+  }
+}

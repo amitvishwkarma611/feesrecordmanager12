@@ -1,0 +1,216 @@
+.expense-form-container {
+  padding: 20px;
+  background: linear-gradient(to bottom right, #f8faff, #eef2ff);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 50px;
+}
+
+.expense-form-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 22px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  width: 100%;
+  max-width: 600px;
+  animation: cardAppear 0.5s ease-out;
+  border: none;
+  transition: all 0.25s ease;
+  margin-bottom: 28px;
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.expense-form-card h2 {
+  color: var(--text-primary);
+  margin-bottom: 30px;
+  font-weight: 700;
+  text-align: center;
+  position: relative;
+}
+
+.expense-form-card h2::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--danger-color), var(--warning-color));
+  border-radius: 3px;
+}
+
+.expense-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.form-group input {
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--info-color);
+  box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.1);
+}
+
+.form-group input.error {
+  border-color: var(--danger-color);
+  box-shadow: 0 0 0 3px rgba(231, 74, 59, 0.1);
+}
+
+.error-message {
+  color: var(--danger-color);
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 5px;
+}
+
+.total-expenses-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 18px;
+  margin-top: 28px;
+  margin-bottom: 28px;
+}
+
+.total-label {
+  font-weight: 600;
+  color: var(--info-color);
+  font-size: 18px;
+}
+
+.total-amount {
+  font-weight: 700;
+  color: var(--danger-color);
+  font-size: 22px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 24px;
+  margin-top: 28px;
+}
+
+.cancel-btn,
+.submit-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.cancel-btn {
+  background: var(--text-secondary);
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: var(--text-secondary-dark);
+  transform: translateY(-2px);
+}
+
+.submit-btn {
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker));
+  color: white;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 767px) {
+  .expense-form-container {
+    padding: 15px;
+    padding-top: 30px;
+  }
+  
+  .expense-form-card {
+    padding: 20px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}
+
+/* Refresh button styles */
+.input-with-button {
+  display: flex;
+  gap: 10px;
+}
+
+.refresh-button {
+  padding: 12px 15px;
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  min-width: 100px;
+}
+
+.refresh-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.refresh-button:disabled {
+  background: var(--text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.info-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 5px;
+}

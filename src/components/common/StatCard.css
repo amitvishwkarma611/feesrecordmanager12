@@ -1,0 +1,125 @@
+.stat-card {
+  background: #fff; /* Match dashboard card background */
+  border-radius: 14px; /* Match dashboard card border radius */
+  padding: 18px 22px; /* Match dashboard card padding */
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04); /* Match dashboard card shadow */
+  display: flex; /* Match dashboard card display */
+  flex-direction: column; /* Match dashboard card direction */
+  position: relative; /* Keep position relative */
+  transition: all 0.25s ease; /* Match dashboard card transition */
+  border: none; /* Remove border to match dashboard cards */
+  overflow: hidden; /* Keep overflow hidden */
+  margin-bottom: 28px; /* Add margin to match dashboard cards */
+  gap: 24px; /* Add gap to match dashboard cards */
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px; /* Match dashboard card before height */
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker)); /* Match dashboard gradient */
+  transform: scaleX(0); /* Initial state */
+  transition: transform 0.3s ease; /* Match dashboard transition */
+  transform-origin: left; /* Match dashboard origin */
+}
+
+.stat-card:hover::before {
+  transform: scaleX(1); /* Match dashboard hover effect */
+}
+
+.stat-card:hover {
+  transform: translateY(-3px); /* Match dashboard hover transform */
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08); /* Match dashboard hover shadow */
+}
+
+.stat-icon {
+  width: 50px; /* Match dashboard icon container size */
+  height: 50px; /* Match dashboard icon container size */
+  border-radius: 50%; /* Match dashboard icon container border radius */
+  display: flex; /* Match dashboard icon container display */
+  align-items: center; /* Match dashboard icon container alignment */
+  justify-content: center; /* Match dashboard icon container justification */
+  margin-bottom: 15px; /* Add margin to match dashboard cards */
+  transition: all 0.3s ease; /* Match dashboard icon transition */
+  position: relative; /* Keep position relative */
+  overflow: hidden; /* Keep overflow hidden */
+}
+
+.stat-card:hover .stat-icon {
+  transform: scale(1.1) rotate(10deg); /* Match dashboard icon hover effect */
+}
+
+.stat-icon-content {
+  font-size: 20px; /* Match dashboard icon font size */
+  transition: all 0.3s ease; /* Add transition */
+}
+
+.stat-content {
+  flex: 1; /* Match dashboard content flex */
+}
+
+.stat-title {
+  font-size: 0.85rem; /* Match dashboard title font size */
+  color: var(--text-secondary); /* Keep existing color */
+  margin-bottom: 8px; /* Keep existing margin */
+  font-weight: 600; /* Keep existing font weight */
+  text-transform: uppercase; /* Keep existing text transform */
+  letter-spacing: 0.5px; /* Keep existing letter spacing */
+  transition: all 0.3s ease; /* Add transition to match dashboard cards */
+}
+
+.stat-card:hover .stat-title {
+  color: var(--info-color); /* Match dashboard title hover effect */
+}
+
+.stat-value {
+  font-size: 1.5rem; /* Match dashboard value font size */
+  font-weight: 800; /* Keep existing font weight */
+  transition: all 0.5s ease; /* Match dashboard value transition */
+  color: var(--info-color); /* Set color to match dashboard cards */
+  letter-spacing: -0.5px; /* Add letter spacing to match dashboard cards */
+}
+
+.stat-card:hover .stat-value {
+  transform: scale(1.05); /* Match dashboard value hover effect */
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .stat-card {
+    padding: 15px;
+  }
+  
+  .stat-icon {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .stat-icon-content {
+    font-size: 22px;
+  }
+  
+  .stat-value {
+    font-size: 1.3rem;
+  }
+}
+
+/* Add specific color effects for different cards */
+.stat-card.info {
+  /* Remove gradient background to match dashboard cards */
+}
+
+.stat-card.success {
+  /* Remove gradient background to match dashboard cards */
+}
+
+.stat-card.warning {
+  /* Remove gradient background to match dashboard cards */
+}
+
+.stat-card.danger {
+  /* Remove gradient background to match dashboard cards */
+}

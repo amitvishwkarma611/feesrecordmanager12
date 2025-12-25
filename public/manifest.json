@@ -1,0 +1,16 @@
+{
+  "name": "Fees Management App",
+  "short_name": "FeesApp",
+  "description": "A comprehensive fees management application for educational institutions",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4e73df",
+  "icons": [
+    {
+      "src": "/Logo.png",
+      "sizes": "223x223",
+      "type": "image/png"
+    }
+  ]
+}

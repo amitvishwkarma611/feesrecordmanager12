@@ -1,0 +1,13 @@
+.no-results {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  width: 100%;
+  text-align: center;
+  color: #6B7280;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 0;
+  margin: 0;
+}

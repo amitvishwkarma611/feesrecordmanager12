@@ -1,0 +1,274 @@
+.profit-loss-card {
+  background: #fff; /* Match dashboard card background */
+  border-radius: 14px; /* Match dashboard card border radius */
+  padding: 18px 22px; /* Match dashboard card padding */
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04); /* Match dashboard card shadow */
+  backdrop-filter: blur(10px);
+  border: none; /* Match dashboard card border */
+  height: fit-content;
+  transition: all 0.25s ease; /* Add transition to match dashboard cards */
+  margin-bottom: 28px; /* Add margin to match dashboard cards */
+  position: relative; /* Add position for consistent styling */
+  overflow: hidden; /* Add overflow handling */
+}
+
+.profit-loss-card:hover {
+  transform: translateY(-3px); /* Add hover effect to match dashboard cards */
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08); /* Enhance shadow on hover */
+}
+
+.profit-loss-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--danger-color), var(--warning-color));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: left;
+}
+
+.profit-loss-card:hover::before {
+  transform: scaleX(1);
+}
+
+.profit-loss-card .card-header {
+  margin-bottom: 20px;
+}
+
+.profit-loss-card .card-header h3 {
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: 700;
+  position: relative;
+  display: inline-block;
+}
+
+.profit-loss-card .card-header h3::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--danger-color), var(--warning-color));
+  border-radius: 3px;
+}
+
+.financial-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-radius: 10px;
+  background: rgba(78, 115, 223, 0.05);
+  transition: all 0.3s ease;
+}
+
+.summary-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.summary-item .label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.summary-item.profit .label {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.summary-item.loss .label {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.helper-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 3px;
+  opacity: 0.8;
+}
+
+.summary-item .value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.summary-item.profit .value {
+  color: var(--success-color); /* Green for success/collected */
+  font-size: 20px;
+  font-weight: 800;
+  text-shadow: 0 2px 4px rgba(28, 200, 138, 0.2);
+}
+
+.summary-item.loss .value {
+  color: var(--danger-color); /* Red for alert/drop */
+  font-size: 20px;
+  font-weight: 800;
+  text-shadow: 0 2px 4px rgba(231, 74, 59, 0.2);
+}
+
+.summary-item.profit {
+  background: rgba(28, 200, 138, 0.15);
+  border-left: 4px solid var(--success-color); /* Green for success/collected */
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(28, 200, 138, 0.1);
+}
+
+.summary-item.loss {
+  background: rgba(231, 74, 59, 0.15);
+  border-left: 4px solid var(--danger-color); /* Red for alert/drop */
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(231, 74, 59, 0.1);
+}
+
+.summary-item.income {
+  background: rgba(78, 115, 223, 0.08);
+  border-left: 3px solid var(--info-color);
+}
+
+.summary-item.expenditure {
+  background: rgba(246, 194, 62, 0.08);
+  border-left: 3px solid var(--warning-color);
+}
+
+.expenditure-details h4 {
+  color: var(--text-primary);
+  margin: 0 0 15px 0;
+  font-weight: 600;
+}
+
+.expenditure-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.expenditure-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  background: rgba(248, 249, 252, 0.8);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.expenditure-item:hover {
+  background: rgba(78, 115, 223, 0.1);
+}
+
+.expenditure-item .description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.expenditure-item .amount {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.no-expenditures {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 30px;
+  color: var(--info-color); /* Blue for neutral info */
+  font-weight: 500;
+}
+
+.error {
+  color: var(--danger-color); /* Red for alert/drop */
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar styling */
+.expenditure-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.expenditure-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.expenditure-list::-webkit-scrollbar-thumb {
+  background: rgba(78, 115, 223, 0.3);
+  border-radius: 3px;
+}
+
+.expenditure-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(78, 115, 223, 0.5);
+}
+
+.profit-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--success-color); /* Green for success/collected */
+}
+
+.loss-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--danger-color); /* Red for alert/drop */
+}
+
+.profit-indicator {
+  color: var(--success-color); /* Green for success/collected */
+  font-weight: 600;
+}
+
+.loss-indicator {
+  color: var(--danger-color); /* Red for alert/drop */
+  font-weight: 600;
+}
+
+.profit-card {
+  border-left: 4px solid var(--success-color); /* Green for success/collected */
+}
+
+.loss-card {
+  border-left: 4px solid var(--danger-color); /* Red for alert/drop */
+}
+
+.view-report-link {
+  color: var(--info-color); /* Blue for neutral info */
+}
+
+.view-report-link:hover {
+  color: var(--info-color); /* Blue for neutral info */
+}
