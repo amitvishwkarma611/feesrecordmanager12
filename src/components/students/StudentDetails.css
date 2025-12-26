@@ -43,7 +43,7 @@
   z-index: 2;
 }
 
-.back-button, .edit-button {
+.back-button, .edit-button, .print-button {
   padding: 12px 24px;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -60,6 +60,12 @@
   gap: 8px;
   position: relative;
   overflow: hidden;
+}
+
+.print-button {
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker)); /* Blue for print */
+  border: none;
+  backdrop-filter: none;
 }
 
 .edit-button {
@@ -79,7 +85,12 @@
   transition: left 0.5s;
 }
 
-.back-button:hover, .edit-button:hover {
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.back-button:hover, .edit-button:hover, .print-button:hover {
   background: rgba(255, 255, 255, 0.25);
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import dataManager from '../../utils/dataManager';
 import { uploadStudentPhoto, testStorageConnection } from '../../services/firebaseService';
+import { db } from '../../firebase/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { getCurrentUserUID, isAuthenticated } from '../../utils/auth';
 import './StudentDetails.css';
 
 const StudentDetails = () => {
@@ -16,7 +19,32 @@ const StudentDetails = () => {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [firmName, setFirmName] = useState('Victory Point Academy');
 
+  // Fetch firm name from user settings
+  useEffect(() => {
+    const fetchFirmName = async () => {
+      if (isAuthenticated()) {
+        try {
+          const uid = getCurrentUserUID();
+          const settingsDoc = doc(db, `users/${uid}/settings/profile`);
+          const settingsSnapshot = await getDoc(settingsDoc);
+          
+          if (settingsSnapshot.exists()) {
+            const data = settingsSnapshot.data();
+            if (data.firmName) {
+              setFirmName(data.firmName);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching firm name:', error);
+        }
+      }
+    };
+    
+    fetchFirmName();
+  }, []);
+  
   // Test Firebase Storage connection on component mount
   useEffect(() => {
     const testConnection = async () => {
@@ -242,6 +270,314 @@ const StudentDetails = () => {
     navigate('/students', { state: { editingStudent: student } });
   };
 
+  const handlePrint = () => {
+    // Create a print-specific version of the student profile with watermark
+    const printContent = document.querySelector('.student-profile-card');
+    if (!printContent) {
+      console.error('Print content not found');
+      return;
+    }
+    
+    // Create print window
+    const printWindow = window.open('', '_blank');
+    
+    // Create comprehensive print styles
+    const printStyles = `
+      <style>
+        @media print {
+          @page { 
+            size: A4; 
+            margin: 1cm; 
+          }
+          body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Times New Roman', serif; 
+            color: black; 
+          }
+          .student-profile-card { 
+            max-width: 90%; 
+            margin: 0 auto; 
+            padding: 15px; 
+            box-shadow: none; 
+            background: white; 
+            font-size: 11px; /* Professional font size */
+          }
+          .photo-upload-section { 
+            display: none; 
+          }
+          .upload-photo-btn { 
+            display: none; 
+          }
+          .upload-success-message { 
+            display: none; 
+          }
+          .watermark-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.05;
+            font-size: 5em;
+            color: #cccccc;
+            font-weight: bold;
+            text-align: center;
+          }
+          .student-photo-preview {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: block;
+            border: 1px solid #ddd;
+          }
+          .photo-preview img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+          }
+          .student-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4e73df; /* Professional border */
+          }
+          .student-basic-info {
+            flex: 1;
+          }
+          .student-basic-info h2 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            color: #2c3e50;
+            font-weight: bold;
+            text-transform: uppercase;
+          }
+          .student-id, .student-class {
+            font-size: 12px;
+            margin: 4px 0;
+            font-weight: bold;
+          }
+          .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+          }
+          .summary-card {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 0;
+            background: #f8f9fa;
+          }
+          .summary-card-title {
+            font-size: 10px;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: bold;
+          }
+          .summary-card-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+          }
+          .payment-progress-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f8f9fa;
+          }
+          .payment-progress-section h3 {
+            font-size: 14px;
+            margin: 0 0 12px 0;
+            color: #2c3e50;
+            font-weight: bold;
+          }
+          .progress-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+          }
+          .progress-bar {
+            height: 12px;
+            background-color: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+          }
+          .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4e73df, #224abe);
+            border-radius: 6px;
+          }
+          .progress-text {
+            font-size: 11px;
+            font-weight: bold;
+            color: #495057;
+          }
+          .personal-info-section, .system-info-section {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            page-break-inside: avoid;
+          }
+          .personal-info-section h3, .system-info-section h3 {
+            padding: 12px 15px;
+            margin: 0;
+            font-size: 14px;
+            background: #4e73df;
+            color: white;
+          }
+          .personal-info-content, .system-info-content {
+            padding: 15px;
+          }
+          .info-category {
+            margin-bottom: 15px;
+          }
+          .info-category h4 {
+            font-size: 12px;
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-weight: bold;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+          }
+          .student-details-grid, .contact-info-grid, .family-info-grid, .system-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+          }
+          .student-detail-item, .contact-detail-item, .family-detail-item, .system-item {
+            margin-bottom: 10px;
+            page-break-inside: avoid;
+          }
+          .student-detail-item label, .contact-detail-item label, .family-detail-item label, .system-item label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 10px;
+            color: #495057;
+          }
+          .student-detail-item span, .contact-detail-item span, .family-detail-item span, .system-item span {
+            display: block;
+            padding: 6px;
+            background: #ffffff;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid #dee2e6;
+            min-height: 20px;
+          }
+          .payments-table {
+            overflow-x: auto;
+            margin-top: 10px;
+          }
+          .payments-table table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          .payments-table th,
+          .payments-table td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+            font-size: 10px;
+          }
+          .payments-table th {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #495057;
+          }
+          .payments-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+          }
+          .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: bold;
+          }
+          .status-paid {
+            background: #d4edda;
+            color: #155724;
+          }
+          .status-pending {
+            background: #fff3cd;
+            color: #856404;
+          }
+          .status-overdue {
+            background: #f8d7da;
+            color: #721c24;
+          }
+          .status-not-started {
+            background: #d1ecf1;
+            color: #0c5460;
+          }
+          .print-only {
+            display: block !important;
+          }
+          /* Ensure single page layout */
+          .student-profile-card {
+            display: block;
+            width: 100%;
+            overflow: hidden;
+          }
+          .details-section {
+            page-break-inside: avoid;
+            margin-bottom: 20px;
+          }
+        }
+        @media screen {
+          .print-only {
+            display: none;
+          }
+        }
+      </style>
+    `;
+    
+    // Create watermark container
+    const watermarkHtml = `
+      <div class="watermark-container">
+        ${firmName}
+      </div>
+    `;
+    
+    // Get current content
+    const content = printContent.innerHTML;
+    
+    // Write print content with watermark and styles
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Student Profile - ${student.name}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          ${printStyles}
+        </head>
+        <body>
+          ${watermarkHtml}
+          <div class="student-profile-card">
+            ${content}
+          </div>
+          <script>
+            // Add delay to ensure content renders before printing
+            setTimeout(() => {
+              window.print();
+              window.close();
+            }, 500);
+          </script>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+  };
+
   const handlePhotoUpload = async (event) => {
     const file = event.target.files[0];
     console.log('File selected:', file);
@@ -411,7 +747,10 @@ const StudentDetails = () => {
           Back to Students
         </button>
         <h1>Student Profile</h1>
-        <button onClick={handleEdit} className="edit-button">Edit Student</button>
+        <div className="header-buttons">
+          <button onClick={handlePrint} className="print-button">Print Profile</button>
+          <button onClick={handleEdit} className="edit-button">Edit Student</button>
+        </div>
       </div>
       
       <div className="student-profile-card">

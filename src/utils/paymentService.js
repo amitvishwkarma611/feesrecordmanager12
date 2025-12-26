@@ -2,14 +2,9 @@ import { updateSubscriptionOnPaymentSuccess } from '../services/subscriptionServ
 
 // API base URL from environment variables
 const API_BASE = import.meta.env.VITE_API_BASE;
-
-// Safety check for API_BASE
 if (!API_BASE) {
-  console.error('VITE_API_BASE environment variable is not defined. Please check your .env file configuration.');
-  throw new Error('API configuration error: VITE_API_BASE is not defined');
+  throw new Error("VITE_API_BASE is not defined");
 }
-
-console.log('API_BASE configured as:', API_BASE);
 
 // Function to open Razorpay checkout
 export const openRazorpayCheckout = async (uid, amount = 499) => {
