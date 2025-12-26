@@ -173,7 +173,7 @@ const Subscribe = () => {
               fontSize: '0.9rem'
             }}>
               <strong>⏰ Free Trial Active!</strong> You have {trialDaysRemaining} days remaining.
-              <br /><small>You can upgrade now for unlimited access forever.</small>
+              <br /><small>Subscribe now for ₹499/month to continue after trial ends.</small>
             </div>
           )}
           
@@ -190,7 +190,7 @@ const Subscribe = () => {
               fontSize: '0.9rem'
             }}>
               <strong>⚠️ Trial Expired</strong> Your free trial ended {Math.abs(trialDaysRemaining)} days ago.
-              <br /><small>Upgrade now to continue using the service.</small>
+              <br /><small>Subscribe now for ₹499/month to continue using the service.</small>
             </div>
           )}
 

@@ -30,26 +30,32 @@ const TrialBanner = () => {
     <div className="trial-banner" style={{
       backgroundColor: '#e3f2fd',
       color: '#1976d2',
-      padding: '12px',
-      borderRadius: '6px',
-      marginBottom: '15px',
-      border: '1px solid #bbdefb',
+      padding: '16px',
+      borderRadius: '8px',
+      marginBottom: '20px',
+      border: '2px solid #bbdefb',
       textAlign: 'center',
       fontWeight: '500',
-      fontSize: '0.9rem'
+      fontSize: '1rem',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
     }}>
       <strong>🎉 Free Trial Active!</strong> You have {trialDaysRemaining} day{trialDaysRemaining !== 1 ? 's' : ''} remaining.
       <br />
-      <small>
+      <small style={{display: 'block', marginTop: '8px'}}>
         <a 
           href="/subscribe" 
           style={{ 
-            color: '#1976d2', 
-            textDecoration: 'underline', 
-            fontWeight: '600' 
+            backgroundColor: '#1976d2',
+            color: 'white', 
+            padding: '8px 16px',
+            borderRadius: '4px',
+            textDecoration: 'none', 
+            fontWeight: '600',
+            display: 'inline-block',
+            marginTop: '8px'
           }}
         >
-          Upgrade to PRO now for lifetime access
+          Subscribe Now for ₹499/month
         </a>
       </small>
     </div>

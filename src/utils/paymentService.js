@@ -119,6 +119,11 @@ export const verifyPayment = async (paymentData) => {
       throw new Error(result.message || 'Payment verification failed');
     }
     
+    // Check if backend returned a failure because user already has an active subscription
+    if (result.success === false && result.message === 'You already have an active subscription') {
+      throw new Error(result.message);
+    }
+    
     return result;
   } catch (error) {
     console.error('Payment verification error:', error);
@@ -147,6 +152,7 @@ export const handlePaymentClick = async (uid, isPaidUser = false) => {
       console.log('Payment cancelled by user');
       throw error;
     }
+    // Re-throw all other errors including 'already has active subscription' error
     throw error;
   }
 };

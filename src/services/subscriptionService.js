@@ -9,6 +9,15 @@ import { db } from '../firebase/firebaseConfig';
  */
 export const createSubscription = async (uid, userData = {}) => {
   try {
+    // First check if subscription already exists to prevent overwrites
+    const subscriptionRef = doc(db, `subscriptions/${uid}`);
+    const subscriptionDoc = await getDoc(subscriptionRef);
+    
+    if (subscriptionDoc.exists()) {
+      console.log('Subscription already exists for user:', uid);
+      return subscriptionDoc.data();
+    }
+    
     const now = new Date();
     const trialEndDate = new Date();
     trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
@@ -24,7 +33,6 @@ export const createSubscription = async (uid, userData = {}) => {
       ...userData
     };
 
-    const subscriptionRef = doc(db, `subscriptions/${uid}`);
     await setDoc(subscriptionRef, subscriptionData);
 
     console.log('Trial subscription created successfully for user:', uid);

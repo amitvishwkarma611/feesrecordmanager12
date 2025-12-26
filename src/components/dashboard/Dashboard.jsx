@@ -17,7 +17,7 @@ import HistoryModal from './HistoryModal';
 import Sparkline from '../common/Sparkline';
 import SkeletonLoader from '../common/SkeletonLoader';
 import RootLayout from '../common/RootLayout';
-import TrialBanner from '../common/TrialBanner';
+
 import './Dashboard.css';
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -715,7 +715,6 @@ const Dashboard = () => {
   return (
     <RootLayout>
       <div className="dashboard">
-        <TrialBanner />
         {/* Header */}
         <div className="dashboard-header">
           <div className="header-left">
