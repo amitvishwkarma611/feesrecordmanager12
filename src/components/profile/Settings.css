@@ -776,6 +776,17 @@ input:checked + .slider:before {
   box-shadow: 0 12px 24px rgba(0,0,0,0.08);
 }
 
+.disabled-label {
+  font-size: 14px;
+  color: #94a3b8;
+  font-weight: normal;
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-left: 10px;
+  border: 1px solid #e2e8f0;
+}
+
 .save-button:active {
   transform: translateY(0) scale(0.98);
 }

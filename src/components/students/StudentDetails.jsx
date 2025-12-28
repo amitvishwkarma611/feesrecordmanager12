@@ -278,304 +278,656 @@ const StudentDetails = () => {
       return;
     }
     
-    // Create print window
-    const printWindow = window.open('', '_blank');
+    // Check if on mobile device
+    const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    // Create comprehensive print styles
-    const printStyles = `
-      <style>
-        @media print {
-          @page { 
-            size: A4; 
-            margin: 1cm; 
+    // Create print window (handle mobile compatibility)
+    let printWindow;
+    try {
+      // For mobile devices, always use iframe approach to avoid popup blockers
+      if (isMobile) {
+        throw new Error('Force iframe approach on mobile');
+      }
+      printWindow = window.open('', '_blank');
+      
+      // Create comprehensive print styles
+      const printStyles = `
+        <style>
+          @media print {
+            @page { 
+              size: A4; 
+              margin: 1cm; 
+            }
+            body { 
+              margin: 0; 
+              padding: 0; 
+              font-family: 'Times New Roman', serif; 
+              color: black; 
+            }
+            .student-profile-card { 
+              max-width: 90%; 
+              margin: 0 auto; 
+              padding: 15px; 
+              box-shadow: none; 
+              background: white; 
+              font-size: 11px; /* Professional font size */
+            }
+            .photo-upload-section { 
+              display: none; 
+            }
+            .upload-photo-btn { 
+              display: none; 
+            }
+            .upload-success-message { 
+              display: none; 
+            }
+            .watermark-container {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) rotate(-45deg);
+              pointer-events: none;
+              z-index: 1000;
+              opacity: 0.05;
+              font-size: 5em;
+              color: #cccccc;
+              font-weight: bold;
+              text-align: center;
+            }
+            .student-photo-preview {
+              width: 120px;
+              height: 120px;
+              object-fit: cover;
+              border-radius: 8px;
+              margin-bottom: 10px;
+              display: block;
+              border: 1px solid #ddd;
+            }
+            .photo-preview img {
+              width: 120px;
+              height: 120px;
+              object-fit: cover;
+              border-radius: 8px;
+            }
+            .student-header {
+              display: flex;
+              align-items: flex-start;
+              gap: 20px;
+              margin-bottom: 20px;
+              padding-bottom: 15px;
+              border-bottom: 2px solid #4e73df; /* Professional border */
+            }
+            .student-basic-info {
+              flex: 1;
+            }
+            .student-basic-info h2 {
+              margin: 0 0 8px 0;
+              font-size: 18px;
+              color: #2c3e50;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            .student-id, .student-class {
+              font-size: 12px;
+              margin: 4px 0;
+              font-weight: bold;
+            }
+            .summary-cards {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 10px;
+              margin-bottom: 20px;
+            }
+            .summary-card {
+              padding: 12px;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              margin-bottom: 0;
+              background: #f8f9fa;
+            }
+            .summary-card-title {
+              font-size: 10px;
+              margin-bottom: 5px;
+              color: #495057;
+              font-weight: bold;
+            }
+            .summary-card-value {
+              font-size: 14px;
+              font-weight: bold;
+              color: #2c3e50;
+            }
+            .payment-progress-section {
+              margin-bottom: 20px;
+              padding: 15px;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              background: #f8f9fa;
+            }
+            .payment-progress-section h3 {
+              font-size: 14px;
+              margin: 0 0 12px 0;
+              color: #2c3e50;
+              font-weight: bold;
+            }
+            .progress-container {
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            }
+            .progress-bar {
+              height: 12px;
+              background-color: #e9ecef;
+              border-radius: 6px;
+              overflow: hidden;
+            }
+            .progress-fill {
+              height: 100%;
+              background: linear-gradient(90deg, #4e73df, #224abe);
+              border-radius: 6px;
+            }
+            .progress-text {
+              font-size: 11px;
+              font-weight: bold;
+              color: #495057;
+            }
+            .personal-info-section, .system-info-section {
+              margin-bottom: 20px;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              page-break-inside: avoid;
+            }
+            .personal-info-section h3, .system-info-section h3 {
+              padding: 12px 15px;
+              margin: 0;
+              font-size: 14px;
+              background: #4e73df;
+              color: white;
+            }
+            .personal-info-content, .system-info-content {
+              padding: 15px;
+            }
+            .info-category {
+              margin-bottom: 15px;
+            }
+            .info-category h4 {
+              font-size: 12px;
+              margin: 0 0 10px 0;
+              color: #2c3e50;
+              font-weight: bold;
+              border-bottom: 1px solid #dee2e6;
+              padding-bottom: 5px;
+            }
+            .student-details-grid, .contact-info-grid, .family-info-grid, .system-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 15px;
+              margin-bottom: 10px;
+            }
+            .student-detail-item, .contact-detail-item, .family-detail-item, .system-item {
+              margin-bottom: 10px;
+              page-break-inside: avoid;
+            }
+            .student-detail-item label, .contact-detail-item label, .family-detail-item label, .system-item label {
+              display: block;
+              font-weight: bold;
+              margin-bottom: 3px;
+              font-size: 10px;
+              color: #495057;
+            }
+            .student-detail-item span, .contact-detail-item span, .family-detail-item span, .system-item span {
+              display: block;
+              padding: 6px;
+              background: #ffffff;
+              border-radius: 4px;
+              font-size: 11px;
+              border: 1px solid #dee2e6;
+              min-height: 20px;
+            }
+            .payments-table {
+              overflow-x: auto;
+              margin-top: 10px;
+            }
+            .payments-table table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            .payments-table th,
+            .payments-table td {
+              padding: 8px;
+              text-align: left;
+              border: 1px solid #dee2e6;
+              font-size: 10px;
+            }
+            .payments-table th {
+              background-color: #e9ecef;
+              font-weight: bold;
+              color: #495057;
+            }
+            .payments-table tr:nth-child(even) {
+              background-color: #f8f9fa;
+            }
+            .status-badge {
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-size: 9px;
+              font-weight: bold;
+            }
+            .status-paid {
+              background: #d4edda;
+              color: #155724;
+            }
+            .status-pending {
+              background: #fff3cd;
+              color: #856404;
+            }
+            .status-overdue {
+              background: #f8d7da;
+              color: #721c24;
+            }
+            .status-not-started {
+              background: #d1ecf1;
+              color: #0c5460;
+            }
+            .print-only {
+              display: block !important;
+            }
+            /* Ensure single page layout */
+            .student-profile-card {
+              display: block;
+              width: 100%;
+              overflow: hidden;
+            }
+            .details-section {
+              page-break-inside: avoid;
+              margin-bottom: 20px;
+            }
           }
-          body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Times New Roman', serif; 
-            color: black; 
+          @media screen {
+            .print-only {
+              display: none;
+            }
           }
-          .student-profile-card { 
-            max-width: 90%; 
-            margin: 0 auto; 
-            padding: 15px; 
-            box-shadow: none; 
-            background: white; 
-            font-size: 11px; /* Professional font size */
+        </style>
+      `;
+      
+      // Create watermark container
+      const watermarkHtml = `
+        <div class="watermark-container">
+          ${firmName}
+        </div>
+      `;
+      
+      // Get current content
+      const content = printContent.innerHTML;
+      
+      // Write print content with watermark and styles
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Student Profile - ${student.name}</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            ${printStyles}
+          </head>
+          <body>
+            ${watermarkHtml}
+            <div class="student-profile-card">
+              ${content}
+            </div>
+            <script>
+              // Add delay to ensure content renders before printing
+              setTimeout(() => {
+                window.print();
+                // Don't close the window automatically on mobile to allow user control
+                if (window.innerWidth <= 768) {
+                  // On mobile, let user close the window themselves
+                  document.body.innerHTML = '<div style="text-align: center; padding: 20px;"><h2>Print dialog opened. Please use the print button in your browser to print the document.</h2><p><button onclick="window.close()">Close Window</button></p></div>';
+                } else {
+                  // On desktop, close after printing
+                  window.close();
+                }
+              }, 500);
+            </script>
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+    } catch (error) {
+      // Fallback for mobile browsers that block window.open
+      console.warn('Popup blocked or not supported. Using fallback method.', error);
+      
+      // Create a temporary iframe for printing
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      iframe.style.left = '-9999px';
+      iframe.style.opacity = '0';
+      iframe.style.zIndex = '-1';
+      iframe.style.overflow = 'hidden';
+      document.body.appendChild(iframe);
+      
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      
+      // Create comprehensive print styles
+      const printStyles = `
+        <style>
+          @media print {
+            @page { 
+              size: A4; 
+              margin: 1cm; 
+            }
+            body { 
+              margin: 0; 
+              padding: 0; 
+              font-family: 'Times New Roman', serif; 
+              color: black; 
+            }
+            .student-profile-card { 
+              max-width: 90%; 
+              margin: 0 auto; 
+              padding: 15px; 
+              box-shadow: none; 
+              background: white; 
+              font-size: 11px; /* Professional font size */
+            }
+            .photo-upload-section { 
+              display: none; 
+            }
+            .upload-photo-btn { 
+              display: none; 
+            }
+            .upload-success-message { 
+              display: none; 
+            }
+            .watermark-container {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) rotate(-45deg);
+              pointer-events: none;
+              z-index: 1000;
+              opacity: 0.05;
+              font-size: 5em;
+              color: #cccccc;
+              font-weight: bold;
+              text-align: center;
+            }
+            .student-photo-preview {
+              width: 120px;
+              height: 120px;
+              object-fit: cover;
+              border-radius: 8px;
+              margin-bottom: 10px;
+              display: block;
+              border: 1px solid #ddd;
+            }
+            .photo-preview img {
+              width: 120px;
+              height: 120px;
+              object-fit: cover;
+              border-radius: 8px;
+            }
+            .student-header {
+              display: flex;
+              align-items: flex-start;
+              gap: 20px;
+              margin-bottom: 20px;
+              padding-bottom: 15px;
+              border-bottom: 2px solid #4e73df; /* Professional border */
+            }
+            .student-basic-info {
+              flex: 1;
+            }
+            .student-basic-info h2 {
+              margin: 0 0 8px 0;
+              font-size: 18px;
+              color: #2c3e50;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            .student-id, .student-class {
+              font-size: 12px;
+              margin: 4px 0;
+              font-weight: bold;
+            }
+            .summary-cards {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 10px;
+              margin-bottom: 20px;
+            }
+            .summary-card {
+              padding: 12px;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              margin-bottom: 0;
+              background: #f8f9fa;
+            }
+            .summary-card-title {
+              font-size: 10px;
+              margin-bottom: 5px;
+              color: #495057;
+              font-weight: bold;
+            }
+            .summary-card-value {
+              font-size: 14px;
+              font-weight: bold;
+              color: #2c3e50;
+            }
+            .payment-progress-section {
+              margin-bottom: 20px;
+              padding: 15px;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              background: #f8f9fa;
+            }
+            .payment-progress-section h3 {
+              font-size: 14px;
+              margin: 0 0 12px 0;
+              color: #2c3e50;
+              font-weight: bold;
+            }
+            .progress-container {
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            }
+            .progress-bar {
+              height: 12px;
+              background-color: #e9ecef;
+              border-radius: 6px;
+              overflow: hidden;
+            }
+            .progress-fill {
+              height: 100%;
+              background: linear-gradient(90deg, #4e73df, #224abe);
+              border-radius: 6px;
+            }
+            .progress-text {
+              font-size: 11px;
+              font-weight: bold;
+              color: #495057;
+            }
+            .personal-info-section, .system-info-section {
+              margin-bottom: 20px;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              page-break-inside: avoid;
+            }
+            .personal-info-section h3, .system-info-section h3 {
+              padding: 12px 15px;
+              margin: 0;
+              font-size: 14px;
+              background: #4e73df;
+              color: white;
+            }
+            .personal-info-content, .system-info-content {
+              padding: 15px;
+            }
+            .info-category {
+              margin-bottom: 15px;
+            }
+            .info-category h4 {
+              font-size: 12px;
+              margin: 0 0 10px 0;
+              color: #2c3e50;
+              font-weight: bold;
+              border-bottom: 1px solid #dee2e6;
+              padding-bottom: 5px;
+            }
+            .student-details-grid, .contact-info-grid, .family-info-grid, .system-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 15px;
+              margin-bottom: 10px;
+            }
+            .student-detail-item, .contact-detail-item, .family-detail-item, .system-item {
+              margin-bottom: 10px;
+              page-break-inside: avoid;
+            }
+            .student-detail-item label, .contact-detail-item label, .family-detail-item label, .system-item label {
+              display: block;
+              font-weight: bold;
+              margin-bottom: 3px;
+              font-size: 10px;
+              color: #495057;
+            }
+            .student-detail-item span, .contact-detail-item span, .family-detail-item span, .system-item span {
+              display: block;
+              padding: 6px;
+              background: #ffffff;
+              border-radius: 4px;
+              font-size: 11px;
+              border: 1px solid #dee2e6;
+              min-height: 20px;
+            }
+            .payments-table {
+              overflow-x: auto;
+              margin-top: 10px;
+            }
+            .payments-table table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            .payments-table th,
+            .payments-table td {
+              padding: 8px;
+              text-align: left;
+              border: 1px solid #dee2e6;
+              font-size: 10px;
+            }
+            .payments-table th {
+              background-color: #e9ecef;
+              font-weight: bold;
+              color: #495057;
+            }
+            .payments-table tr:nth-child(even) {
+              background-color: #f8f9fa;
+            }
+            .status-badge {
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-size: 9px;
+              font-weight: bold;
+            }
+            .status-paid {
+              background: #d4edda;
+              color: #155724;
+            }
+            .status-pending {
+              background: #fff3cd;
+              color: #856404;
+            }
+            .status-overdue {
+              background: #f8d7da;
+              color: #721c24;
+            }
+            .status-not-started {
+              background: #d1ecf1;
+              color: #0c5460;
+            }
+            .print-only {
+              display: block !important;
+            }
+            /* Ensure single page layout */
+            .student-profile-card {
+              display: block;
+              width: 100%;
+              overflow: hidden;
+            }
+            .details-section {
+              page-break-inside: avoid;
+              margin-bottom: 20px;
+            }
           }
-          .photo-upload-section { 
-            display: none; 
+          @media screen {
+            .print-only {
+              display: none;
+            }
           }
-          .upload-photo-btn { 
-            display: none; 
-          }
-          .upload-success-message { 
-            display: none; 
-          }
-          .watermark-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            pointer-events: none;
-            z-index: 1000;
-            opacity: 0.05;
-            font-size: 5em;
-            color: #cccccc;
-            font-weight: bold;
-            text-align: center;
-          }
-          .student-photo-preview {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            display: block;
-            border: 1px solid #ddd;
-          }
-          .photo-preview img {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 8px;
-          }
-          .student-header {
-            display: flex;
-            align-items: flex-start;
-            gap: 20px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #4e73df; /* Professional border */
-          }
-          .student-basic-info {
-            flex: 1;
-          }
-          .student-basic-info h2 {
-            margin: 0 0 8px 0;
-            font-size: 18px;
-            color: #2c3e50;
-            font-weight: bold;
-            text-transform: uppercase;
-          }
-          .student-id, .student-class {
-            font-size: 12px;
-            margin: 4px 0;
-            font-weight: bold;
-          }
-          .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-          }
-          .summary-card {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            margin-bottom: 0;
-            background: #f8f9fa;
-          }
-          .summary-card-title {
-            font-size: 10px;
-            margin-bottom: 5px;
-            color: #495057;
-            font-weight: bold;
-          }
-          .summary-card-value {
-            font-size: 14px;
-            font-weight: bold;
-            color: #2c3e50;
-          }
-          .payment-progress-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background: #f8f9fa;
-          }
-          .payment-progress-section h3 {
-            font-size: 14px;
-            margin: 0 0 12px 0;
-            color: #2c3e50;
-            font-weight: bold;
-          }
-          .progress-container {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-          }
-          .progress-bar {
-            height: 12px;
-            background-color: #e9ecef;
-            border-radius: 6px;
-            overflow: hidden;
-          }
-          .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4e73df, #224abe);
-            border-radius: 6px;
-          }
-          .progress-text {
-            font-size: 11px;
-            font-weight: bold;
-            color: #495057;
-          }
-          .personal-info-section, .system-info-section {
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            page-break-inside: avoid;
-          }
-          .personal-info-section h3, .system-info-section h3 {
-            padding: 12px 15px;
-            margin: 0;
-            font-size: 14px;
-            background: #4e73df;
-            color: white;
-          }
-          .personal-info-content, .system-info-content {
-            padding: 15px;
-          }
-          .info-category {
-            margin-bottom: 15px;
-          }
-          .info-category h4 {
-            font-size: 12px;
-            margin: 0 0 10px 0;
-            color: #2c3e50;
-            font-weight: bold;
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 5px;
-          }
-          .student-details-grid, .contact-info-grid, .family-info-grid, .system-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 10px;
-          }
-          .student-detail-item, .contact-detail-item, .family-detail-item, .system-item {
-            margin-bottom: 10px;
-            page-break-inside: avoid;
-          }
-          .student-detail-item label, .contact-detail-item label, .family-detail-item label, .system-item label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 3px;
-            font-size: 10px;
-            color: #495057;
-          }
-          .student-detail-item span, .contact-detail-item span, .family-detail-item span, .system-item span {
-            display: block;
-            padding: 6px;
-            background: #ffffff;
-            border-radius: 4px;
-            font-size: 11px;
-            border: 1px solid #dee2e6;
-            min-height: 20px;
-          }
-          .payments-table {
-            overflow-x: auto;
-            margin-top: 10px;
-          }
-          .payments-table table {
-            width: 100%;
-            border-collapse: collapse;
-          }
-          .payments-table th,
-          .payments-table td {
-            padding: 8px;
-            text-align: left;
-            border: 1px solid #dee2e6;
-            font-size: 10px;
-          }
-          .payments-table th {
-            background-color: #e9ecef;
-            font-weight: bold;
-            color: #495057;
-          }
-          .payments-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-          }
-          .status-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 9px;
-            font-weight: bold;
-          }
-          .status-paid {
-            background: #d4edda;
-            color: #155724;
-          }
-          .status-pending {
-            background: #fff3cd;
-            color: #856404;
-          }
-          .status-overdue {
-            background: #f8d7da;
-            color: #721c24;
-          }
-          .status-not-started {
-            background: #d1ecf1;
-            color: #0c5460;
-          }
-          .print-only {
-            display: block !important;
-          }
-          /* Ensure single page layout */
-          .student-profile-card {
-            display: block;
-            width: 100%;
-            overflow: hidden;
-          }
-          .details-section {
-            page-break-inside: avoid;
-            margin-bottom: 20px;
-          }
-        }
-        @media screen {
-          .print-only {
-            display: none;
-          }
-        }
-      </style>
-    `;
-    
-    // Create watermark container
-    const watermarkHtml = `
-      <div class="watermark-container">
-        ${firmName}
-      </div>
-    `;
-    
-    // Get current content
-    const content = printContent.innerHTML;
-    
-    // Write print content with watermark and styles
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Student Profile - ${student.name}</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          ${printStyles}
-        </head>
-        <body>
-          ${watermarkHtml}
-          <div class="student-profile-card">
-            ${content}
-          </div>
-          <script>
-            // Add delay to ensure content renders before printing
+        </style>
+      `;
+      
+      // Create watermark container
+      const watermarkHtml = `
+        <div class="watermark-container">
+          ${firmName}
+        </div>
+      `;
+      
+      // Write print content with watermark and styles
+      iframeDoc.open();
+      iframeDoc.write(`
+        <html>
+          <head>
+            <title>Student Profile - ${student.name}</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            ${printStyles}
+          </head>
+          <body>
+            ${watermarkHtml}
+            <div class="student-profile-card">
+              ${printContent.innerHTML}
+            </div>
+          </body>
+        </html>
+      `);
+      iframeDoc.close();
+      
+      // Wait for iframe to load before printing
+      iframe.onload = function() {
+        try {
+          // Focus the iframe and print
+          iframe.contentWindow.focus();
+          setTimeout(() => {
+            iframe.contentWindow.print();
+            
+            // Clean up after printing
             setTimeout(() => {
-              window.print();
-              window.close();
-            }, 500);
-          </script>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+            }, 1000);
+          }, 500);
+        } catch (printError) {
+          console.error('Error during iframe printing:', printError);
+          // Clean up in case of error
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }
+      };
+      
+      // Also handle error case
+      iframe.onerror = function() {
+        console.error('Iframe loading error');
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      };
+    }
   };
 
   const handlePhotoUpload = async (event) => {

@@ -61,19 +61,47 @@ const Settings = () => {
     // Load branding data from Firestore
     loadBrandingDataFromFirestore();
     
-    // Load PIN from localStorage
-    const savedPin = localStorage.getItem('brandingPin');
-    if (savedPin) {
-      setStoredPin(savedPin);
-    }
+      // Load PIN from Firestore
+    loadPinFromFirestore();
   }, []);
   
-  // Save PIN to localStorage when it changes
+  // Save PIN to Firestore when it changes
   useEffect(() => {
-    if (storedPin) {
-      localStorage.setItem('brandingPin', storedPin);
+    if (storedPin && isAuthenticated()) {
+      savePinToFirestore(storedPin);
     }
   }, [storedPin]);
+  
+  // Save PIN to Firestore
+  const savePinToFirestore = async (pin) => {
+    try {
+      const uid = getCurrentUserUID();
+      const settingsDoc = doc(db, `users/${uid}/settings/profile`);
+      
+      await setDoc(settingsDoc, { brandingPin: pin }, { merge: true });
+    } catch (error) {
+      console.error('Error saving PIN to Firestore:', error);
+    }
+  };
+  
+  // Load PIN from Firestore
+  const loadPinFromFirestore = async () => {
+    if (!isAuthenticated()) {
+      return;
+    }
+    
+    try {
+      const uid = getCurrentUserUID();
+      const settingsDocRef = doc(db, `users/${uid}/settings/profile`);
+      const docSnap = await getDoc(settingsDocRef);
+      
+      if (docSnap.exists() && docSnap.data().brandingPin) {
+        setStoredPin(docSnap.data().brandingPin);
+      }
+    } catch (error) {
+      console.error('Error loading PIN from Firestore:', error);
+    }
+  };
   
   // Apply theme settings to document whenever they change
   useEffect(() => {
@@ -477,6 +505,11 @@ const Settings = () => {
       
       // Save branding data to Firestore
       await setDoc(settingsDoc, brandingData, { merge: true });
+      
+      // Save PIN separately to ensure it's not overwritten
+      if (storedPin) {
+        await savePinToFirestore(storedPin);
+      }
       
       showToast('Branding saved successfully!', 'success');
       
@@ -884,7 +917,7 @@ const Settings = () => {
       </div>
 
       <div className="settings-section">
-        <h2>🎨 Theme Customization</h2>
+        <h2>🎨 Theme Customization <span className="disabled-label">(Disabled)</span></h2>
         <div className="setting-item">
           <div className="setting-info">
             <h3>🎨 Primary Color</h3>
@@ -895,6 +928,7 @@ const Settings = () => {
               type="color" 
               value={primaryColor} 
               onChange={(e) => handleColorChange('primary', e.target.value)} 
+              disabled
             />
           </div>
         </div>
@@ -909,6 +943,7 @@ const Settings = () => {
               type="color" 
               value={accentColor} 
               onChange={(e) => handleColorChange('accent', e.target.value)} 
+              disabled
             />
           </div>
         </div>
@@ -923,6 +958,7 @@ const Settings = () => {
               type="color" 
               value={backgroundColor} 
               onChange={(e) => handleColorChange('background', e.target.value)} 
+              disabled
             />
           </div>
         </div>
@@ -936,6 +972,7 @@ const Settings = () => {
             <select 
               value={sidebarGradient} 
               onChange={(e) => handleColorChange('sidebar', e.target.value)}
+              disabled
             >
               <option value="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">Purple Gradient</option>
               <option value="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">Pink Gradient</option>
@@ -980,6 +1017,7 @@ const Settings = () => {
           <button 
             className="reset-button"
             onClick={handleResetDefaults}
+            disabled
           >
             Reset to Defaults
           </button>
@@ -987,7 +1025,7 @@ const Settings = () => {
       </div>
 
       <div className="settings-section">
-        <h2>🌙 Dark Mode & Sync</h2>
+        <h2>🌙 Dark Mode & Sync <span className="disabled-label">(Disabled)</span></h2>
         <div className="setting-item dark-mode-toggle-large">
           <div className="setting-info">
             <h3>🌙 Dark Mode</h3>
@@ -1001,6 +1039,7 @@ const Settings = () => {
                 checked={settings.darkMode}
                 onChange={() => handleSettingChange('darkMode')}
                 name="darkMode"
+                disabled
               />
               <span className="slider-large"></span>
             </label>
@@ -1040,6 +1079,7 @@ const Settings = () => {
               checked={settings.autoSync}
               onChange={() => handleSettingChange('autoSync')}
               name="autoSync"
+              disabled
             />
             <span className="slider"></span>
           </label>
@@ -1112,6 +1152,8 @@ const Settings = () => {
                 onClick={async () => {
                   if (pin.length === 4) {
                     setStoredPin(pin);
+                    // Save PIN to Firestore
+                    await savePinToFirestore(pin);
                     setShowPinDialog(false);
                     // Now proceed with saving branding
                     await performSaveBranding();

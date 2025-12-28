@@ -144,4 +144,15 @@ To build the project for production:
 npm run build
 ```
 
-The built files will be in the `dist` directory.# fees_track
+The built files will be in the `dist` directory.
+
+## Monthly Email Reports
+
+The application includes an automated monthly email report system that runs on the 1st of each month at 9 AM IST. The system:
+
+- Fetches user-specific data from Firestore (total students, total fees, paid fees, pending fees)
+- Generates personalized HTML email reports
+- Sends reports to registered user email addresses
+- Logs all email activity in Firestore
+
+For setup and configuration instructions, see [functions/monthly-email-report-setup.md](functions/monthly-email-report-setup.md).# fees_track
