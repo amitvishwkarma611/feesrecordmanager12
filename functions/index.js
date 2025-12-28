@@ -5,9 +5,9 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 // Import cloud functions
-const { sendWhatsAppFeeReminders } = require('./src/whatsappReminder');
+//const { sendWhatsAppFeeReminders } = require('./src/whatsappReminder');
 const { sendMonthlyEmailReport } = require('./src/monthlyEmailReport');
 
 // Export functions
-exports.sendWhatsAppFeeReminders = sendWhatsAppFeeReminders;
+//exports.sendWhatsAppFeeReminders = sendWhatsAppFeeReminders;
 exports.sendMonthlyEmailReport = sendMonthlyEmailReport;

@@ -10,13 +10,18 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 // Configure nodemailer for sending emails
-const transporter = nodemailer.createTransporter({
+
+const emailUser = functions.config().email.user;
+const emailPass = functions.config().email.pass;
+
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: functions.config().email.user,
-    pass: functions.config().email.pass,
+    user: emailUser,
+    pass: emailPass,
   },
 });
+
 
 /**
  * Scheduled function to send monthly email reports
@@ -30,7 +35,7 @@ exports.sendMonthlyEmailReport = functions.pubsub
       console.log('Starting monthly email report process...');
       
       // Get all users from the users collection
-      const usersSnapshot = await db.collection('users').get();
+      const usersSnapshot = await db.collection('userProfiles').get();
       
       if (usersSnapshot.empty) {
         console.log('No users found, skipping monthly email reports');
