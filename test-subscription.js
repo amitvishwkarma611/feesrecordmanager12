@@ -13,7 +13,7 @@ async function testSubscription() {
     trialEndDate.setDate(trialEndDate.getDate() + 7);
     
     const subscriptionData = {
-      plan: 'TRIAL',
+      plan: 'trial',
       status: 'active',
       trialStartDate: now,
       trialEndDate: Timestamp.fromDate(trialEndDate),

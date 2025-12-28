@@ -909,7 +909,7 @@ const Students = () => {
               <th onClick={() => handleSort('class')}>
                 Class {sortBy === 'class' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th>Contact</th>
+
               <th>Total Fees</th>
               <th>Paid Fees</th>
               <th>Pending Fees</th>
@@ -954,17 +954,10 @@ const Students = () => {
                       </div>
                     </td>
                     <td>{student.class}</td>
-                    <td>
-                      {student.contact && (
-                        <div className="contact-info">
-                          <div>{student.contact}</div>
-                          {student.fatherName && <div className="parent-name">Father: {student.fatherName}</div>}
-                        </div>
-                      )}
-                    </td>
+      
                     <td>₹{parseFloat(student.totalFees || 0).toLocaleString()}</td>
                     <td>₹{parseFloat(student.feesPaid || 0).toLocaleString()}</td>
-                    <td className="fee-pending">₹{pendingFees.toLocaleString()}</td>
+                    <td>₹{pendingFees.toLocaleString()}</td>
                     <td>
                       <span className={`status-badge status-${studentWithStatus.status.toLowerCase().replace(' ', '-')}`}>
                         {
@@ -981,20 +974,23 @@ const Students = () => {
                         <button 
                           className="view-btn"
                           onClick={() => handleViewStudent(student)}
+                          title="View student"
                         >
-                          View
+                          👁️
                         </button>
                         <button 
                           className="edit-btn"
                           onClick={() => handleEdit(student)}
+                          title="Edit student"
                         >
-                          Edit
+                          ✏️
                         </button>
                         <button 
                           className="delete-btn"
                           onClick={() => handleDelete(student.id)}
+                          title="Delete student"
                         >
-                          Delete
+                          🗑️
                         </button>
                       </div>
                     </td>

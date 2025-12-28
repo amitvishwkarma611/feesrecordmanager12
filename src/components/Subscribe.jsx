@@ -92,8 +92,25 @@ const Subscribe = () => {
 
   if (loading) {
     return (
-      <div className="login-container">
-        <div className="login-card">
+      <div className="login-container" style={{
+        background: '#ffffff',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '10px'
+      }}>
+        <div className="login-card" style={{
+          maxWidth: '700px',
+          width: '100%',
+          border: '1px solid #e0e0e0',
+          borderRadius: '12px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+          overflow: 'hidden',
+          maxHeight: '95vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
           <div className="subscribe-loading">
             <div className="loading-logo">
               <div className="loading-logo-inner"></div>
@@ -109,8 +126,25 @@ const Subscribe = () => {
   if (subscription && subscription.status === 'active' && subscription.isPaid === true) {
     // The useEffect will handle the actual navigation
     return (
-      <div className="login-container">
-        <div className="login-card">
+      <div className="login-container" style={{
+        background: '#ffffff',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '10px'
+      }}>
+        <div className="login-card" style={{
+          maxWidth: '700px',
+          width: '100%',
+          border: '1px solid #e0e0e0',
+          borderRadius: '12px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+          overflow: 'hidden',
+          maxHeight: '95vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
           <div className="subscribe-loading">
             <div className="loading-logo">
               <div className="loading-logo-inner"></div>
@@ -126,7 +160,7 @@ const Subscribe = () => {
 
   return (
     <div className="login-container" style={{
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: '#ffffff',
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
@@ -136,25 +170,27 @@ const Subscribe = () => {
       <div className="login-card" style={{
         maxWidth: '700px',
         width: '100%',
+        border: '1px solid #e0e0e0',
         borderRadius: '12px',
-        boxShadow: '0 15px 30px rgba(0,0,0,0.15)',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
         overflow: 'hidden',
         maxHeight: '95vh',
         display: 'flex',
         flexDirection: 'column'
       }}>
         <div style={{
-          background: 'linear-gradient(90deg, #667eea, #764ba2)',
-          color: 'white',
-          padding: '15px',
-          textAlign: 'center'
+          background: '#e3f2fd',
+          color: '#2c3e50',
+          padding: '20px',
+          textAlign: 'center',
+          borderBottom: '1px solid #e0e0e0'
         }}>
           <h1 style={{
             margin: 0,
             fontSize: '1.8rem',
             fontWeight: '600'
           }}>🚀 Unlock PRO Features</h1>
-          <p style={{ margin: '5px 0 0 0', opacity: 0.9 }}>
+          <p style={{ margin: '5px 0 0 0', color: '#7f8c8d' }}>
             Upgrade to access all premium features
           </p>
         </div>
@@ -260,12 +296,13 @@ const Subscribe = () => {
           </div>
 
           <div className="pricing-card" style={{
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e7f0 100%)',
-            border: '2px solid #e0e6ed',
-            borderRadius: '10px',
+            background: '#ffffff',
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
             padding: '20px',
             textAlign: 'center',
-            marginBottom: '20px'
+            marginBottom: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
           }}>
             <h3 style={{ 
               color: '#2c3e50', 
@@ -335,20 +372,24 @@ const Subscribe = () => {
               fontWeight: '600',
               borderRadius: '8px',
               background: isPaidUser 
-                ? 'linear-gradient(90deg, #95a5a6, #7f8c8d)' 
-                : 'linear-gradient(90deg, #667eea, #764ba2)',
+                ? '#95a5a6' 
+                : '#667eea',
               border: 'none',
               color: 'white',
               cursor: (processing || isPaidUser) ? 'not-allowed' : 'pointer',
-              boxShadow: '0 3px 10px rgba(102, 126, 234, 0.3)',
+              boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)',
               transition: 'all 0.2s ease'
             }}
             onMouseOver={(e) => {
               if (!processing && !isPaidUser) {
+                e.target.style.background = '#5a67d8';
                 e.target.style.transform = 'translateY(-1px)';
               }
             }}
             onMouseOut={(e) => {
+              if (!isPaidUser) {
+                e.target.style.background = '#667eea';
+              }
               e.target.style.transform = 'translateY(0)';
             }}
           >

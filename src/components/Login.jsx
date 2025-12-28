@@ -268,7 +268,7 @@ const Login = () => {
             // Create a new trial subscription
             console.log('Login: No subscription found, creating new one for user:', userCredential.user.uid);
             await createSubscription(userCredential.user.uid);
-          } else if (subscription.plan === 'TRIAL') {
+          } else if (subscription.plan === 'trial') {
             // For trial users, redirect to free trial continue page
             console.log('Login: User has trial subscription, redirecting to free trial page');
             navigate('/free-trial-continue');
