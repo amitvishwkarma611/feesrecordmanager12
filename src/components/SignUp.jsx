@@ -136,8 +136,8 @@ const SignUp = () => {
       }
       
       // DO NOT signOut() the user after sign up
-      // Redirect to login page with success message
-      navigate('/login?signup=verification');
+      // Redirect to email verification page
+      navigate('/verify-email');
     } catch (err) {
       console.error('Sign up error:', err);
       let errorMessage = 'Sign up failed. Please try again.';

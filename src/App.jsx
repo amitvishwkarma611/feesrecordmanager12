@@ -26,6 +26,7 @@ import TestSubscription from './components/TestSubscription';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import FreeTrialContinue from './components/FreeTrialContinue';
 import TestSubscriptionCreation from './components/TestSubscriptionCreation';
+import VerifyEmail from './components/VerifyEmail';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 
 import './App.css';
@@ -277,6 +278,7 @@ const AuthenticatedApp = () => {
           <Route path="/free-trial-continue" element={<FreeTrialContinue />} />
           <Route path="/test-subscription" element={<TestSubscription />} />
           <Route path="/test-subscription-creation" element={<TestSubscriptionCreation />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login-new" element={<LoginNew />} />
         </Routes>

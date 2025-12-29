@@ -15,6 +15,12 @@ const ProtectedRoute = ({ children }) => {
       return;
     }
 
+    // Check if user's email is verified
+    if (!auth.currentUser.emailVerified) {
+      navigate('/verify-email');
+      return;
+    }
+
     // If there's an error in the subscription context, log it
     if (error) {
       console.error('ProtectedRoute: Subscription context error:', error);

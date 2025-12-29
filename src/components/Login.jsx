@@ -251,11 +251,8 @@ const Login = () => {
         // Check if email is verified
         console.log('Login: Checking email verification for user:', userCredential.user.email, userCredential.user.emailVerified);
         if (!userCredential.user.emailVerified) {
-          // Stay logged in but show verification message
-          // Show ONLY error message and enable resend button (no success messages)
-          setSuccessMessage('');
-          setError('Please verify your email before signing in.');
-          setShowResendButton(true);
+          // Redirect to email verification page
+          navigate('/verify-email');
           return;
         }
         
