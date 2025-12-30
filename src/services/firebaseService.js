@@ -698,3 +698,32 @@ export const deleteStaffAttendance = async (firebaseDocId) => {
     throw error;
   }
 };
+
+// Get branding settings for receipts
+export const getBrandingSettings = async () => {
+  try {
+    console.log('=== FIREBASE GET BRANDING SETTINGS START ===');
+    
+    if (!isAuthenticated()) {
+      throw new Error('User not authenticated. Please sign in first.');
+    }
+    
+    const uid = getCurrentUserUID();
+    const settingsDoc = doc(db, `users/${uid}/settings/profile`);
+    const docSnap = await getDoc(settingsDoc);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log('Branding settings data:', data);
+      console.log('=== FIREBASE GET BRANDING SETTINGS END SUCCESS ===');
+      return data;
+    } else {
+      console.log('No branding settings found');
+      console.log('=== FIREBASE GET BRANDING SETTINGS END SUCCESS ===');
+      return {};
+    }
+  } catch (error) {
+    console.error('Error getting branding settings: ', error);
+    throw error;
+  }
+};

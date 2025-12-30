@@ -569,7 +569,49 @@ const Students = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading students...</div>;
+    return (
+      <RootLayout>
+        <div className="students-container">
+          <div className="students-header">
+            <div className="header-content">
+              <div className="header-left">
+                <div className="skeleton-header" style={{ width: '200px', height: '40px', marginBottom: '10px' }}></div>
+                <div className="skeleton-bar" style={{ width: '300px', height: '24px', marginTop: '10px' }}></div>
+              </div>
+              <div className="header-right">
+                <div className="header-actions">
+                  <div className="skeleton-bar" style={{ width: '120px', height: '40px', marginRight: '10px' }}></div>
+                  <div className="skeleton-bar" style={{ width: '120px', height: '40px' }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="search-filters">
+            <div className="search-container">
+              <div className="skeleton-header" style={{ width: '100%', height: '44px', borderRadius: '12px' }}></div>
+            </div>
+            
+            <div className="filter-container">
+              <div className="skeleton-bar" style={{ width: '100px', height: '40px', borderRadius: '8px' }}></div>
+            </div>
+          </div>
+          
+          <div className="kpi-skeleton-grid">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="skeleton-card"></div>
+            ))}
+          </div>
+          
+          <div className="table-skeleton">
+            <div className="skeleton-header"></div>
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="skeleton-row"></div>
+            ))}
+          </div>
+        </div>
+      </RootLayout>
+    );
   }
 
   return (

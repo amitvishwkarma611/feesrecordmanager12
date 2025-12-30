@@ -568,6 +568,116 @@ const Profile = () => {
     alert('Opening profile edit modal... (This would open a form in a real app)');
   };
 
+  if (loading) {
+    return (
+      <RootLayout>
+        <div className="profile-container">
+          <div className="profile-header">
+            <div className="header-left">
+              <div className="skeleton-header" style={{ width: '200px', height: '40px', marginBottom: '10px' }}></div>
+              <div className="skeleton-bar" style={{ width: '400px', height: '24px' }}></div>
+            </div>
+          </div>
+          
+          <div className="profile-layout">
+            <div className="profile-column">
+              <div className="profile-card">
+                <div className="profile-avatar" style={{ justifyContent: 'center', alignItems: 'center' }}>
+                  <div className="skeleton-card" style={{ width: '120px', height: '120px', borderRadius: '50%' }}></div>
+                </div>
+                
+                <div className="profile-info">
+                  <div className="skeleton-header" style={{ width: '150px', height: '30px', marginBottom: '15px' }}></div>
+                  <div className="skeleton-bar" style={{ width: '100px', height: '20px', marginBottom: '15px' }}></div>
+                  
+                  <div className="profile-contact">
+                    <div className="contact-item">
+                      <div className="skeleton-bar" style={{ width: '120px', height: '16px', marginBottom: '5px' }}></div>
+                      <div className="skeleton-bar" style={{ width: '80px', height: '16px' }}></div>
+                    </div>
+                    <div className="contact-item">
+                      <div className="skeleton-bar" style={{ width: '80px', height: '16px', marginBottom: '5px' }}></div>
+                      <div className="skeleton-bar" style={{ width: '120px', height: '16px' }}></div>
+                    </div>
+                    <div className="contact-item">
+                      <div className="skeleton-bar" style={{ width: '100px', height: '16px', marginBottom: '5px' }}></div>
+                      <div className="skeleton-bar" style={{ width: '100px', height: '16px' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="performance-section">
+                <div className="section-header">
+                  <div className="skeleton-header" style={{ width: '180px', height: '28px', marginBottom: '10px' }}></div>
+                  <div className="skeleton-bar" style={{ width: '200px', height: '16px' }}></div>
+                </div>
+                
+                <div className="metrics-grid">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="metric-card">
+                      <div className="skeleton-header" style={{ width: '60px', height: '24px', marginBottom: '5px' }}></div>
+                      <div className="skeleton-bar" style={{ width: '40px', height: '20px' }}></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="profile-column">
+              <div className="stats-section">
+                <div className="section-header">
+                  <div className="skeleton-header" style={{ width: '200px', height: '28px', marginBottom: '10px' }}></div>
+                  <div className="skeleton-bar" style={{ width: '220px', height: '16px' }}></div>
+                </div>
+                
+                <div className="stats-grid">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="skeleton-card" style={{ height: '100px' }}></div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="activity-section">
+                <div className="section-header">
+                  <div className="skeleton-header" style={{ width: '180px', height: '28px', marginBottom: '10px' }}></div>
+                  <div className="skeleton-bar" style={{ width: '200px', height: '16px' }}></div>
+                </div>
+                
+                <div className="activity-list">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="skeleton-row" style={{ height: '80px', marginBottom: '10px' }}></div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="settings-section">
+                <div className="section-header">
+                  <div className="skeleton-header" style={{ width: '180px', height: '28px', marginBottom: '10px' }}></div>
+                  <div className="skeleton-bar" style={{ width: '200px', height: '16px' }}></div>
+                </div>
+                
+                <div className="settings-list">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="setting-item">
+                      <div className="skeleton-bar" style={{ width: '200px', height: '40px', marginBottom: '10px' }}></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="profile-actions">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="skeleton-card" style={{ width: '120px', height: '40px', borderRadius: '8px', margin: '0 5px' }}></div>
+            ))}
+          </div>
+        </div>
+      </RootLayout>
+    );
+  }
+  
   return (
     <RootLayout>
       <div className="profile-container">

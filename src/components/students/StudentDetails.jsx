@@ -5,6 +5,7 @@ import { uploadStudentPhoto, testStorageConnection } from '../../services/fireba
 import { db } from '../../firebase/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { getCurrentUserUID, isAuthenticated } from '../../utils/auth';
+import SkeletonLoader from '../common/SkeletonLoader';
 import './StudentDetails.css';
 
 const StudentDetails = () => {
@@ -1047,7 +1048,70 @@ const StudentDetails = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading student details...</div>;
+    return (
+      <div className="student-details-container">
+        <div className="details-header">
+          <button className="back-button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path></path>
+              <path></path>
+            </svg>
+            Back to Students
+          </button>
+          <h1>Student Profile</h1>
+          <div className="header-buttons">
+            <button className="print-button">Print Profile</button>
+            <button className="edit-button">Edit Student</button>
+          </div>
+        </div>
+        
+        <div className="student-profile-card">
+          <div className="student-header">
+            <div className="student-avatar-container">
+              <div className="photo-upload-section">
+                <div className="photo-preview">
+                  <div className="skeleton-card" style={{width: '120px', height: '120px', borderRadius: '8px'}}></div>
+                </div>
+                <div className="skeleton-card" style={{width: '120px', height: '36px', marginTop: '10px'}}></div>
+              </div>
+            </div>
+            <div className="student-basic-info">
+              <div className="skeleton-card" style={{width: '200px', height: '28px', marginBottom: '10px'}}></div>
+              <div className="skeleton-card" style={{width: '150px', height: '20px', marginBottom: '10px'}}></div>
+              <div className="skeleton-card" style={{width: '100px', height: '20px', marginBottom: '10px'}}></div>
+              <div className="skeleton-card" style={{width: '80px', height: '20px'}}></div>
+            </div>
+          </div>
+          
+          <div className="summary-cards">
+            <div className="skeleton-card" style={{height: '80px', marginBottom: '10px'}}></div>
+            <div className="skeleton-card" style={{height: '80px', marginBottom: '10px'}}></div>
+            <div className="skeleton-card" style={{height: '80px', marginBottom: '10px'}}></div>
+            <div className="skeleton-card" style={{height: '80px'}}></div>
+          </div>
+          
+          <div className="payment-progress-section">
+            <div className="skeleton-card" style={{height: '24px', marginBottom: '10px'}}></div>
+            <div className="skeleton-card" style={{height: '20px'}}></div>
+          </div>
+          
+          <div className="personal-info-section">
+            <div className="skeleton-card" style={{height: '24px', marginBottom: '10px'}}></div>
+            <div className="skeleton-card" style={{height: '150px'}}></div>
+          </div>
+          
+          <div className="system-info-section">
+            <div className="skeleton-card" style={{height: '24px', marginBottom: '10px'}}></div>
+            <div className="skeleton-card" style={{height: '100px'}}></div>
+          </div>
+          
+          <div className="details-section">
+            <div className="skeleton-card" style={{height: '24px', marginBottom: '10px'}}></div>
+            <div className="skeleton-card" style={{height: '200px'}}></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -1314,7 +1378,28 @@ const StudentDetails = () => {
         <div className="details-section">
           <h3>Payment History</h3>
           {loadingPayments ? (
-            <div className="loading">Loading payment history...</div>
+            <div className="payments-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <tr key={`skeleton-${index}`}>
+                      <td><SkeletonLoader type="text" width="80px" height="16px" /></td>
+                      <td><SkeletonLoader type="text" width="120px" height="16px" /></td>
+                      <td><SkeletonLoader type="text" width="60px" height="16px" /></td>
+                      <td><SkeletonLoader type="text" width="70px" height="16px" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : payments.length === 0 ? (
             <div className="no-payments">No payment history available</div>
           ) : (

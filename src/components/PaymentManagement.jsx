@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Timestamp } from 'firebase/firestore';
 import dataManager from '../utils/dataManager';
 import { setPaymentsList } from '../utils/dataStore';
+import { getBrandingSettings } from '../services/firebaseService';
+import SkeletonLoader from './common/SkeletonLoader';
 import '../styles/PaymentManagement.css';
 
 const PaymentManagement = () => {
@@ -17,6 +19,7 @@ const PaymentManagement = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
+  const [brandingData, setBrandingData] = useState(null);
   const [stats, setStats] = useState({
     totalCollected: 0,
     totalPending: 0,
@@ -66,9 +69,17 @@ const PaymentManagement = () => {
   
   const [amountExceedsFees, setAmountExceedsFees] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(true);
+  
   // Load initial data
   useEffect(() => {
-    refreshData();
+    const loadData = async () => {
+      setIsLoading(true);
+      await refreshData();
+      setIsLoading(false);
+    };
+    
+    loadData();
   }, []);
 
   // Listen for storage changes to update data across components
@@ -325,8 +336,18 @@ const PaymentManagement = () => {
     }
   };
 
-  const handleViewReceipt = (payment) => {
+  const handleViewReceipt = async (payment) => {
     setReceiptData(payment);
+    
+    // Fetch branding settings
+    try {
+      const branding = await getBrandingSettings();
+      setBrandingData(branding);
+    } catch (error) {
+      console.error('Error fetching branding settings:', error);
+      setBrandingData({});
+    }
+    
     setShowReceipt(true);
   };
 
@@ -760,41 +781,51 @@ const PaymentManagement = () => {
             <h3>Payment Status Distribution</h3>
           </div>
           <div className="overview-content">
-            <div className="status-item paid">
-              <div className="status-label">Collected Amount</div>
-              <div className="status-value">₹{stats.collectedAmount?.toLocaleString() || 0}</div>
-              <div className="status-count">{filteredPayments.filter(p => p.status === 'paid').length} payments</div>
-            </div>
-            <div className="status-item pending">
-              <div className="status-label">Pending Amount</div>
-              <div className="status-value">₹{stats.paymentPendingAmount?.toLocaleString() || 0}</div>
-              <div className="status-count">From student records</div>
-              <div className="status-subtext">
-                {stats.totalExpected > 0 
-                  ? `${Math.round((stats.paymentPendingAmount / stats.totalExpected) * 100)}% of total`
-                  : '0% of total'}
+            {isLoading ? (
+              <div className="kpi-skeleton-grid">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="skeleton-card"></div>
+                ))}
               </div>
-            </div>
-            <div className="status-item overdue">
-              <div className="status-label">Overdue Amount</div>
-              <div className="status-value">₹{stats.paymentOverdueAmount?.toLocaleString() || 0}</div>
-              <div className="status-count">{filteredPayments.filter(p => p.status === 'overdue').length} payments</div>
-              <div className="status-subtext">
-                {stats.totalExpected > 0 
-                  ? `${Math.round((stats.paymentOverdueAmount / stats.totalExpected) * 100)}% of total`
-                  : '0% of total'}
-              </div>
-            </div>
-            <div className="status-item total">
-              <div className="status-label">Total Expected</div>
-              <div className="status-value">₹{stats.totalExpected?.toLocaleString() || 0}</div>
-              <div className="status-count">{filteredPayments.length} payments</div>
-              <div className="status-subtext">
-                Collection Rate: {stats.totalExpected > 0 
-                  ? Math.round((stats.collectedAmount / stats.totalExpected) * 100) 
-                  : 0}%
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="status-item paid">
+                  <div className="status-label">Collected Amount</div>
+                  <div className="status-value">₹{stats.collectedAmount?.toLocaleString() || 0}</div>
+                  <div className="status-count">{filteredPayments.filter(p => p.status === 'paid').length} payments</div>
+                </div>
+                <div className="status-item pending">
+                  <div className="status-label">Pending Amount</div>
+                  <div className="status-value">₹{stats.paymentPendingAmount?.toLocaleString() || 0}</div>
+                  <div className="status-count">From student records</div>
+                  <div className="status-subtext">
+                    {stats.totalExpected > 0 
+                      ? `${Math.round((stats.paymentPendingAmount / stats.totalExpected) * 100)}% of total`
+                      : '0% of total'}
+                  </div>
+                </div>
+                <div className="status-item overdue">
+                  <div className="status-label">Overdue Amount</div>
+                  <div className="status-value">₹{stats.paymentOverdueAmount?.toLocaleString() || 0}</div>
+                  <div className="status-count">{filteredPayments.filter(p => p.status === 'overdue').length} payments</div>
+                  <div className="status-subtext">
+                    {stats.totalExpected > 0 
+                      ? `${Math.round((stats.paymentOverdueAmount / stats.totalExpected) * 100)}% of total`
+                      : '0% of total'}
+                  </div>
+                </div>
+                <div className="status-item total">
+                  <div className="status-label">Total Expected</div>
+                  <div className="status-value">₹{stats.totalExpected?.toLocaleString() || 0}</div>
+                  <div className="status-count">{filteredPayments.length} payments</div>
+                  <div className="status-subtext">
+                    Collection Rate: {stats.totalExpected > 0 
+                      ? Math.round((stats.collectedAmount / stats.totalExpected) * 100) 
+                      : 0}%
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -815,47 +846,63 @@ const PaymentManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredPayments.map((payment) => (
-                <tr key={payment.id}>
-                  <td>{payment.studentName || 'Unknown Student'}</td>
-                  <td>{payment.studentId || 'N/A'}</td>
-                  <td>₹{payment.amount || 0}</td>
-                  <td>{formatDisplayDate(payment.dueDate)}</td>
-                  <td>{formatDisplayDate(payment.paidDate)}</td>
-                  <td>
-                    <span className={`status-badge ${getStatusClass(payment.status || 'pending')}`}>
-                      {getStatusText(payment.status || 'pending')}
-                    </span>
-                  </td>
-                  <td>{payment.method || '-'}</td>
-                  <td>{payment.receipt || '-'}</td>
-                  <td>
-                    {payment.status === 'paid' ? (
-                      <>
-                        <button 
-                          className="action-button view-button"
-                          onClick={() => handleViewReceipt(payment)}
-                        >
-                          View
-                        </button>
-                        <button 
-                          className="action-button edit-button"
-                          onClick={() => handleEditPayment(payment)}
-                        >
-                          Edit
-                        </button>
-                      </>
-                    ) : (
-                      <button 
-                        className="action-button pay-button"
-                        onClick={() => handleRecordPayment(payment)}
-                      >
-                        Record Payment
-                      </button>
-                    )}
+              {isLoading ? (
+                <div className="table-skeleton">
+                  <div className="skeleton-header"></div>
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="skeleton-row"></div>
+                  ))}
+                </div>
+              ) : filteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="no-results">
+                    You haven't added any payments yet. Start by adding your first payment.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                // Actual payment rows
+                filteredPayments.map((payment) => (
+                  <tr key={payment.id}>
+                    <td>{payment.studentName || 'Unknown Student'}</td>
+                    <td>{payment.studentId || 'N/A'}</td>
+                    <td>₹{payment.amount || 0}</td>
+                    <td>{formatDisplayDate(payment.dueDate)}</td>
+                    <td>{formatDisplayDate(payment.paidDate)}</td>
+                    <td>
+                      <span className={`status-badge ${getStatusClass(payment.status || 'pending')}`}>
+                        {getStatusText(payment.status || 'pending')}
+                      </span>
+                    </td>
+                    <td>{payment.method || '-'}</td>
+                    <td>{payment.receipt || '-'}</td>
+                    <td>
+                      {payment.status === 'paid' ? (
+                        <>
+                          <button 
+                            className="action-button view-button"
+                            onClick={() => handleViewReceipt(payment)}
+                          >
+                            View
+                          </button>
+                          <button 
+                            className="action-button edit-button"
+                            onClick={() => handleEditPayment(payment)}
+                          >
+                            Edit
+                          </button>
+                        </>
+                      ) : (
+                        <button 
+                          className="action-button pay-button"
+                          onClick={() => handleRecordPayment(payment)}
+                        >
+                          Record Payment
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -975,14 +1022,24 @@ const PaymentManagement = () => {
               </div>
               <div className="receipt-content">
                 <div className="receipt-header">
-                  <h3>FeeManager</h3>
-                  <p>Payment Receipt</p>
+                  <div className="receipt-header-content">
+                    {brandingData?.logoUrl ? (
+                      <img src={brandingData.logoUrl} alt="Academy Logo" className="receipt-preview-logo" />
+                    ) : (
+                      <div className="receipt-placeholder-logo">🏫</div>
+                    )}
+                    <div className="receipt-academy-info">
+                      <h4 className="receipt-academy-name">{brandingData?.firmName || 'Academy Name'}</h4>
+                      <p className="receipt-academy-address">{brandingData?.firmAddress || 'Academy Address'}</p>
+                    </div>
+                  </div>
+                  <div className="receipt-title-preview">Fee Receipt</div>
                 </div>
                 
                 <div className="receipt-details">
                   <div className="receipt-row">
                     <span className="receipt-label">Receipt No:</span>
-                    <span className="receipt-value">{receiptData.receipt}</span>
+                    <span className="receipt-value">{receiptData.receipt || 'N/A'}</span>
                   </div>
                   
                   <div className="receipt-row">
@@ -1046,6 +1103,27 @@ const PaymentManagement = () => {
                   )}
                 </div>
                 
+                <div className="receipt-signatures">
+                  <div className="signature-section">
+                    <p>Cashier</p>
+                    <div className="signature-line"></div>
+                  </div>
+                  
+                  {brandingData?.signatureUrl && (
+                    <div className="authorized-signature-section">
+                      <img src={brandingData.signatureUrl} alt="Authorized Signature" className="receipt-signature" />
+                      <p>Authorized Signature</p>
+                    </div>
+                  )}
+                  
+                  {brandingData?.stampUrl && (
+                    <div className="stamp-section">
+                      <img src={brandingData.stampUrl} alt="Official Stamp" className="receipt-stamp" />
+                      <p>Official Stamp</p>
+                    </div>
+                  )}
+                </div>
+                
                 <div className="receipt-footer">
                   <p>Thank you for your payment!</p>
                   <p className="receipt-note">This is an auto-generated receipt. No signature required.</p>
@@ -1055,7 +1133,55 @@ const PaymentManagement = () => {
               <div className="form-actions">
                 <button 
                   className="print-button"
-                  onClick={() => window.print()}
+                  onClick={() => {
+                    // Create a print-friendly version of the receipt
+                    const printWindow = window.open('', '_blank');
+                    const receiptContent = document.querySelector('.receipt-content');
+                    
+                    if (receiptContent) {
+                      const receiptHTML = receiptContent.innerHTML;
+                      
+                      printWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                          <title>Payment Receipt</title>
+                          <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            .receipt-content { max-width: 600px; margin: 0 auto; }
+                            .receipt-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; }
+                            .receipt-preview-logo { max-width: 200px; max-height: 100px; }
+                            .receipt-header-content { display: flex; align-items: center; justify-content: center; }
+                            .receipt-academy-info { text-align: center; margin-left: 15px; }
+                            .receipt-academy-name { margin: 0; font-size: 1.2em; }
+                            .receipt-academy-address { margin: 5px 0 0 0; }
+                            .receipt-title-preview { text-align: center; font-size: 1.4em; font-weight: bold; margin: 15px 0; }
+                            .receipt-details { margin: 20px 0; }
+                            .receipt-row { display: flex; justify-content: space-between; margin: 8px 0; }
+                            .receipt-label { font-weight: bold; }
+                            .receipt-amount { color: #27ae60; font-weight: bold; }
+                            .receipt-divider { height: 1px; background: #ccc; margin: 15px 0; }
+                            .receipt-signatures { display: flex; justify-content: space-between; margin: 30px 0; padding: 15px 0; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
+                            .signature-section, .stamp-section, .authorized-signature-section { text-align: center; }
+                            .receipt-signature, .receipt-stamp { max-width: 150px; max-height: 80px; }
+                            .signature-line { width: 100px; height: 1px; background: #000; margin: 20px auto; }
+                            .receipt-footer { text-align: center; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px; }
+                          </style>
+                        </head>
+                        <body>
+                          <div class="receipt-content">
+                            ${receiptHTML}
+                          </div>
+                        </body>
+                        </html>
+                      `);
+                      
+                      printWindow.document.close();
+                      printWindow.focus();
+                      printWindow.print();
+                      printWindow.close();
+                    }
+                  }}
                 >
                   Print Receipt
                 </button>

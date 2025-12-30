@@ -34,6 +34,7 @@ const Attendance = () => {
     contact: '',
     email: ''
   });
+  const [loading, setLoading] = useState(true); // Add loading state for skeleton loader
 
   // Load initial data
   useEffect(() => {
@@ -61,6 +62,8 @@ const Attendance = () => {
 
   const refreshData = async () => {
     try {
+      setLoading(true); // Set loading to true when starting to fetch data
+      
       // Load staff data
       const staffData = await dataManager.getStaff();
       setStaff(staffData);
@@ -75,6 +78,8 @@ const Attendance = () => {
       calculateSalaryData(staffData, staffAttendanceData);
     } catch (error) {
       console.error('Error loading data:', error);
+    } finally {
+      setLoading(false); // Set loading to false when data fetching is complete
     }
   };
   
@@ -518,6 +523,46 @@ const Attendance = () => {
       setSelectedClass('');
     }
   };
+  
+  if (loading) {
+    return (
+      <RootLayout>
+        <div className="attendance-container">
+          <div className="header">
+            <div className="header-content">
+              <div className="skeleton-header" style={{ width: '300px', height: '40px', marginBottom: '10px' }}></div>
+              <div className="skeleton-bar" style={{ width: '400px', height: '24px', marginTop: '10px' }}></div>
+            </div>
+            <div className="header-tabs">
+              <div className="tab-navigation">
+                <div className="skeleton-bar" style={{ width: '150px', height: '40px', marginRight: '10px' }}></div>
+                <div className="skeleton-bar" style={{ width: '150px', height: '40px' }}></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="date-selection">
+            <div className="date-picker-container">
+              <div className="skeleton-bar" style={{ width: '200px', height: '40px' }}></div>
+            </div>
+          </div>
+          
+          <div className="kpi-skeleton-grid">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="skeleton-card"></div>
+            ))}
+          </div>
+          
+          <div className="table-skeleton">
+            <div className="skeleton-header"></div>
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="skeleton-row"></div>
+            ))}
+          </div>
+        </div>
+      </RootLayout>
+    );
+  }
   
   return (
     <RootLayout>

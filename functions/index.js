@@ -7,7 +7,9 @@ admin.initializeApp();
 // Import cloud functions
 //const { sendWhatsAppFeeReminders } = require('./src/whatsappReminder');
 const { sendMonthlyEmailReport } = require('./src/monthlyEmailReport');
+const { deleteUnverifiedUsers } = require('./src/deleteUnverifiedUsers');
 
 // Export functions
 //exports.sendWhatsAppFeeReminders = sendWhatsAppFeeReminders;
 exports.sendMonthlyEmailReport = sendMonthlyEmailReport;
+exports.deleteUnverifiedUsers = deleteUnverifiedUsers;

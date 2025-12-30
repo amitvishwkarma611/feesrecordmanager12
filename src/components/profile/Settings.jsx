@@ -4,6 +4,7 @@ import { doc, setDoc, getDoc, onSnapshot, collection } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../firebase/firebaseConfig';
 import { getCurrentUserUID, isAuthenticated } from '../../utils/auth';
+import SkeletonLoader from '../common/SkeletonLoader';
 
 import './Settings.css';
 
@@ -647,12 +648,37 @@ const Settings = () => {
     }
   }, [primaryColor, accentColor, backgroundColor, sidebarGradient]);
 
-  // Render nothing until data is loaded to prevent flickering
+  // Render skeleton loader until data is loaded to prevent flickering
   if (!dataLoaded) {
     return (
       <div className="settings-container">
-        <div className="loading-indicator">
-          Loading settings...
+        <div className="settings-header">
+          <SkeletonLoader type="text" width="200px" height="32px" />
+          <SkeletonLoader type="text" width="400px" height="20px" />
+        </div>
+        
+        <div className="settings-section">
+          <SkeletonLoader type="text" width="300px" height="24px" />
+          <SkeletonLoader type="card" width="100%" height="120px" />
+          <SkeletonLoader type="card" width="100%" height="120px" />
+          <SkeletonLoader type="card" width="100%" height="120px" />
+        </div>
+        
+        <div className="settings-section">
+          <SkeletonLoader type="text" width="300px" height="24px" />
+          <SkeletonLoader type="card" width="100%" height="80px" />
+          <SkeletonLoader type="card" width="100%" height="80px" />
+          <SkeletonLoader type="card" width="100%" height="80px" />
+        </div>
+        
+        <div className="settings-section">
+          <SkeletonLoader type="text" width="300px" height="24px" />
+          <SkeletonLoader type="card" width="100%" height="80px" />
+          <SkeletonLoader type="card" width="100%" height="80px" />
+        </div>
+        
+        <div className="settings-footer">
+          <SkeletonLoader type="button" width="150px" height="40px" />
         </div>
       </div>
     );

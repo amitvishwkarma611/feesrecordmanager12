@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import dataManager from '../utils/dataManager';
 import { setStudentsList } from '../utils/dataStore';
+import SkeletonLoader from './common/SkeletonLoader';
 import '../styles/StudentManagement.css';
 
 const StudentManagement = () => {
@@ -45,9 +46,17 @@ const StudentManagement = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false); // Add this state for anti-double-submit
 
+  const [isLoading, setIsLoading] = useState(true);
+  
   // Load initial data
   useEffect(() => {
-    refreshData();
+    const loadData = async () => {
+      setIsLoading(true);
+      await refreshData();
+      setIsLoading(false);
+    };
+    
+    loadData();
   }, []);
 
   // Listen for storage changes to update data across components
@@ -626,22 +635,32 @@ const StudentManagement = () => {
             <h3>Student Overview</h3>
           </div>
           <div className="overview-content">
-            <div className="status-item total">
-              <div className="status-label">Total Students</div>
-              <div className="status-value">{stats.studentTotalStudents}</div>
-            </div>
-            <div className="status-item paid">
-              <div className="status-label">Fees Collected</div>
-              <div className="status-value">₹{stats.studentFeesCollected?.toLocaleString() || 0}</div>
-            </div>
-            <div className="status-item pending">
-              <div className="status-label">Pending Fees</div>
-              <div className="status-value">₹{stats.studentPendingFees?.toLocaleString() || 0}</div>
-            </div>
-            <div className="status-item overdue">
-              <div className="status-label">Overdue Fees</div>
-              <div className="status-value">₹{stats.overdueFees?.toLocaleString() || 0}</div>
-            </div>
+            {isLoading ? (
+              <div className="kpi-skeleton-grid">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="skeleton-card"></div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="status-item total">
+                  <div className="status-label">Total Students</div>
+                  <div className="status-value">{stats.studentTotalStudents}</div>
+                </div>
+                <div className="status-item paid">
+                  <div className="status-label">Fees Collected</div>
+                  <div className="status-value">₹{stats.studentFeesCollected?.toLocaleString() || 0}</div>
+                </div>
+                <div className="status-item pending">
+                  <div className="status-label">Pending Fees</div>
+                  <div className="status-value">₹{stats.studentPendingFees?.toLocaleString() || 0}</div>
+                </div>
+                <div className="status-item overdue">
+                  <div className="status-label">Overdue Fees</div>
+                  <div className="status-value">₹{stats.overdueFees?.toLocaleString() || 0}</div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -681,79 +700,89 @@ const StudentManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredStudents.map((student) => {
-                const totalFees = (student.feesPaid || 0) + (student.feesDue || 0);
-                const paymentPercentage = totalFees > 0 ? Math.round((student.feesPaid || 0) / totalFees * 100) : 0;
-                const paymentStatus = paymentPercentage === 100 ? 'paid' : paymentPercentage > 0 ? 'partial' : 'pending';
-                
-                return (
-                  <tr key={student.id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selectedStudents.includes(student.id)}
-                        onChange={() => handleSelectStudent(student.id)}
-                      />
-                    </td>
-                    <td>{student.studentId}</td>
-                    <td>{student.name}</td>
-                    <td>{student.class}</td>
-                    <td>{student.contact}</td>
-                    <td className="numeric">₹{student.feesPaid?.toLocaleString() || '0'}</td>
-                    <td className="numeric">₹{student.feesDue?.toLocaleString() || '0'}</td>
-                    <td>
-                      <span className={`status-badge status-${calculateStudentStatus(student).toLowerCase().replace(' ', '-')}`}>
-                        {
-                          calculateStudentStatus(student) === "Pending" 
-                            ? "⏳ Pending" 
-                            : calculateStudentStatus(student) === "Paid"
-                            ? "✔️ Paid"
-                            : "🆕 Not Started"
-                        }
-                      </span>
-                    </td>
-                    <td>
-                      <div className="progress-container">
-                        <div className="progress-bar">
-                          <div 
-                            className={`progress-fill ${paymentStatus}`}
-                            style={{ width: `${paymentPercentage}%` }}
-                          ></div>
+              {isLoading ? (
+                <div className="table-skeleton">
+                  <div className="skeleton-header"></div>
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="skeleton-row"></div>
+                  ))}
+                </div>
+              ) : filteredStudents.length === 0 ? (
+                <tr>
+                  <td colSpan="10" className="no-results">
+                    You haven't added any students yet. Start by adding your first student.
+                  </td>
+                </tr>
+              ) : (
+                // Actual student rows
+                filteredStudents.map((student) => {
+                  const totalFees = (student.feesPaid || 0) + (student.feesDue || 0);
+                  const paymentPercentage = totalFees > 0 ? Math.round((student.feesPaid || 0) / totalFees * 100) : 0;
+                  const paymentStatus = paymentPercentage === 100 ? 'paid' : paymentPercentage > 0 ? 'partial' : 'pending';
+                              
+                  return (
+                    <tr key={student.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selectedStudents.includes(student.id)}
+                          onChange={() => handleSelectStudent(student.id)}
+                        />
+                      </td>
+                      <td>{student.studentId}</td>
+                      <td>{student.name}</td>
+                      <td>{student.class}</td>
+                      <td>{student.contact}</td>
+                      <td className="numeric">₹{student.feesPaid?.toLocaleString() || '0'}</td>
+                      <td className="numeric">₹{student.feesDue?.toLocaleString() || '0'}</td>
+                      <td>
+                        <span className={`status-badge status-${calculateStudentStatus(student).toLowerCase().replace(' ', '-')}`}>
+                          {
+                            calculateStudentStatus(student) === "Pending" 
+                              ? "⏳ Pending" 
+                              : calculateStudentStatus(student) === "Paid"
+                              ? "✔️ Paid"
+                              : "🆕 Not Started"
+                          }
+                        </span>
+                      </td>
+                      <td>
+                        <div className="progress-container">
+                          <div className="progress-bar">
+                            <div 
+                              className={`progress-fill ${paymentStatus}`}
+                              style={{ width: `${paymentPercentage}%` }}
+                            ></div>
+                          </div>
+                          <div className="progress-text">{paymentPercentage}%</div>
                         </div>
-                        <div className="progress-text">{paymentPercentage}%</div>
-                      </div>
-                    </td>
-                    <td>
-                      <button 
-                        className="action-button view-button"
-                        onClick={() => handleViewProfile(student)}
-                      >
-                        View
-                      </button>
-                      <button 
-                        className="action-button edit-button"
-                        onClick={() => handleEditStudent(student)}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        className="action-button delete-button"
-                        onClick={() => handleDeleteStudent(student)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td>
+                        <button 
+                          className="action-button view-button"
+                          onClick={() => handleViewProfile(student)}
+                        >
+                          View
+                        </button>
+                        <button 
+                          className="action-button edit-button"
+                          onClick={() => handleEditStudent(student)}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          className="action-button delete-button"
+                          onClick={() => handleDeleteStudent(student)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
-          
-          {filteredStudents.length === 0 && (
-            <div className="no-results">
-              You haven't added any students yet. Start by adding your first student.
-            </div>
-          )}
         </div>
 
         {/* Add/Edit Student Form Modal */}

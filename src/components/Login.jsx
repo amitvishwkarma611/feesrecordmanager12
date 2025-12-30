@@ -14,6 +14,7 @@ import {
 } from 'firebase/auth';
 import { createUserProfile } from '../services/firebaseService';
 import { hasActiveSubscription, getSubscription, createSubscription } from '../services/subscriptionService';
+import SkeletonLoader from './common/SkeletonLoader';
 import './Login.css';
 
 const Login = () => {
