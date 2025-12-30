@@ -346,7 +346,12 @@ const AppContent = () => {
   if (authLoading) {
     return (
       <div className="app-loading">
-        <div className="loading-spinner">Loading...</div>
+        <div className="loading-spinner">
+          <div className="loading-logo">
+            <div className="loading-logo-inner"></div>
+          </div>
+          <div className="loading-spinner-text">Loading and checking access...</div>
+        </div>
       </div>
     );
   }

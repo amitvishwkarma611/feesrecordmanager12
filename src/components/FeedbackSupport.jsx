@@ -206,18 +206,17 @@ const FeedbackSupport = () => {
         
         {/* Page Header */}
         <div className="page-header">
-          <div className="header-navigation">
-            <button className="back-button" onClick={() => navigate(-1)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path></path>
-                <path></path>
-              </svg>
-              Back
-            </button>
+          <div className="header-content">
             <div className="header-text">
               <h1 className="page-title">Feedback & Support</h1>
               <p className="page-subtitle">We value your feedback and are here to help.</p>
             </div>
+            <button className="back-button" onClick={() => navigate(-1)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Back
+            </button>
           </div>
         </div>
         
@@ -225,7 +224,10 @@ const FeedbackSupport = () => {
           {/* Feedback Form Section */}
           <div className="form-section">
             <div className="form-card">
-              <h2 className="form-title">Share Your Experience</h2>
+              <div className="form-header">
+                <div className="form-icon">💬</div>
+                <h2 className="form-title">Share Your Experience</h2>
+              </div>
               
               <form onSubmit={submitFeedback} className="feedback-form">
                 {/* Experience Rating */}
@@ -271,13 +273,14 @@ const FeedbackSupport = () => {
                     placeholder="Tell us what you liked or what we can improve…"
                     className="form-textarea"
                     rows="4"
+                    required
                   />
                 </div>
                 
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={feedbackSubmitting}
+                  disabled={feedbackSubmitting || feedbackForm.rating === 0 || !feedbackForm.message.trim()}
                   className="submit-btn primary-btn"
                 >
                   {feedbackSubmitting ? 'Submitting...' : 'Submit Feedback'}
@@ -289,7 +292,10 @@ const FeedbackSupport = () => {
           {/* Support Form Section */}
           <div className="form-section">
             <div className="form-card">
-              <h2 className="form-title">Raise a Query</h2>
+              <div className="form-header">
+                <div className="form-icon">🎫</div>
+                <h2 className="form-title">Raise a Query</h2>
+              </div>
               
               <form onSubmit={submitSupportQuery} className="support-form">
                 {/* Query Category */}
@@ -312,7 +318,7 @@ const FeedbackSupport = () => {
                 
                 {/* Priority */}
                 <div className="form-group">
-                  <label className="form-label">Priority (Optional)</label>
+                  <label className="form-label">Priority</label>
                   <select
                     name="priority"
                     value={supportForm.priority}
@@ -349,6 +355,7 @@ const FeedbackSupport = () => {
                     onChange={handleSupportChange}
                     placeholder="your.email@example.com"
                     className="form-input"
+                    required
                   />
                 </div>
                 
@@ -385,12 +392,45 @@ const FeedbackSupport = () => {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={supportSubmitting}
+                  disabled={supportSubmitting || !supportForm.description.trim() || !supportForm.email.trim()}
                   className="submit-btn primary-btn"
                 >
                   {supportSubmitting ? 'Submitting...' : 'Submit Query'}
                 </button>
               </form>
+            </div>
+          </div>
+        </div>
+        
+        {/* Support Info Section */}
+        <div className="support-info-section">
+          <div className="support-info-card">
+            <div className="info-header">
+              <h3>Need Immediate Help?</h3>
+              <p>Our support team is here to assist you</p>
+            </div>
+            <div className="info-content">
+              <div className="contact-item">
+                <div className="contact-icon">📧</div>
+                <div className="contact-details">
+                  <h4>Email Support</h4>
+                  <p>support@victorypointacademy.edu</p>
+                </div>
+              </div>
+              <div className="contact-item">
+                <div className="contact-icon">⏰</div>
+                <div className="contact-details">
+                  <h4>Response Time</h4>
+                  <p>Within 24 hours</p>
+                </div>
+              </div>
+              <div className="contact-item">
+                <div className="contact-icon">🔄</div>
+                <div className="contact-details">
+                  <h4>Follow-up</h4>
+                  <p>Track your query status in your profile</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

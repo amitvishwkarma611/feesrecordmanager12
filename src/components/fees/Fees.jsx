@@ -1019,7 +1019,7 @@ const Fees = () => {
             
             <div class="signature-section">
               <div class="signature-box">
-                <div>Cashier Signature</div>
+                <div>Authorized Signature</div>
                 <div class="signature-line"></div>
               </div>
               <div class="signature-box">

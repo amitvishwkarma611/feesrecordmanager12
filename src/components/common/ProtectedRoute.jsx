@@ -53,7 +53,12 @@ const ProtectedRoute = ({ children }) => {
   if (!hasActiveSub && location.pathname !== '/subscribe') {
     return (
       <div className="app-loading">
-        <div className="loading-spinner">Redirecting to subscription page...</div>
+        <div className="loading-spinner">
+          <div className="loading-logo">
+            <div className="loading-logo-inner"></div>
+          </div>
+          <div className="loading-spinner-text">Redirecting to subscription page...</div>
+        </div>
       </div>
     );
   }

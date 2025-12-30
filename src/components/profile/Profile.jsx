@@ -47,6 +47,9 @@ const Profile = () => {
   });
 
   const [recentActivity, setRecentActivity] = useState([]);
+  
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [showAllFaqs, setShowAllFaqs] = useState(false);
 
   // Listen for Firebase auth state changes
   useEffect(() => {
@@ -567,6 +570,10 @@ const Profile = () => {
   const handleEditProfile = () => {
     alert('Opening profile edit modal... (This would open a form in a real app)');
   };
+  
+  const toggleFaq = (index) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
 
   if (loading) {
     return (
@@ -897,16 +904,85 @@ const Profile = () => {
       </div>
       
       <div className="profile-actions">
-        <button className="action-btn edit-btn" onClick={handleEditProfile}>
-          Edit Profile
-        </button>
-        
         <button className="action-btn contact-btn" onClick={handleContactSupport}>
           Contact Support
         </button>
         <button className="action-btn logout-btn" onClick={handleLogout}>
           Logout
         </button>
+      </div>
+      
+      {/* FAQ Section */}
+      <div className="faq-section">
+        <h3>Frequently Asked Questions</h3>
+        <div className="faq-item">
+          <div className={`faq-question ${openFaqIndex === 0 ? 'open' : ''}`} onClick={() => toggleFaq(0)}>
+            How do I update my profile information?
+            <span className="faq-toggle">{openFaqIndex === 0 ? '−' : '+'}</span>
+          </div>
+          {openFaqIndex === 0 && <div className="faq-answer">Your profile information is automatically synced with your Google account. Update your details there to reflect changes here.</div>}
+        </div>
+        <div className="faq-item">
+          <div className={`faq-question ${openFaqIndex === 1 ? 'open' : ''}`} onClick={() => toggleFaq(1)}>
+            How can I reset my password?
+            <span className="faq-toggle">{openFaqIndex === 1 ? '−' : '+'}</span>
+          </div>
+          {openFaqIndex === 1 && <div className="faq-answer">Click on the login page and select "Forgot Password" to reset your password via email.</div>}
+        </div>
+        
+        {/* Additional FAQ items that are shown when showAllFaqs is true */}
+        {showAllFaqs && (
+          <>
+            <div className="faq-item">
+              <div className={`faq-question ${openFaqIndex === 2 ? 'open' : ''}`} onClick={() => toggleFaq(2)}>
+                Can I export my data?
+                <span className="faq-toggle">{openFaqIndex === 2 ? '−' : '+'}</span>
+              </div>
+              {openFaqIndex === 2 && <div className="faq-answer">Yes, you can export your data from the dashboard by clicking the "Export" button in the top-right corner.</div>}
+            </div>
+            <div className="faq-item">
+              <div className={`faq-question ${openFaqIndex === 3 ? 'open' : ''}`} onClick={() => toggleFaq(3)}>
+                How do I add new students?
+                <span className="faq-toggle">{openFaqIndex === 3 ? '−' : '+'}</span>
+              </div>
+              {openFaqIndex === 3 && <div className="faq-answer">Navigate to the Students section and click the "Add Student" button to register new students.</div>}
+            </div>
+            <div className="faq-item">
+              <div className={`faq-question ${openFaqIndex === 4 ? 'open' : ''}`} onClick={() => toggleFaq(4)}>
+                How do I record fee payments?
+                <span className="faq-toggle">{openFaqIndex === 4 ? '−' : '+'}</span>
+              </div>
+              {openFaqIndex === 4 && <div className="faq-answer">Go to the Fees section and click "Add Payment" to record new fee payments for students.</div>}
+            </div>
+            <div className="faq-item">
+              <div className={`faq-question ${openFaqIndex === 5 ? 'open' : ''}`} onClick={() => toggleFaq(5)}>
+                Where can I view reports?
+                <span className="faq-toggle">{openFaqIndex === 5 ? '−' : '+'}</span>
+              </div>
+              {openFaqIndex === 5 && <div className="faq-answer">Access reports through the Dashboard section where you'll find various analytics and summaries.</div>}
+            </div>
+            <div className="faq-item">
+              <div className={`faq-question ${openFaqIndex === 6 ? 'open' : ''}`} onClick={() => toggleFaq(6)}>
+                How do I contact support?
+                <span className="faq-toggle">{openFaqIndex === 6 ? '−' : '+'}</span>
+              </div>
+              {openFaqIndex === 6 && <div className="faq-answer">Click the "Contact Support" button below or use the feedback form in the navigation menu.</div>}
+            </div>
+            <div className="faq-item">
+              <div className={`faq-question ${openFaqIndex === 7 ? 'open' : ''}`} onClick={() => toggleFaq(7)}>
+                What payment methods are accepted?
+                <span className="faq-toggle">{openFaqIndex === 7 ? '−' : '+'}</span>
+              </div>
+              {openFaqIndex === 7 && <div className="faq-answer">Our system supports various online payment methods including UPI, credit/debit cards, and net banking.</div>}
+            </div>
+          </>
+        )}
+        
+        <div className="faq-show-more">
+          <button className="show-more-btn" onClick={() => setShowAllFaqs(!showAllFaqs)}>
+            {showAllFaqs ? 'Show Less' : 'Show More FAQs'}
+          </button>
+        </div>
       </div>
       
       <div className="app-info">

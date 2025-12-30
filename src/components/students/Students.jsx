@@ -469,19 +469,33 @@ const Students = () => {
   };
 
   const exportStudents = () => {
+    // Determine which students to export
+    // If there are selected students (from bulk action), export those
+    // Otherwise export all filtered students
+    let studentsToExport = [];
+    if (selectedStudents && selectedStudents.length > 0) {
+      // Get the actual student objects based on selected IDs
+      studentsToExport = students.filter(student => 
+        selectedStudents.includes(student.id)
+      );
+    } else {
+      // Use filtered students if no specific selection
+      studentsToExport = filteredStudents;
+    }
+    
     const csvContent = [
-      ['Name', 'Class', 'Contact', 'Email', 'Address', 'Father Name', 'Mother Name', 'Total Fees', 'Fees Paid', 'Fees Due'],
-      ...filteredStudents.map(student => [
+      ['Name', 'Class', 'Contact', 'Address', 'Father Name', 'Mother Name', 'Total Fees', 'Fees Paid', 'Fees Due'],
+      ...studentsToExport.map(student => [
         student.name,
         student.class,
         student.contact || '',
-        student.email || '',
         student.address || '',
         student.fatherName || '',
         student.motherName || '',
-        student.totalFees || 0,
-        student.feesPaid || 0,
-        (student.totalFees || 0) - (student.feesPaid || 0)
+        student.totalFees ? `INR ${Number(student.totalFees).toLocaleString()}` : 'INR 0',
+        student.feesPaid ? `INR ${Number(student.feesPaid).toLocaleString()}` : 'INR 0',
+        student.totalFees && student.feesPaid ? 
+          `INR ${Number(student.totalFees - student.feesPaid).toLocaleString()}` : 'INR 0'
       ])
     ].map(row => row.join(',')).join('\n');
     
@@ -510,33 +524,86 @@ const Students = () => {
       doc.setFontSize(12);
       doc.text(`Generated on: ${date}`, 20, 30);
       
+      // Determine which students to export
+      // If there are selected students (from bulk action), export those
+      // Otherwise export all filtered students
+      let studentsToExport = [];
+      if (selectedStudents && selectedStudents.length > 0) {
+        // Get the actual student objects based on selected IDs
+        studentsToExport = students.filter(student => 
+          selectedStudents.includes(student.id)
+        );
+      } else {
+        // Use filtered students if no specific selection
+        studentsToExport = filteredStudents;
+      }
+      
       // Check if we have data to export
-      if (filteredStudents && filteredStudents.length > 0) {
-        // Prepare table data
-        const headers = [['Name', 'Class', 'Contact', 'Email', 'Total Fees', 'Fees Paid', 'Fees Due']];
+      if (studentsToExport && studentsToExport.length > 0) {
+        // Prepare table data - exclude email column
+        const headers = [['Name', 'Class', 'Contact', 'Total Fees', 'Fees Paid', 'Fees Due']];
         
-        // Map student data to table rows
-        const data = filteredStudents.map(student => [
+        // Map student data to table rows - format currency without Rupee symbol to avoid rendering issues
+        const data = studentsToExport.map(student => [
           student.name || 'N/A',
           student.class || 'N/A',
           student.contact || 'N/A',
-          student.email || 'N/A',
-          student.totalFees ? `₹${Number(student.totalFees).toLocaleString()}` : '₹0',
-          student.feesPaid ? `₹${Number(student.feesPaid).toLocaleString()}` : '₹0',
+          student.totalFees ? `INR ${Number(student.totalFees).toLocaleString()}` : 'INR 0',
+          student.feesPaid ? `INR ${Number(student.feesPaid).toLocaleString()}` : 'INR 0',
           student.totalFees && student.feesPaid ? 
-            `₹${Number(student.totalFees - student.feesPaid).toLocaleString()}` : '₹0'
+            `INR ${Number(student.totalFees - student.feesPaid).toLocaleString()}` : 'INR 0'
         ]);
         
-        // Add table using autotable
-        doc.autoTable({
-          head: headers,
-          body: data,
-          startY: 40,
-          styles: { fontSize: 10 },
-          headStyles: { fillColor: [52, 152, 219] }, // Blue header
-          alternateRowStyles: { fillColor: [240, 240, 240] }, // Light gray alternate rows
-          margin: { horizontal: 10 }
-        });
+        // Add table using autotable - ensure plugin is available
+        if (doc.autoTable) {
+          doc.autoTable({
+            head: headers,
+            body: data,
+            startY: 40,
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [52, 152, 219], fontSize: 10 }, // Blue header
+            alternateRowStyles: { fillColor: [240, 240, 240] }, // Light gray alternate rows
+            margin: { left: 5, right: 5 },
+            // Format the currency columns in the table
+            didParseCell: function(data) {
+              if (data.section === 'body') {
+                // Format currency values in the table
+                if (data.column.index >= 3 && data.column.index <= 5) { // Total Fees, Fees Paid, Fees Due columns (now shifted)
+                  const cellValue = data.cell.raw;
+                  if (typeof cellValue === 'string' && cellValue.startsWith('INR ')) {
+                    data.cell.text = [cellValue];
+                  }
+                }
+              }
+            },
+            columnStyles: {
+              0: { cellWidth: 'auto' }, // Name
+              1: { cellWidth: 'auto' }, // Class
+              2: { cellWidth: 'auto' }, // Contact
+              3: { cellWidth: 'auto' }, // Total Fees
+              4: { cellWidth: 'auto' }, // Fees Paid
+              5: { cellWidth: 'auto' }, // Fees Due
+            }
+          });
+        } else {
+          // Fallback: Add data manually if autoTable is not available
+          let yPosition = 40;
+          headers[0].forEach((header, index) => {
+            doc.text(header, 15 + (index * 30), yPosition);
+          });
+          yPosition += 10;
+          
+          data.forEach(row => {
+            row.forEach((cell, index) => {
+              doc.text(String(cell), 15 + (index * 30), yPosition);
+            });
+            yPosition += 10;
+            if (yPosition > 280) { // If we're near bottom of page, add new page
+              doc.addPage();
+              yPosition = 20;
+            }
+          });
+        }
       } else {
         doc.text('No student data available.', 20, 40);
       }

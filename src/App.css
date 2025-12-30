@@ -629,6 +629,27 @@ body {
   text-align: center;
   margin-top: 10px;
   animation: pulse 2s ease-in-out infinite;
+  /* Ensure no rotation animations */
+  transform: none !important;
+  rotate: none !important;
+  /* Prevent any transform inheritance */
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  -ms-transform: none !important;
+  -o-transform: none !important;
+}
+
+/* Additional protection: prevent rotation on all text elements in loading containers */
+.app-loading *,
+.loading-spinner * {
+  animation-play-state: running;
+  /* But prevent rotation */
+  transform: none !important;
+  rotate: none !important;
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  -ms-transform: none !important;
+  -o-transform: none !important;
 }
 
 @keyframes pulse {
@@ -655,6 +676,22 @@ body {
   justify-content: center;
   padding: 20px;
   text-align: center;
+}
+
+.loading-spinner-text {
+  margin-top: 10px;
+  font-size: 1.2rem;
+  color: #7f8c8d;
+  animation: none !important;
+  transform: none !important;
+  display: block;
+  /* Explicitly prevent rotation */
+  rotate: none !important;
+  /* Prevent any transform inheritance */
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  -ms-transform: none !important;
+  -o-transform: none !important;
 }
 
 /* Enhanced loading animation for subscribe page */

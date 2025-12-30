@@ -35,15 +35,16 @@
 
 .header-content {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-end;
+  align-items: flex-start;
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 15px;
 }
 
 .header-left {
-  flex: 1;
+  text-align: right;
+  margin-right: auto;
 }
 
 .header-right {
@@ -57,13 +58,15 @@
   font-weight: 700;
   position: relative;
   letter-spacing: -0.5px;
+  text-align: right;
 }
 
 .header-content h1::after {
   content: '';
   position: absolute;
   bottom: -12px;
-  left: 0;
+  right: 0;
+  left: auto;
   width: 80px;
   height: 4px;
   background: linear-gradient(90deg, var(--info-color), var(--info-color-darker));
@@ -76,6 +79,7 @@
   margin: 20px 0 0 0;
   font-weight: 400;
   opacity: 0.9;
+  text-align: right;
 }
 
 .month-selector {

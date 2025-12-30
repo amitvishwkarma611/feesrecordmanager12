@@ -1104,15 +1104,16 @@ const PaymentManagement = () => {
                 </div>
                 
                 <div className="receipt-signatures">
-                  <div className="signature-section">
-                    <p>Cashier</p>
-                    <div className="signature-line"></div>
-                  </div>
                   
-                  {brandingData?.signatureUrl && (
+                  {brandingData?.signatureUrl ? (
                     <div className="authorized-signature-section">
                       <img src={brandingData.signatureUrl} alt="Authorized Signature" className="receipt-signature" />
                       <p>Authorized Signature</p>
+                    </div>
+                  ) : (
+                    <div className="signature-section">
+                      <p>Authorized Signature</p>
+                      <div className="signature-line"></div>
                     </div>
                   )}
                   
@@ -1134,53 +1135,308 @@ const PaymentManagement = () => {
                 <button 
                   className="print-button"
                   onClick={() => {
-                    // Create a print-friendly version of the receipt
+                    // Create a print-friendly version of the receipt matching the live preview template
                     const printWindow = window.open('', '_blank');
-                    const receiptContent = document.querySelector('.receipt-content');
                     
-                    if (receiptContent) {
-                      const receiptHTML = receiptContent.innerHTML;
-                      
-                      printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                          <title>Payment Receipt</title>
-                          <style>
-                            body { font-family: Arial, sans-serif; margin: 20px; }
-                            .receipt-content { max-width: 600px; margin: 0 auto; }
-                            .receipt-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; }
-                            .receipt-preview-logo { max-width: 200px; max-height: 100px; }
-                            .receipt-header-content { display: flex; align-items: center; justify-content: center; }
-                            .receipt-academy-info { text-align: center; margin-left: 15px; }
-                            .receipt-academy-name { margin: 0; font-size: 1.2em; }
-                            .receipt-academy-address { margin: 5px 0 0 0; }
-                            .receipt-title-preview { text-align: center; font-size: 1.4em; font-weight: bold; margin: 15px 0; }
-                            .receipt-details { margin: 20px 0; }
-                            .receipt-row { display: flex; justify-content: space-between; margin: 8px 0; }
-                            .receipt-label { font-weight: bold; }
-                            .receipt-amount { color: #27ae60; font-weight: bold; }
-                            .receipt-divider { height: 1px; background: #ccc; margin: 15px 0; }
-                            .receipt-signatures { display: flex; justify-content: space-between; margin: 30px 0; padding: 15px 0; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
-                            .signature-section, .stamp-section, .authorized-signature-section { text-align: center; }
-                            .receipt-signature, .receipt-stamp { max-width: 150px; max-height: 80px; }
-                            .signature-line { width: 100px; height: 1px; background: #000; margin: 20px auto; }
-                            .receipt-footer { text-align: center; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px; }
-                          </style>
-                        </head>
-                        <body>
-                          <div class="receipt-content">
-                            ${receiptHTML}
+                    // Get all the receipt data to include in the print template
+                    const receiptNo = document.querySelector('.receipt-value')?.textContent || 'N/A';
+                    const receiptDate = document.querySelector('.receipt-value:nth-of-type(2)')?.textContent || 'N/A';
+                    const studentName = document.querySelector('.receipt-value:nth-of-type(3)')?.textContent || 'N/A';
+                    const studentId = document.querySelector('.receipt-value:nth-of-type(4)')?.textContent || 'N/A';
+                    const studentClass = document.querySelector('.receipt-value:nth-of-type(5)')?.textContent || 'N/A';
+                    const studentContact = document.querySelector('.receipt-value:nth-of-type(6)')?.textContent || 'N/A';
+                    const amountPaid = document.querySelector('.receipt-amount')?.textContent || 'N/A';
+                    const paymentMethod = document.querySelector('.receipt-value:nth-of-type(7)')?.textContent || 'N/A';
+                    const dueDate = document.querySelector('.receipt-value:nth-of-type(8)')?.textContent || 'N/A';
+                    const status = document.querySelector('.receipt-value:nth-of-type(9)')?.textContent || 'N/A';
+                    const description = document.querySelector('.receipt-value:nth-of-type(10)')?.textContent || 'N/A';
+                    
+                    // Get branding data
+                    const logoUrl = document.querySelector('.receipt-preview-logo') ? document.querySelector('.receipt-preview-logo').src : null;
+                    const firmName = document.querySelector('.receipt-academy-name')?.textContent || 'Academy Name';
+                    const firmAddress = document.querySelector('.receipt-academy-address')?.textContent || 'Academy Address';
+                    const signatureUrl = document.querySelector('.receipt-signature') ? document.querySelector('.receipt-signature').src : null;
+                    const stampUrl = document.querySelector('.receipt-stamp') ? document.querySelector('.receipt-stamp').src : null;
+                    
+                    printWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                      <head>
+                        <title>Payment Receipt</title>
+                        <style>
+                          @media print {
+                            @page { margin: 0.5cm; size: A4; }
+                            body { margin: 0.5cm; }
+                          }
+                          
+                          body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            max-width: 600px; 
+                            margin: 0 auto; 
+                            padding: 10px;
+                            color: var(--text-primary, #333);
+                            line-height: 1.3;
+                            font-size: 13px;
+                            position: relative;
+                          }
+                          
+                          .receipt-container {
+                            border: 1px solid var(--info-color, #3498db); /* Blue for neutral info */
+                            border-radius: 8px;
+                            padding: 15px;
+                            position: relative;
+                            background: white;
+                          }
+                          
+                          .receipt-header {
+                            text-align: center;
+                            margin-bottom: 15px;
+                            padding-bottom: 15px;
+                            border-bottom: 2px solid var(--info-color, #3498db);
+                          }
+                          
+                          .receipt-header-content {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin-bottom: 10px;
+                          }
+                          
+                          .receipt-preview-logo {
+                            max-width: 60px;
+                            max-height: 60px;
+                            margin-right: 15px;
+                          }
+                          
+                          .receipt-placeholder-logo {
+                            font-size: 2em;
+                            margin-right: 15px;
+                          }
+                          
+                          .receipt-academy-info {
+                            text-align: left;
+                          }
+                          
+                          .receipt-academy-name {
+                            margin: 0 0 5px 0;
+                            font-size: 1.3em;
+                            font-weight: bold;
+                            color: var(--primary-color, #2c3e50);
+                          }
+                          
+                          .receipt-academy-address {
+                            margin: 0;
+                            font-size: 0.9em;
+                            color: var(--text-secondary, #7f8c8d);
+                          }
+                          
+                          .receipt-title-preview {
+                            text-align: center;
+                            font-size: 1.4em;
+                            font-weight: bold;
+                            margin: 15px 0 10px 0;
+                            color: var(--success-color, #27ae60);
+                          }
+                          
+                          .receipt-details {
+                            margin: 15px 0;
+                          }
+                          
+                          .receipt-row {
+                            display: flex;
+                            justify-content: space-between;
+                            margin: 8px 0;
+                            padding: 4px 0;
+                          }
+                          
+                          .detail-item {
+                            display: flex;
+                            justify-content: space-between;
+                            margin: 6px 0;
+                          }
+                          
+                          .detail-label {
+                            font-weight: 600;
+                            color: var(--text-secondary, #7f8c8d);
+                            min-width: 120px;
+                          }
+                          
+                          .detail-value {
+                            font-weight: 500;
+                            color: var(--text-primary, #34495e);
+                            text-align: right;
+                            flex: 1;
+                          }
+                          
+                          .receipt-label {
+                            font-weight: 600;
+                            color: var(--text-secondary, #7f8c8d);
+                          }
+                          
+                          .receipt-value {
+                            font-weight: 500;
+                            color: var(--text-primary, #34495e);
+                            text-align: right;
+                          }
+                          
+                          .receipt-amount {
+                            color: var(--success-color, #27ae60);
+                            font-weight: bold;
+                          }
+                          
+                          .receipt-divider {
+                            height: 1px;
+                            background: var(--border-color, #e0e0e0);
+                            margin: 12px 0;
+                            border: none;
+                          }
+                          
+                          .receipt-signatures {
+                            display: flex;
+                            justify-content: space-between;
+                            margin: 25px 0 15px 0;
+                            padding: 15px 0;
+                            border-top: 1px solid var(--border-color, #e0e0e0);
+                            border-bottom: 1px solid var(--border-color, #e0e0e0);
+                          }
+                          
+                          .signature-section, .stamp-section, .authorized-signature-section {
+                            text-align: center;
+                            flex: 1;
+                          }
+                          
+                          .receipt-signature, .receipt-stamp {
+                            max-width: 120px;
+                            max-height: 60px;
+                            margin: 0 auto 5px;
+                          }
+                          
+                          .signature-line {
+                            width: 100px;
+                            height: 1px;
+                            background: #000;
+                            margin: 15px auto 5px;
+                          }
+                          
+                          .receipt-footer {
+                            text-align: center;
+                            margin-top: 15px;
+                            padding-top: 15px;
+                            border-top: 1px solid var(--border-color, #e0e0e0);
+                          }
+                          
+                          .receipt-note {
+                            font-style: italic;
+                            font-size: 0.85em;
+                            color: var(--text-secondary, #7f8c8d);
+                            margin-top: 5px;
+                          }
+                        </style>
+                      </head>
+                      <body>
+                        <div class="receipt-container">
+                          <div class="receipt-header">
+                            <div class="receipt-header-content">
+                              ${logoUrl ? `<img src="${logoUrl}" alt="Academy Logo" class="receipt-preview-logo" />` : `<div class="receipt-placeholder-logo">🏫</div>`}
+                              <div class="receipt-academy-info">
+                                <h4 class="receipt-academy-name">${firmName}</h4>
+                                <p class="receipt-academy-address">${firmAddress}</p>
+                              </div>
+                            </div>
+                            <div class="receipt-title-preview">Fee Receipt</div>
                           </div>
-                        </body>
-                        </html>
-                      `);
-                      
-                      printWindow.document.close();
-                      printWindow.focus();
-                      printWindow.print();
-                      printWindow.close();
-                    }
+                          
+                          <div class="receipt-details">
+                            <div class="detail-item">
+                              <span class="detail-label">Receipt No:</span>
+                              <span class="detail-value">${receiptNo}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Date:</span>
+                              <span class="detail-value">${receiptDate}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Student Name:</span>
+                              <span class="detail-value">${studentName}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Student ID:</span>
+                              <span class="detail-value">${studentId}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Class:</span>
+                              <span class="detail-value">${studentClass}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Contact:</span>
+                              <span class="detail-value">${studentContact}</span>
+                            </div>
+                            
+                            <div class="receipt-divider"></div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Amount Paid:</span>
+                              <span class="detail-value receipt-amount">${amountPaid}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Payment Method:</span>
+                              <span class="detail-value">${paymentMethod}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Due Date:</span>
+                              <span class="detail-value">${dueDate}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Status:</span>
+                              <span class="detail-value">${status}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                              <span class="detail-label">Description:</span>
+                              <span class="detail-value">${description}</span>
+                            </div>
+                          </div>
+                          
+                          <div class="receipt-signatures">
+                            
+                            ${signatureUrl ? `
+                            <div class="authorized-signature-section">
+                              <img src="${signatureUrl}" alt="Authorized Signature" class="receipt-signature" />
+                              <p>Authorized Signature</p>
+                            </div>` : `
+                            <div class="signature-section">
+                              <p>Authorized Signature</p>
+                              <div class="signature-line"></div>
+                            </div>`}
+                            
+                            ${stampUrl ? `
+                            <div class="stamp-section">
+                              <img src="${stampUrl}" alt="Official Stamp" class="receipt-stamp" />
+                              <p>Official Stamp</p>
+                            </div>` : ''}
+                          </div>
+                          
+                          <div class="receipt-footer">
+                            <p>Thank you for your payment!</p>
+                            <p class="receipt-note">This is an auto-generated receipt. No signature required.</p>
+                          </div>
+                        </div>
+                      </body>
+                      </html>
+                    `);
+                    
+                    printWindow.document.close();
+                    printWindow.focus();
+                    printWindow.print();
+                    printWindow.close();
                   }}
                 >
                   Print Receipt

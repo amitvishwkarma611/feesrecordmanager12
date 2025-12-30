@@ -316,35 +316,66 @@ const MonthlyExpenses = () => {
       doc.text(`Expense Report - ${selectedMonth}`, 20, 20);
       
       // Add date
-      const date = new Date().toLocaleDateString();
+      const date = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
       doc.setFontSize(12);
       doc.text(`Generated on: ${date}`, 20, 30);
       
       // Check if we have data to export
       if (filteredExpenses && filteredExpenses.length > 0) {
-        // Prepare table data
-        const headers = [['Date', 'Expense Name', 'Category', 'Amount', 'Payment Mode', 'Added By']];
+        // Prepare table data - remove Added By column
+        const headers = [['Date', 'Expense Name', 'Category', 'Amount', 'Payment Mode']];
         
         // Map expense data to table rows
         const data = filteredExpenses.map(expense => [
-          expense.date ? new Date(expense.date).toLocaleDateString() : 'N/A',
+          expense.date ? new Date(expense.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A',
           expense.name || 'N/A',
           getCategoryDisplayName(expense.category || 'miscellaneous'),
-          expense.amount ? `₹${Number(expense.amount).toLocaleString()}` : '₹0',
-          expense.paymentMode || 'N/A',
-          expense.addedBy || 'System'
+          expense.amount ? `INR ${Number(expense.amount).toLocaleString()}` : 'INR 0',
+          expense.paymentMode || 'N/A'
         ]);
         
-        // Add table using autotable
-        doc.autoTable({
-          head: headers,
-          body: data,
-          startY: 40,
-          styles: { fontSize: 10 },
-          headStyles: { fillColor: [52, 152, 219] }, // Blue header
-          alternateRowStyles: { fillColor: [240, 240, 240] }, // Light gray alternate rows
-          margin: { horizontal: 10 }
-        });
+        // Add table using autotable - ensure plugin is available
+        if (doc.autoTable) {
+          doc.autoTable({
+            head: headers,
+            body: data,
+            startY: 40,
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [52, 152, 219] }, // Blue header
+            alternateRowStyles: { fillColor: [240, 240, 240] }, // Light gray alternate rows
+            margin: { horizontal: 10 },
+            // Format the currency column in the table
+            didParseCell: function(data) {
+              if (data.section === 'body') {
+                // Format currency values in the table
+                if (data.column.index === 3) { // Amount column
+                  const cellValue = data.cell.raw;
+                  if (typeof cellValue === 'string' && cellValue.startsWith('INR ')) {
+                    data.cell.text = [cellValue];
+                  }
+                }
+              }
+            }
+          });
+        } else {
+          // Fallback: Add data manually if autoTable is not available
+          let yPosition = 40;
+          headers[0].forEach((header, index) => {
+            doc.text(header, 15 + (index * 35), yPosition);
+          });
+          yPosition += 10;
+          
+          data.forEach(row => {
+            row.forEach((cell, index) => {
+              doc.text(String(cell), 15 + (index * 35), yPosition);
+            });
+            yPosition += 10;
+            if (yPosition > 280) { // If we're near bottom of page, add new page
+              doc.addPage();
+              yPosition = 20;
+            }
+          });
+        }
       } else {
         doc.text('No expense data available for this period.', 20, 40);
       }
