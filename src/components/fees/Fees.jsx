@@ -1037,16 +1037,6 @@ const Fees = () => {
               <strong>Note:</strong> This is a computer-generated receipt and does not require a signature.
             </div>
             
-            <div class="signature-section">
-              <div class="signature-box">
-                <div>Authorized Signature</div>
-                <div class="signature-line"></div>
-              </div>
-              <div class="signature-box">
-                <div>Parent/Guardian</div>
-                <div class="signature-line"></div>
-              </div>
-            </div>
             
             <!-- Academy Signature and Stamp Section -->
             <div class="official-section">
@@ -1054,7 +1044,6 @@ const Fees = () => {
               <div class="official-content">
                 ${signatureUrl ? `
                 <div class="official-item">
-                  <div class="official-label">Authorized Signature:</div>
                   <img src="${signatureUrl}" alt="Authorized Signature" class="official-image signature-preview" />
                 </div>
                 ` : ''}

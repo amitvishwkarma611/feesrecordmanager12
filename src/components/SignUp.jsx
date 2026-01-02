@@ -402,6 +402,23 @@ const SignUp = () => {
                 I agree to the <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer">Terms and Conditions</a>
               </span>
             </label>
+            <button 
+              type="button" 
+              className="preview-button"
+              onClick={() => window.open('/terms-and-conditions', 'terms', 'width=800,height=600')}
+              style={{
+                marginTop: '10px',
+                padding: '8px 16px',
+                backgroundColor: '#3498db',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Preview Terms & Conditions
+            </button>
           </div>
           
           {error && <div className="error-message">{error}</div>}

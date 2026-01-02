@@ -1005,6 +1005,7 @@ const Dashboard = () => {
                       <button 
                         className="view-trend-button"
                         onClick={() => navigate('/collection-trend')}
+                        disabled
                         style={{ 
                           position: 'absolute',
                           top: '60px',
@@ -1018,7 +1019,9 @@ const Dashboard = () => {
                           height: '30px',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center'
+                          justifyContent: 'center',
+                          opacity: 0.6,
+                          cursor: 'not-allowed'
                         }}
                       >
                         <span>Trend</span>

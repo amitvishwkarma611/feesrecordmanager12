@@ -138,9 +138,10 @@ const BarChart = ({ data, width = "100%", height = 300 }) => {
               x={padding.left - 10}
               y={y + 4}
               textAnchor="end"
-              fontSize="14"  // Increased font size
-              fill="#6c757d"
+              fontSize="16"  // Increased font size for better visibility
+              fill="#495057"
               fontFamily="sans-serif"
+              fontWeight="500"
             >
               ₹{tick === 0 ? '0' : tick >= 1000 ? `${tick/1000}k` : tick}
             </text>
@@ -192,9 +193,10 @@ const BarChart = ({ data, width = "100%", height = 300 }) => {
                 x={groupX}
                 y={svgHeight - padding.bottom + 20}
                 textAnchor="middle"
-                fontSize="14"  // Increased font size
-                fill="#6c757d"
+                fontSize="16"  // Increased font size for better visibility
+                fill="#495057"
                 fontFamily="sans-serif"
+                fontWeight="500"
               >
                 {month.month.split(' ')[0]}
               </text>
@@ -204,7 +206,7 @@ const BarChart = ({ data, width = "100%", height = 300 }) => {
                   x={groupX}
                   y={svgHeight - padding.bottom + 35}
                   textAnchor="middle"
-                  fontSize="12"  // Increased font size
+                  fontSize="14"  // Increased font size for better visibility
                   fill="#1cc88a"
                   fontWeight="600"
                   fontFamily="sans-serif"

@@ -747,7 +747,7 @@ const Settings = () => {
             {/* Signature Upload */}
             <div className="setting-item">
               <div className="setting-info">
-                <h3>✍️ Authorized Signature</h3>
+                <h3>✍️ Signature</h3>
                 <p>Upload your authorized signature (PNG/JPG with transparent background preferred)</p>
                 <p style={{fontSize: '12px', color: '#7f8c8d', marginTop: '5px'}}>Used in receipts and payment slips</p>
               </div>
@@ -895,12 +895,12 @@ const Settings = () => {
                   <div className="signature-section-preview">
                     {signatureUrl ? (
                       <div className="signature-item">
-                        <div className="signature-label">Authorized Signature:</div>
+                        <div className="signature-label">Signature:</div>
                         <img src={signatureUrl} alt="Signature" className="signature-preview-img" />
                       </div>
                     ) : (
                       <div className="signature-item">
-                        <div className="signature-label">Authorized Signature:</div>
+                        <div className="signature-label">Signature:</div>
                         <div className="signature-placeholder">[Signature]</div>
                       </div>
                     )}

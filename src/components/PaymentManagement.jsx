@@ -8,6 +8,96 @@ import SkeletonLoader from './common/SkeletonLoader';
 import '../styles/PaymentManagement.css';
 
 const PaymentManagement = () => {
+  // Function to generate PDF receipt
+  const generatePDFReceipt = async (receiptData, brandingData) => {
+    try {
+      // Dynamically import jsPDF and jsPDF-autotable
+      const jsPDF = await import('jspdf');
+      const autoTable = await import('jspdf-autotable');
+      
+      const { jsPDF: JsPDF } = jsPDF;
+      
+      // Create a new PDF instance
+      const pdf = new JsPDF.default();
+      
+      // Add header with branding
+      if (brandingData?.logoUrl) {
+        try {
+          // Convert logo to base64 for PDF embedding
+          const logoResponse = await fetch(brandingData.logoUrl);
+          const logoBlob = await logoResponse.blob();
+          const logoBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(logoBlob);
+          });
+          
+          // Add logo to PDF
+          pdf.addImage(logoBase64, 'PNG', 15, 15, 30, 15);
+        } catch (e) {
+          console.warn('Could not load logo for PDF:', e);
+        }
+      }
+      
+      // Add firm name and address
+      pdf.setFontSize(16);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(brandingData?.firmName || 'Academy Name', 105, 15, { align: 'center' });
+      
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, 'normal');
+      pdf.text(brandingData?.firmAddress || 'Academy Address', 105, 22, { align: 'center' });
+      
+      // Add receipt title
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Fee Receipt', 105, 32, { align: 'center' });
+      
+      // Add receipt details table
+      const receiptDetails = [
+        ['Receipt No.', receiptData.id || 'N/A'],
+        ['Date', receiptData.date || new Date().toLocaleDateString()],
+        ['Student Name', receiptData.studentName || 'N/A'],
+        ['Student ID', receiptData.studentId || 'N/A'],
+        ['Class', receiptData.studentClass || 'N/A'],
+        ['Contact', receiptData.studentContact || 'N/A'],
+        ['Amount', `₹${receiptData.amount || '0'}`],
+        ['Method', receiptData.method || 'N/A'],
+        ['Due Date', receiptData.dueDate || 'N/A'],
+        ['Status', receiptData.status || 'N/A'],
+        ['Description', receiptData.description || 'N/A']
+      ];
+      
+      if (receiptData.amountInWords) {
+        receiptDetails.push(['Amount in Words', receiptData.amountInWords]);
+      }
+      
+      // Use autoTable to create a nicely formatted table
+      autoTable.autoTable(pdf, {
+        startY: 40,
+        head: [['Field', 'Value']],
+        body: receiptDetails,
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [52, 152, 219] }, // Blue header
+        margin: { left: 15, right: 15 }
+      });
+      
+      // Add thank you message
+      const finalY = pdf.lastAutoTable.finalY || 40;
+      pdf.setFont(undefined, 'italic');
+      pdf.text('Thank you for your payment!', 105, finalY + 15, { align: 'center' });
+      
+      pdf.setFont(undefined, 'normal');
+      pdf.text('This is an auto-generated receipt. No signature required.', 105, finalY + 20, { align: 'center' });
+      
+      // Save the PDF
+      pdf.save(`receipt-${receiptData.id || 'payment'}-${Date.now()}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
   const navigate = useNavigate();
   const [payments, setPayments] = useState([]);
   const [students, setStudents] = useState([]); // Add students state
@@ -1103,15 +1193,9 @@ const PaymentManagement = () => {
                 
                 <div className="receipt-signatures">
                   
-                  {brandingData?.signatureUrl ? (
+                  {brandingData?.signatureUrl && (
                     <div className="authorized-signature-section">
                       <img src={brandingData.signatureUrl} alt="Authorized Signature" className="receipt-signature" />
-                      <p>Authorized Signature</p>
-                    </div>
-                  ) : (
-                    <div className="signature-section">
-                      <p>Authorized Signature</p>
-                      <div className="signature-line"></div>
                     </div>
                   )}
                   
@@ -1130,6 +1214,15 @@ const PaymentManagement = () => {
               </div>
               
               <div className="form-actions">
+                <button 
+                  className="pdf-button"
+                  onClick={async () => {
+                    // Generate PDF receipt
+                    await generatePDFReceipt(receiptData, brandingData);
+                  }}
+                >
+                  Download PDF
+                </button>
                 <button 
                   className="print-button"
                   onClick={async () => {
@@ -1478,12 +1571,7 @@ const PaymentManagement = () => {
                             ${signatureUrl ? `
                             <div class="authorized-signature-section">
                               <img src="${signatureUrl}" alt="Authorized Signature" class="receipt-signature" />
-                              <p>Authorized Signature</p>
-                            </div>` : `
-                            <div class="signature-section">
-                              <p>Authorized Signature</p>
-                              <div class="signature-line"></div>
-                            </div>`}
+                            </div>` : ''}
                             
                             ${stampUrl ? `
                             <div class="stamp-section">
