@@ -701,7 +701,7 @@ const Settings = () => {
       {/* Academy Branding Section */}
       <div className={`settings-section ${!showBrandingSection ? 'collapsed' : ''}`}>
         <div className="section-header">
-          <h2>🏫 Academy Profile & Branding</h2>
+          <h2>Academy Profile & Branding</h2>
           <button 
             className="toggle-button"
             onClick={() => setShowBrandingSection(!showBrandingSection)}
@@ -812,7 +812,7 @@ const Settings = () => {
             <div className="setting-item form-group-row">
               <div className="form-group-col">
                 <div className="setting-info">
-                  <h3>🏫 Academy Name</h3>
+                  <h3>Academy Name</h3>
                   <p>Enter your academy or institution name</p>
                 </div>
                 <div className="firm-name-controls">
@@ -855,10 +855,8 @@ const Settings = () => {
                 <div className="preview-card receipt-preview-mini">
                 <div className="receipt-header-preview">
                   <div className="receipt-header-content">
-                    {logoUrl ? (
+                    {logoUrl && (
                       <img src={logoUrl} alt="Preview Logo" className="receipt-preview-logo" />
-                    ) : (
-                      <div className="receipt-placeholder-logo">🏫</div>
                     )}
                     <div className="receipt-academy-info">
                       <h4 className="receipt-academy-name">{tempFirmName || 'Academy Name'}</h4>

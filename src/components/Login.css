@@ -520,3 +520,90 @@
     font-size: 16px; /* Prevent zoom on iOS */
   }
 }
+
+/* Terms and Conditions Checkbox */
+.terms-and-conditions {
+  margin: 15px 0;
+  display: flex;
+  align-items: flex-start;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 20px;
+}
+
+.checkbox-container {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 20px;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: relative;
+  top: 2px;
+  left: 0;
+  height: 18px;
+  width: 18px;
+  background-color: #eee;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  background-color: #f5f5f5;
+  border-color: #667eea;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: #667eea;
+  border-color: #667eea;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.terms-text {
+  color: #34495e;
+  line-height: 1.4;
+}
+
+.terms-text a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.terms-text a:hover {
+  text-decoration: underline;
+  color: #764ba2;
+}

@@ -23,6 +23,7 @@ const SignUp = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const navigate = useNavigate();
   const emailRef = useRef();
   const passwordRef = useRef();
@@ -91,6 +92,24 @@ const SignUp = () => {
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       confirmPasswordRef.current?.focus();
+      setLoading(false);
+      return;
+    }
+
+    if (!phone.trim()) {
+      setError('Please enter your phone number');
+      setLoading(false);
+      return;
+    }
+
+    if (!firmName.trim()) {
+      setError('Please enter your firm or organization name');
+      setLoading(false);
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError('You must accept the Terms and Conditions to sign up');
       setLoading(false);
       return;
     }
@@ -346,28 +365,47 @@ const SignUp = () => {
           </div>
           
           <div className="input-group">
-            <label htmlFor="phone">Phone Number</label>
+            <label htmlFor="phone">Phone Number *</label>
             <input
               type="tel"
               id="phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Enter your phone number"
+              required
             />
           </div>
           
           <div className="input-group">
-            <label htmlFor="firmName">Firm/Organization Name</label>
+            <label htmlFor="firmName">Firm/Organization Name *</label>
             <input
               type="text"
               id="firmName"
               value={firmName}
               onChange={(e) => setFirmName(e.target.value)}
               placeholder="Enter your firm or organization name"
+              required
             />
           </div>
           
+          <div className="terms-and-conditions">
+            <label className="checkbox-container">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                required
+              />
+              <span className="checkmark"></span>
+              <span className="terms-text">
+                I agree to the <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer">Terms and Conditions</a>
+              </span>
+            </label>
+          </div>
+          
           {error && <div className="error-message">{error}</div>}
+          
           
           <button 
             type="submit" 

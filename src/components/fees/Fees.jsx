@@ -699,134 +699,150 @@ const Fees = () => {
             }
             
             .school-logo {
-              font-size: 20px;
+              max-width: 60px;
+              max-height: 60px;
+              width: auto;
               margin-bottom: 8px;
-              color: var(--info-color); /* Blue for neutral info */
-}
+              vertical-align: middle;
+            }
+            
+            .header-content {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 15px;
+              margin-bottom: 10px;
+            }
+            
+            .school-info {
+              display: flex;
+              flex-direction: column;
+              text-align: center;
+            }
 
-.school-name {
-  font-size: 20px;
-  font-weight: bold;
-  color: var(--info-color-darker);
-  margin: 2px 0;
-}
+            .school-name {
+              font-size: 20px;
+              font-weight: bold;
+              color: var(--info-color-darker);
+              margin: 2px 0;
+            }
 
-.school-address {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  font-weight: 500;
-}
+            .school-address {
+              font-size: 13px;
+              color: var(--text-secondary);
+              margin-bottom: 8px;
+              font-weight: 500;
+            }
 
-.receipt-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: var(--danger-color); /* Red for alert/drop */
-  margin: 10px 0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+            .receipt-title {
+              font-size: 18px;
+              font-weight: bold;
+              color: var(--danger-color); /* Red for alert/drop */
+              margin: 10px 0;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              background: linear-gradient(90deg, var(--info-color), var(--info-color-darker));
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              background-clip: text;
+            }
 
-.receipt-details {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-bottom: 15px;
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
+            .receipt-details {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 10px;
+              margin-bottom: 15px;
+              background: #f8f9fa;
+              padding: 15px;
+              border-radius: 8px;
+              border: 1px solid #e9ecef;
+            }
 
-.detail-item {
-  display: flex;
-  flex-direction: column;
-  padding: 5px 0;
-}
+            .detail-item {
+              display: flex;
+              flex-direction: column;
+              padding: 5px 0;
+            }
 
-.detail-label {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 3px;
-  font-weight: 600;
-}
+            .detail-label {
+              font-size: 12px;
+              color: var(--text-secondary);
+              margin-bottom: 3px;
+              font-weight: 600;
+            }
 
-.detail-value {
-  font-weight: 700;
-  color: var(--info-color-darker); /* Blue for neutral info */
-  font-size: 14px;
-  background: white;
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid #e9ecef;
-}
+            .detail-value {
+              font-weight: 700;
+              color: var(--info-color-darker); /* Blue for neutral info */
+              font-size: 14px;
+              background: white;
+              padding: 3px 8px;
+              border-radius: 4px;
+              border: 1px solid #e9ecef;
+            }
 
-.amount-section {
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  padding: 15px;
-  border-radius: 8px;
-  margin: 15px 0;
-  border: 1px solid #dee2e6;
-}
+            .amount-section {
+              background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+              padding: 15px;
+              border-radius: 8px;
+              margin: 15px 0;
+              border: 1px solid #dee2e6;
+            }
 
-.amount-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 5px;
-}
+            .amount-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 5px;
+            }
 
-.amount-row.total {
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
-  font-size: 16px;
-  padding-top: 8px;
-  border-top: 2px solid var(--info-color);
-  margin-top: 8px;
-  color: var(--info-color-darker);
-}
+            .amount-row.total {
+              display: flex;
+              justify-content: space-between;
+              font-weight: bold;
+              font-size: 16px;
+              padding-top: 8px;
+              border-top: 2px solid var(--info-color);
+              margin-top: 8px;
+              color: var(--info-color-darker);
+            }
 
-.amount-in-words {
-  margin: 15px 0;
-  padding: 10px;
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-  border-radius: 6px;
-  font-style: italic;
-  font-weight: 500;
-  border: 1px solid #90caf9;
-  text-align: center;
-  color: #1976d2;
-  font-size: 12px;
-}
+            .amount-in-words {
+              margin: 15px 0;
+              padding: 10px;
+              background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+              border-radius: 6px;
+              font-style: italic;
+              font-weight: 500;
+              border: 1px solid #90caf9;
+              text-align: center;
+              color: #1976d2;
+              font-size: 12px;
+            }
 
-.signature-section {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 25px;
-  padding-top: 15px;
-  border-top: 1px dashed var(--info-color);
-}
+            .signature-section {
+              display: flex;
+              justify-content: space-between;
+              margin-top: 25px;
+              padding-top: 15px;
+              border-top: 1px dashed var(--info-color);
+            }
 
-.signature-box {
-  text-align: center;
-  width: 45%;
-  background: #f8f9fa;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
-}
+            .signature-box {
+              text-align: center;
+              width: 45%;
+              background: #f8f9fa;
+              padding: 10px;
+              border-radius: 6px;
+              border: 1px solid #e9ecef;
+            }
 
-.signature-line {
-  margin-top: 25px;
-  border-top: 1px solid var(--text-primary);
-  padding-top: 5px;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
+            .signature-line {
+              margin-top: 25px;
+              border-top: 1px solid var(--text-primary);
+              padding-top: 5px;
+              color: var(--text-secondary);
+              font-size: 12px;
+            }
 
 /* Official Section for Signature and Stamp */
 .official-section {
@@ -928,9 +944,13 @@ const Fees = () => {
         <body>
           <div class="receipt-container">
             <div class="receipt-header">
-              <div class="school-logo">🏫</div>
-              <div class="school-name">${firmName}</div>
-              <div class="school-address">${firmAddress}</div>
+              <div class="header-content">
+                ${logoUrl ? `<img src="${logoUrl}" alt="School Logo" class="school-logo" />` : ''}
+                <div class="school-info">
+                  <div class="school-name">${firmName}</div>
+                  <div class="school-address">${firmAddress}</div>
+                </div>
+              </div>
               <div class="receipt-title">Fee Receipt</div>
             </div>
             

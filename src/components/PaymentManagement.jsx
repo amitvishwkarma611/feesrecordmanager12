@@ -1023,10 +1023,8 @@ const PaymentManagement = () => {
               <div className="receipt-content">
                 <div className="receipt-header">
                   <div className="receipt-header-content">
-                    {brandingData?.logoUrl ? (
+                    {brandingData?.logoUrl && (
                       <img src={brandingData.logoUrl} alt="Academy Logo" className="receipt-preview-logo" />
-                    ) : (
-                      <div className="receipt-placeholder-logo">🏫</div>
                     )}
                     <div className="receipt-academy-info">
                       <h4 className="receipt-academy-name">{brandingData?.firmName || 'Academy Name'}</h4>
@@ -1134,7 +1132,7 @@ const PaymentManagement = () => {
               <div className="form-actions">
                 <button 
                   className="print-button"
-                  onClick={() => {
+                  onClick={async () => {
                     // Create a print-friendly version of the receipt matching the live preview template
                     const printWindow = window.open('', '_blank');
                     
@@ -1152,11 +1150,50 @@ const PaymentManagement = () => {
                     const description = document.querySelector('.receipt-value:nth-of-type(10)')?.textContent || 'N/A';
                     
                     // Get branding data
-                    const logoUrl = document.querySelector('.receipt-preview-logo') ? document.querySelector('.receipt-preview-logo').src : null;
-                    const firmName = document.querySelector('.receipt-academy-name')?.textContent || 'Academy Name';
-                    const firmAddress = document.querySelector('.receipt-academy-address')?.textContent || 'Academy Address';
-                    const signatureUrl = document.querySelector('.receipt-signature') ? document.querySelector('.receipt-signature').src : null;
-                    const stampUrl = document.querySelector('.receipt-stamp') ? document.querySelector('.receipt-stamp').src : null;
+                    const logoUrl = brandingData?.logoUrl || null;
+                    const firmName = brandingData?.firmName || 'Academy Name';
+                    const firmAddress = brandingData?.firmAddress || 'Academy Address';
+                    const signatureUrl = brandingData?.signatureUrl || null;
+                    const stampUrl = brandingData?.stampUrl || null;
+                    
+                    // Function to convert image to base64 to ensure it's embedded in print
+                    function convertImageToBase64(imageUrl) {
+                      return new Promise((resolve) => {
+                        if (!imageUrl) {
+                          resolve(null);
+                          return;
+                        }
+                        
+                        const img = new Image();
+                        img.crossOrigin = 'Anonymous';
+                        img.src = imageUrl;
+                        
+                        img.onload = function() {
+                          try {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = this.width;
+                            canvas.height = this.height;
+                            ctx.drawImage(this, 0, 0);
+                            const dataURL = canvas.toDataURL('image/png');
+                            resolve(dataURL);
+                          } catch (e) {
+                            console.error('Error converting image to base64:', e);
+                            resolve(imageUrl); // fallback to original URL
+                          }
+                        };
+                        
+                        img.onerror = function() {
+                          resolve(imageUrl); // fallback to original URL
+                        };
+                      });
+                    }
+                    
+                    // Convert logo to base64 to ensure it prints properly
+                    let logoBase64Url = null;
+                    if (brandingData?.logoUrl) {
+                      logoBase64Url = await convertImageToBase64(brandingData.logoUrl);
+                    }
                     
                     printWindow.document.write(`
                       <!DOCTYPE html>
@@ -1167,6 +1204,28 @@ const PaymentManagement = () => {
                           @media print {
                             @page { margin: 0.5cm; size: A4; }
                             body { margin: 0.5cm; }
+                            
+                            /* Ensure images are visible in print */
+                            img {
+                              -webkit-print-color-adjust: exact;
+                              color-adjust: exact;
+                              print-color-adjust: exact;
+                              max-height: 60px;
+                              width: auto;
+                              display: block !important;
+                              visibility: visible !important;
+                              opacity: 1 !important;
+                            }
+                            
+                            .receipt-preview-logo {
+                              max-width: 60px;
+                              max-height: 60px;
+                              width: auto;
+                              margin-right: 15px;
+                              display: block !important;
+                              visibility: visible !important;
+                              opacity: 1 !important;
+                            }
                           }
                           
                           body { 
@@ -1331,13 +1390,22 @@ const PaymentManagement = () => {
                             color: var(--text-secondary, #7f8c8d);
                             margin-top: 5px;
                           }
+                                                    
+                          /* Ensure logo is visible during printing */
+                          .receipt-preview-logo {
+                            display: block !important;
+                            visibility: visible !important;
+                            opacity: 1 !important;
+                            max-height: 60px !important;
+                            width: auto !important;
+                          }
                         </style>
                       </head>
                       <body>
                         <div class="receipt-container">
                           <div class="receipt-header">
                             <div class="receipt-header-content">
-                              ${logoUrl ? `<img src="${logoUrl}" alt="Academy Logo" class="receipt-preview-logo" />` : `<div class="receipt-placeholder-logo">🏫</div>`}
+                              ${logoBase64Url ? `<img src="${logoBase64Url}" alt="Academy Logo" class="receipt-preview-logo" />` : ''}
                               <div class="receipt-academy-info">
                                 <h4 class="receipt-academy-name">${firmName}</h4>
                                 <p class="receipt-academy-address">${firmAddress}</p>
