@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import dataManager from '../../utils/dataManager';
 import { getStudents, getPayments, addPayment, updatePayment, deletePayment } from '../../services/firebaseService';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/firebaseConfig';
 import { getCurrentUserUID, isAuthenticated } from '../../utils/auth';
 import RootLayout from '../common/RootLayout';
@@ -637,11 +637,27 @@ const Fees = () => {
       // Create a new PDF instance
       const pdf = new JsPDF.default();
       
-      // Get branding data
-      const brandingData = {
-        firmName: firmName,
-        firmAddress: firmAddress,
-        logoUrl: logoUrl
+      // Get current branding data from Firestore
+      let brandingData = {
+        firmName: 'Your Academy',
+        firmAddress: 'Chinchpada, Airoli, Navi Mumbai - 400708',
+        logoUrl: ''
+      };
+      
+      try {
+        const brandingRef = doc(db, 'users', getCurrentUserUID(), 'settings', 'branding');
+        const brandingDoc = await getDoc(brandingRef);
+        
+        if (brandingDoc.exists()) {
+          const data = brandingDoc.data();
+          brandingData = {
+            firmName: data.firmName || 'Your Academy',
+            firmAddress: data.firmAddress || 'Chinchpada, Airoli, Navi Mumbai - 400708',
+            logoUrl: data.logoUrl || ''
+          };
+        }
+      } catch (error) {
+        console.warn('Could not load branding data, using defaults:', error);
       };
       
       // Add header with branding

@@ -271,24 +271,26 @@ const StudentDetails = () => {
     navigate('/students', { state: { editingStudent: student } });
   };
 
-  const handlePrint = () => {
-    // Create a print-specific version of the student profile with watermark
+  const handlePrint = async () => {
+    // Check if on mobile device
+    const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile devices, generate PDF using jsPDF
+      await generatePDFProfile(student, firmName);
+      return;
+    }
+    
+    // For desktop, use the existing print functionality
     const printContent = document.querySelector('.student-profile-card');
     if (!printContent) {
       console.error('Print content not found');
       return;
     }
     
-    // Check if on mobile device
-    const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    // Create print window (handle mobile compatibility)
+    // Create print window
     let printWindow;
     try {
-      // For mobile devices, always use iframe approach to avoid popup blockers
-      if (isMobile) {
-        throw new Error('Force iframe approach on mobile');
-      }
       printWindow = window.open('', '_blank');
       
       // Create comprehensive print styles
@@ -578,14 +580,8 @@ const StudentDetails = () => {
               // Add delay to ensure content renders before printing
               setTimeout(() => {
                 window.print();
-                // Don't close the window automatically on mobile to allow user control
-                if (window.innerWidth <= 768) {
-                  // On mobile, let user close the window themselves
-                  document.body.innerHTML = '<div style="text-align: center; padding: 20px;"><h2>Print dialog opened. Please use the print button in your browser to print the document.</h2><p><button onclick="window.close()">Close Window</button></p></div>';
-                } else {
-                  // On desktop, close after printing
-                  window.close();
-                }
+                // Close after printing on desktop
+                window.close();
               }, 500);
             </script>
           </body>
@@ -594,340 +590,158 @@ const StudentDetails = () => {
       
       printWindow.document.close();
     } catch (error) {
-      // Fallback for mobile browsers that block window.open
-      console.warn('Popup blocked or not supported. Using fallback method.', error);
+      console.error('Error creating print window:', error);
+    }
+  };
+  
+  // Generate PDF profile for mobile devices
+  const generatePDFProfile = async (student, firmName) => {
+    try {
+      // Dynamically import jsPDF and jsPDF-autotable
+      const jsPDF = await import('jspdf');
+      const autoTable = await import('jspdf-autotable');
       
-      // Create a temporary iframe for printing
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'absolute';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = 'none';
-      iframe.style.left = '-9999px';
-      iframe.style.opacity = '0';
-      iframe.style.zIndex = '-1';
-      iframe.style.overflow = 'hidden';
-      document.body.appendChild(iframe);
+      const { jsPDF: JsPDF } = jsPDF;
       
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      // Create a new PDF instance
+      const pdf = new JsPDF.default();
       
-      // Create comprehensive print styles
-      const printStyles = `
-        <style>
-          @media print {
-            @page { 
-              size: A4; 
-              margin: 1cm; 
-            }
-            body { 
-              margin: 0; 
-              padding: 0; 
-              font-family: 'Times New Roman', serif; 
-              color: black; 
-            }
-            .student-profile-card { 
-              max-width: 90%; 
-              margin: 0 auto; 
-              padding: 15px; 
-              box-shadow: none; 
-              background: white; 
-              font-size: 11px; /* Professional font size */
-            }
-            .photo-upload-section { 
-              display: none; 
-            }
-            .upload-photo-btn { 
-              display: none; 
-            }
-            .upload-success-message { 
-              display: none; 
-            }
-            .watermark-container {
-              position: fixed;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%) rotate(-45deg);
-              pointer-events: none;
-              z-index: 1000;
-              opacity: 0.05;
-              font-size: 5em;
-              color: #cccccc;
-              font-weight: bold;
-              text-align: center;
-            }
-            .student-photo-preview {
-              width: 120px;
-              height: 120px;
-              object-fit: cover;
-              border-radius: 8px;
-              margin-bottom: 10px;
-              display: block;
-              border: 1px solid #ddd;
-            }
-            .photo-preview img {
-              width: 120px;
-              height: 120px;
-              object-fit: cover;
-              border-radius: 8px;
-            }
-            .student-header {
-              display: flex;
-              align-items: flex-start;
-              gap: 20px;
-              margin-bottom: 20px;
-              padding-bottom: 15px;
-              border-bottom: 2px solid #4e73df; /* Professional border */
-            }
-            .student-basic-info {
-              flex: 1;
-            }
-            .student-basic-info h2 {
-              margin: 0 0 8px 0;
-              font-size: 18px;
-              color: #2c3e50;
-              font-weight: bold;
-              text-transform: uppercase;
-            }
-            .student-id, .student-class {
-              font-size: 12px;
-              margin: 4px 0;
-              font-weight: bold;
-            }
-            .summary-cards {
-              display: grid;
-              grid-template-columns: repeat(4, 1fr);
-              gap: 10px;
-              margin-bottom: 20px;
-            }
-            .summary-card {
-              padding: 12px;
-              border: 1px solid #ddd;
-              border-radius: 6px;
-              margin-bottom: 0;
-              background: #f8f9fa;
-            }
-            .summary-card-title {
-              font-size: 10px;
-              margin-bottom: 5px;
-              color: #495057;
-              font-weight: bold;
-            }
-            .summary-card-value {
-              font-size: 14px;
-              font-weight: bold;
-              color: #2c3e50;
-            }
-            .payment-progress-section {
-              margin-bottom: 20px;
-              padding: 15px;
-              border: 1px solid #ddd;
-              border-radius: 6px;
-              background: #f8f9fa;
-            }
-            .payment-progress-section h3 {
-              font-size: 14px;
-              margin: 0 0 12px 0;
-              color: #2c3e50;
-              font-weight: bold;
-            }
-            .progress-container {
-              display: flex;
-              flex-direction: column;
-              gap: 6px;
-            }
-            .progress-bar {
-              height: 12px;
-              background-color: #e9ecef;
-              border-radius: 6px;
-              overflow: hidden;
-            }
-            .progress-fill {
-              height: 100%;
-              background: linear-gradient(90deg, #4e73df, #224abe);
-              border-radius: 6px;
-            }
-            .progress-text {
-              font-size: 11px;
-              font-weight: bold;
-              color: #495057;
-            }
-            .personal-info-section, .system-info-section {
-              margin-bottom: 20px;
-              border: 1px solid #ddd;
-              border-radius: 6px;
-              page-break-inside: avoid;
-            }
-            .personal-info-section h3, .system-info-section h3 {
-              padding: 12px 15px;
-              margin: 0;
-              font-size: 14px;
-              background: #4e73df;
-              color: white;
-            }
-            .personal-info-content, .system-info-content {
-              padding: 15px;
-            }
-            .info-category {
-              margin-bottom: 15px;
-            }
-            .info-category h4 {
-              font-size: 12px;
-              margin: 0 0 10px 0;
-              color: #2c3e50;
-              font-weight: bold;
-              border-bottom: 1px solid #dee2e6;
-              padding-bottom: 5px;
-            }
-            .student-details-grid, .contact-info-grid, .family-info-grid, .system-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 15px;
-              margin-bottom: 10px;
-            }
-            .student-detail-item, .contact-detail-item, .family-detail-item, .system-item {
-              margin-bottom: 10px;
-              page-break-inside: avoid;
-            }
-            .student-detail-item label, .contact-detail-item label, .family-detail-item label, .system-item label {
-              display: block;
-              font-weight: bold;
-              margin-bottom: 3px;
-              font-size: 10px;
-              color: #495057;
-            }
-            .student-detail-item span, .contact-detail-item span, .family-detail-item span, .system-item span {
-              display: block;
-              padding: 6px;
-              background: #ffffff;
-              border-radius: 4px;
-              font-size: 11px;
-              border: 1px solid #dee2e6;
-              min-height: 20px;
-            }
-            .payments-table {
-              overflow-x: auto;
-              margin-top: 10px;
-            }
-            .payments-table table {
-              width: 100%;
-              border-collapse: collapse;
-            }
-            .payments-table th,
-            .payments-table td {
-              padding: 8px;
-              text-align: left;
-              border: 1px solid #dee2e6;
-              font-size: 10px;
-            }
-            .payments-table th {
-              background-color: #e9ecef;
-              font-weight: bold;
-              color: #495057;
-            }
-            .payments-table tr:nth-child(even) {
-              background-color: #f8f9fa;
-            }
-            .status-badge {
-              padding: 4px 8px;
-              border-radius: 4px;
-              font-size: 9px;
-              font-weight: bold;
-            }
-            .status-paid {
-              background: #d4edda;
-              color: #155724;
-            }
-            .status-pending {
-              background: #fff3cd;
-              color: #856404;
-            }
-            .status-overdue {
-              background: #f8d7da;
-              color: #721c24;
-            }
-            .status-not-started {
-              background: #d1ecf1;
-              color: #0c5460;
-            }
-            .print-only {
-              display: block !important;
-            }
-            /* Ensure single page layout */
-            .student-profile-card {
-              display: block;
-              width: 100%;
-              overflow: hidden;
-            }
-            .details-section {
-              page-break-inside: avoid;
-              margin-bottom: 20px;
-            }
-          }
-          @media screen {
-            .print-only {
-              display: none;
-            }
-          }
-        </style>
-      `;
+      // Calculate values
+      const totalFees = parseFloat(student.totalFees) || 0;
+      const feesPaid = parseFloat(student.feesPaid) || 0;
+      const pendingFees = totalFees - feesPaid;
+      const paymentProgress = totalFees > 0 ? Math.round((feesPaid / totalFees) * 100) : 0;
       
-      // Create watermark container
-      const watermarkHtml = `
-        <div class="watermark-container">
-          ${firmName}
-        </div>
-      `;
+      // Add header with firm name
+      pdf.setFontSize(16);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(firmName, 105, 15, { align: 'center' });
       
-      // Write print content with watermark and styles
-      iframeDoc.open();
-      iframeDoc.write(`
-        <html>
-          <head>
-            <title>Student Profile - ${student.name}</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            ${printStyles}
-          </head>
-          <body>
-            ${watermarkHtml}
-            <div class="student-profile-card">
-              ${printContent.innerHTML}
-            </div>
-          </body>
-        </html>
-      `);
-      iframeDoc.close();
+      // Add student profile title
+      pdf.setFontSize(18);
+      pdf.setTextColor(220, 53, 69); // Red color
+      pdf.text('Student Profile', 105, 25, { align: 'center' });
       
-      // Wait for iframe to load before printing
-      iframe.onload = function() {
-        try {
-          // Focus the iframe and print
-          iframe.contentWindow.focus();
-          setTimeout(() => {
-            iframe.contentWindow.print();
-            
-            // Clean up after printing
-            setTimeout(() => {
-              if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe);
-              }
-            }, 1000);
-          }, 500);
-        } catch (printError) {
-          console.error('Error during iframe printing:', printError);
-          // Clean up in case of error
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-        }
-      };
+      // Add student basic info
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'normal');
+      pdf.setTextColor(0, 0, 0); // Black color
       
-      // Also handle error case
-      iframe.onerror = function() {
-        console.error('Iframe loading error');
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
-        }
-      };
+      pdf.text(`Student Name: ${student.name || 'N/A'}`, 20, 35);
+      pdf.text(`Student ID: ${student.studentId || student.id || 'N/A'}`, 20, 42);
+      pdf.text(`Class: ${student.class || 'N/A'}`, 20, 49);
+      pdf.text(`Contact: ${student.contact || 'N/A'}`, 20, 56);
+      
+      // Add summary cards
+      const summaryY = 65;
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Summary', 20, summaryY);
+      
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'normal');
+      pdf.text(`Total Fees: ₹${totalFees.toLocaleString('en-IN')}`, 20, summaryY + 8);
+      pdf.text(`Fees Paid: ₹${feesPaid.toLocaleString('en-IN')}`, 20, summaryY + 15);
+      pdf.text(`Pending Fees: ₹${pendingFees.toLocaleString('en-IN')}`, 20, summaryY + 22);
+      pdf.text(`Payment Progress: ${paymentProgress}%`, 20, summaryY + 29);
+      
+      // Add personal information
+      const personalInfoY = summaryY + 40;
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Personal Information', 20, personalInfoY);
+      
+      // Create table for personal information
+      const personalInfoData = [
+        ['Field', 'Value'],
+        ['Full Name', student.name || 'N/A'],
+        ['Student ID', student.studentId || student.id || 'N/A'],
+        ['Class', student.class || 'N/A'],
+        ['Contact Number', student.contact || 'N/A'],
+        ['Email', student.email || 'N/A'],
+        ['Father\'s Name', student.fatherName || 'N/A'],
+        ['Mother\'s Name', student.motherName || 'N/A'],
+        ['Address', student.address || 'N/A']
+      ];
+      
+      autoTable.autoTable(pdf, {
+        startY: personalInfoY + 8,
+        head: [personalInfoData[0]],
+        body: personalInfoData.slice(1),
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [52, 152, 219] }, // Blue header
+        margin: { left: 20, right: 20 }
+      });
+      
+      // Add system information
+      const systemInfoStartY = pdf.lastAutoTable.finalY + 10;
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('System Information', 20, systemInfoStartY);
+      
+      // Create table for system information
+      const systemInfoData = [
+        ['Field', 'Value'],
+        ['Created At', formatDate(student.createdAt) || 'N/A'],
+        ['Last Updated', formatDate(student.updatedAt) || 'N/A'],
+        ['Database ID', student.id || 'N/A']
+      ];
+      
+      autoTable.autoTable(pdf, {
+        startY: systemInfoStartY + 8,
+        head: [systemInfoData[0]],
+        body: systemInfoData.slice(1),
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [52, 152, 219] }, // Blue header
+        margin: { left: 20, right: 20 }
+      });
+      
+      // Add payment history if available
+      if (payments && payments.length > 0) {
+        const paymentHistoryStartY = pdf.lastAutoTable.finalY + 10;
+        pdf.setFontSize(14);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('Payment History', 20, paymentHistoryStartY);
+        
+        // Create table for payment history
+        const paymentHistoryData = [
+          ['Date', 'Description', 'Amount', 'Status']
+        ];
+        
+        payments.forEach(payment => {
+          paymentHistoryData.push([
+            formatDate(payment.createdAt),
+            payment.description || 'Payment',
+            `₹${formatCurrency(payment.amount).replace('₹', '')}`,
+            payment.status || 'N/A'
+          ]);
+        });
+        
+        autoTable.autoTable(pdf, {
+          startY: paymentHistoryStartY + 8,
+          head: [paymentHistoryData[0]],
+          body: paymentHistoryData.slice(1),
+          theme: 'grid',
+          styles: { fontSize: 10 },
+          headStyles: { fillColor: [52, 152, 219] }, // Blue header
+          margin: { left: 20, right: 20 }
+        });
+      }
+      
+      // Add watermark
+      pdf.setFontSize(40);
+      pdf.setTextColor(200, 200, 200);
+      pdf.setGState(new pdf.GState({ opacity: 0.05 }));
+      pdf.text(firmName, 105, 140, { align: 'center', angle: 45 });
+      pdf.setGState(new pdf.GState({ opacity: 1 })); // Reset opacity
+      
+      // Save the PDF
+      pdf.save(`student-profile-${student.name || 'student'}-${student.studentId || student.id || 'unknown'}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
     }
   };
 
