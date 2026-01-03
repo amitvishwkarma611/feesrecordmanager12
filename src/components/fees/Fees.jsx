@@ -576,7 +576,182 @@ const Fees = () => {
     setShowForm(true);
   };
 
+  // Generate PDF receipt for mobile devices
+  const generatePDFReceipt = async (payment) => {
+    try {
+      // Dynamically import jsPDF and jsPDF-autotable
+      const jsPDF = await import('jspdf');
+      const autoTable = await import('jspdf-autotable');
+      
+      const { jsPDF: JsPDF } = jsPDF;
+      
+      // Get student information for fee details
+      let studentInfo = null;
+      try {
+        studentInfo = await dataManager.getStudentById(payment.studentId);
+      } catch (error) {
+        console.error('Error fetching student info for receipt:', error);
+      }
+      
+      // Format amount in words
+      const formatAmountInWords = (amount) => {
+        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+                     'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+                     'Seventeen', 'Eighteen', 'Nineteen'];
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        
+        if (amount === 0) return 'Zero Rupees Only';
+        
+        let words = '';
+        let num = Math.floor(amount);
+        
+        if (num >= 100000) {
+          words += ones[Math.floor(num/100000)] + ' Lakh ';
+          num %= 100000;
+        }
+        
+        if (num >= 1000) {
+          words += ones[Math.floor(num/1000)] + ' Thousand ';
+          num %= 1000;
+        }
+        
+        if (num >= 100) {
+          words += ones[Math.floor(num/100)] + ' Hundred ';
+          num %= 100;
+        }
+        
+        if (num >= 20) {
+          words += tens[Math.floor(num/10)] + ' ';
+          num %= 10;
+        }
+        
+        if (num > 0) {
+          words += ones[num];
+        }
+        
+        return words.trim() + ' Rupees Only';
+      };
+      
+      const amountInWords = formatAmountInWords(parseFloat(payment.amount || 0));
+      
+      // Create a new PDF instance
+      const pdf = new JsPDF.default();
+      
+      // Get branding data
+      const brandingData = {
+        firmName: firmName,
+        firmAddress: firmAddress,
+        logoUrl: logoUrl
+      };
+      
+      // Add header with branding
+      if (brandingData?.logoUrl) {
+        try {
+          // Convert logo to base64 for PDF embedding
+          const logoResponse = await fetch(brandingData.logoUrl);
+          const logoBlob = await logoResponse.blob();
+          const logoBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(logoBlob);
+          });
+          
+          // Add logo to PDF
+          pdf.addImage(logoBase64, 'PNG', 15, 15, 30, 15);
+        } catch (e) {
+          console.warn('Could not load logo for PDF:', e);
+        }
+      }
+      
+      // Add firm name and address
+      pdf.setFontSize(16);
+      pdf.setFont(undefined, 'bold');
+      pdf.text(brandingData?.firmName || 'Academy Name', 105, 15, { align: 'center' });
+      
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'normal');
+      pdf.text(brandingData?.firmAddress || 'Academy Address', 105, 22, { align: 'center' });
+      
+      // Add receipt title
+      pdf.setFontSize(18);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(220, 53, 69); // Red color
+      pdf.text('Fee Receipt', 105, 35, { align: 'center' });
+      
+      // Add receipt details
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'normal');
+      pdf.setTextColor(0, 0, 0); // Black color
+      
+      const receiptDetails = [
+        ['Receipt No', payment.id || 'N/A'],
+        ['Date', new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })],
+        ['Student Name', payment.studentName || 'N/A'],
+        ['Student ID', payment.studentId || 'N/A'],
+        ['Class', studentInfo?.class || 'N/A'],
+        ['Contact', studentInfo?.contact || 'N/A'],
+        ['Amount Paid', `₹${payment.amount || '0'}`],
+        ['Payment Method', payment.method || 'N/A'],
+        ['Due Date', payment.dueDate || 'N/A'],
+        ['Status', payment.status || 'N/A'],
+        ['Description', payment.description || 'N/A']
+      ];
+      
+      // Use autoTable to create a nicely formatted table
+      autoTable.autoTable(pdf, {
+        startY: 40,
+        head: [['Field', 'Value']],
+        body: receiptDetails,
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [52, 152, 219] }, // Blue header
+        margin: { left: 15, right: 15 }
+      });
+      
+      // Add amount in words
+      const finalY = pdf.lastAutoTable.finalY || 40;
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, 'italic');
+      pdf.text(`Amount in Words: ${amountInWords}`, 15, finalY + 10);
+      
+      // Add signature section
+      pdf.setFont(undefined, 'normal');
+      pdf.text('Authorized Signatory', 170, finalY + 30, { align: 'right' });
+      
+      // Add thank you message
+      pdf.setFont(undefined, 'italic');
+      pdf.text('Thank you for your payment!', 105, finalY + 40, { align: 'center' });
+      
+      pdf.setFont(undefined, 'normal');
+      pdf.text('This is an auto-generated receipt. No signature required.', 105, finalY + 45, { align: 'center' });
+      
+      // Instead of saving, create a blob URL to open the PDF in a new window for printing
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Open the PDF in a new window and trigger print
+      const printWindow = window.open(pdfUrl);
+      
+      printWindow.onload = function() {
+        printWindow.print();
+        // Don't close the window immediately to allow users to save as PDF if needed
+      };
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+  
   const handlePrintPayment = async (payment) => {
+    // Check if we're on a mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile devices, generate PDF using jsPDF
+      await generatePDFReceipt(payment);
+      return;
+    }
+    
     // Get current date for receipt generation
     const receiptDate = new Date().toLocaleDateString('en-IN', {
       day: '2-digit',
@@ -1064,9 +1239,9 @@ const Fees = () => {
           
           <script>
             window.onload = function() {
+              // Automatically trigger the print dialog
               window.print();
-              // Close window after print dialog is closed
-              setTimeout(function() { window.close(); }, 1000);
+              // Don't close the window immediately to allow users to save as PDF if needed
             };
           </script>
         </body>

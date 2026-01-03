@@ -20,6 +20,8 @@ const PaymentManagement = () => {
       // Create a new PDF instance
       const pdf = new JsPDF.default();
       
+      // Note: We'll handle the print dialog after the PDF is generated and opened in a new window
+      
       // Add header with branding
       if (brandingData?.logoUrl) {
         try {
@@ -91,8 +93,17 @@ const PaymentManagement = () => {
       pdf.setFont(undefined, 'normal');
       pdf.text('This is an auto-generated receipt. No signature required.', 105, finalY + 20, { align: 'center' });
       
-      // Save the PDF
-      pdf.save(`receipt-${receiptData.id || 'payment'}-${Date.now()}.pdf`);
+      // Instead of saving, create a blob URL to open the PDF in a new window for printing
+      const pdfBlob = pdf.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Open the PDF in a new window and trigger print
+      const printWindow = window.open(pdfUrl);
+      
+      printWindow.onload = function() {
+        printWindow.print();
+        // Don't close the window immediately to allow users to save as PDF if needed
+      };
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
@@ -1226,21 +1237,30 @@ const PaymentManagement = () => {
                 <button 
                   className="print-button"
                   onClick={async () => {
+                    // Check if we're on a mobile device
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    
+                    if (isMobile) {
+                      // On mobile devices, use jsPDF and automatically open print dialog
+                      await generatePDFReceipt(receiptData, brandingData);
+                      return;
+                    }
+                    
                     // Create a print-friendly version of the receipt matching the live preview template
                     const printWindow = window.open('', '_blank');
                     
-                    // Get all the receipt data to include in the print template
-                    const receiptNo = document.querySelector('.receipt-value')?.textContent || 'N/A';
-                    const receiptDate = document.querySelector('.receipt-value:nth-of-type(2)')?.textContent || 'N/A';
-                    const studentName = document.querySelector('.receipt-value:nth-of-type(3)')?.textContent || 'N/A';
-                    const studentId = document.querySelector('.receipt-value:nth-of-type(4)')?.textContent || 'N/A';
-                    const studentClass = document.querySelector('.receipt-value:nth-of-type(5)')?.textContent || 'N/A';
-                    const studentContact = document.querySelector('.receipt-value:nth-of-type(6)')?.textContent || 'N/A';
-                    const amountPaid = document.querySelector('.receipt-amount')?.textContent || 'N/A';
-                    const paymentMethod = document.querySelector('.receipt-value:nth-of-type(7)')?.textContent || 'N/A';
-                    const dueDate = document.querySelector('.receipt-value:nth-of-type(8)')?.textContent || 'N/A';
-                    const status = document.querySelector('.receipt-value:nth-of-type(9)')?.textContent || 'N/A';
-                    const description = document.querySelector('.receipt-value:nth-of-type(10)')?.textContent || 'N/A';
+                    // Use the actual receipt data instead of DOM queries
+                    const receiptNo = receiptData.receipt || 'N/A';
+                    const receiptDate = formatDisplayDate(receiptData.paidDate);
+                    const studentName = receiptData.studentName || 'N/A';
+                    const studentId = receiptData.studentId || 'N/A';
+                    const studentClass = receiptData.studentClass || 'N/A';
+                    const studentContact = receiptData.studentContact || 'N/A';
+                    const amountPaid = `₹${receiptData.amount || '0'}`;
+                    const paymentMethod = receiptData.method || 'N/A';
+                    const dueDate = receiptData.dueDate || 'N/A';
+                    const status = receiptData.status || 'N/A';
+                    const description = receiptData.description || 'N/A';
                     
                     // Get branding data
                     const logoUrl = brandingData?.logoUrl || null;
@@ -1592,7 +1612,8 @@ const PaymentManagement = () => {
                     printWindow.document.close();
                     printWindow.focus();
                     printWindow.print();
-                    printWindow.close();
+                    // Don't close the window immediately to allow users to save as PDF
+                    // printWindow.close(); // Commented out to allow PDF saving
                   }}
                 >
                   Print Receipt
