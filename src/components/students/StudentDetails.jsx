@@ -272,7 +272,562 @@ const StudentDetails = () => {
     navigate('/students', { state: { editingStudent: student } });
   };
 
+  // Generate PDF profile for mobile devices - matches desktop print template
+  const generatePDFProfile = async (student, firmName) => {
+    try {
+      // For exact match with desktop print, try to use the same approach
+      // First, try to get the content from the actual rendered component
+      const printContent = document.querySelector('.student-profile-card');
+      
+      let content;
+      if (printContent) {
+        // If the element exists in DOM, use its content like desktop print
+        content = printContent.innerHTML;
+      } else {
+        // Fallback: create content from data if element not available
+        // Get current branding data
+        let brandingData = {
+          firmName: '',
+          logoUrl: '',
+          signatureUrl: '',
+          stampUrl: ''
+        };
+        
+        try {
+          // Use the getBrandingSettings function to fetch branding data
+          const branding = await getBrandingSettings();
+          // Use retrieved values
+          brandingData = {
+            firmName: branding.firmName || '',
+            logoUrl: branding.logoUrl || '',
+            signatureUrl: branding.signatureUrl || '',
+            stampUrl: branding.stampUrl || '',
+            firmAddress: branding.firmAddress || ''
+          };
+        } catch (error) {
+          console.warn('Could not load branding data:', error);
+        }
+        
+        // Calculate values
+        const totalFees = parseFloat(student.totalFees) || 0;
+        const feesPaid = parseFloat(student.feesPaid) || 0;
+        const pendingFees = totalFees - feesPaid;
+        const paymentProgress = totalFees > 0 ? Math.round((feesPaid / totalFees) * 100) : 0;
+        
+        // Create the complete student profile HTML matching the desktop print template
+        content = `
+          <div class="student-header">
+            <div class="student-photo-preview">
+              ${student.photoUrl ? `<img src="${student.photoUrl}" alt="Student Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" />` : `<div style="width: 120px; height: 120px; background: #e9ecef; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #ddd;">No Photo</div>`}
+            </div>
+            <div class="student-basic-info">
+              <h2>${student.name || 'N/A'}</h2>
+              <div class="student-id">Student ID: ${student.studentId || student.id || 'N/A'}</div>
+              <div class="student-class">Class: ${student.class || 'N/A'}</div>
+            </div>
+          </div>
+          
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="summary-card-title">Total Fees</div>
+              <div class="summary-card-value">₹${totalFees.toLocaleString('en-IN')}</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-title">Fees Paid</div>
+              <div class="summary-card-value">₹${feesPaid.toLocaleString('en-IN')}</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-title">Pending Fees</div>
+              <div class="summary-card-value">₹${pendingFees.toLocaleString('en-IN')}</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-title">Payment Progress</div>
+              <div class="summary-card-value">${paymentProgress}%</div>
+            </div>
+          </div>
+          
+          <div class="payment-progress-section">
+            <h3>Payment Progress</h3>
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${paymentProgress}%;"></div>
+              </div>
+              <div class="progress-text">${paymentProgress}% of total fees collected</div>
+            </div>
+          </div>
+          
+          <div class="personal-info-section">
+            <h3>Personal Information</h3>
+            <div class="personal-info-content">
+              <div class="info-category">
+                <h4>Student Details</h4>
+                <div class="student-details-grid">
+                  <div class="student-detail-item">
+                    <label>Name</label>
+                    <span>${student.name || 'N/A'}</span>
+                  </div>
+                  <div class="student-detail-item">
+                    <label>Student ID</label>
+                    <span>${student.studentId || student.id || 'N/A'}</span>
+                  </div>
+                  <div class="student-detail-item">
+                    <label>Class</label>
+                    <span>${student.class || 'N/A'}</span>
+                  </div>
+                  <div class="student-detail-item">
+                    <label>Roll Number</label>
+                    <span>${student.rollNumber || 'N/A'}</span>
+                  </div>
+                  <div class="student-detail-item">
+                    <label>Date of Birth</label>
+                    <span>${formatDate(student.dob) || 'N/A'}</span>
+                  </div>
+                  <div class="student-detail-item">
+                    <label>Gender</label>
+                    <span>${student.gender || 'N/A'}</span>
+                  </div>
+                  <div class="student-detail-item">
+                    <label>Admission Date</label>
+                    <span>${formatDate(student.admissionDate) || 'N/A'}</span>
+                  </div>
+                  <div class="student-detail-item">
+                    <label>Address</label>
+                    <span>${student.address || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="info-category">
+                <h4>Contact Information</h4>
+                <div class="contact-info-grid">
+                  <div class="contact-detail-item">
+                    <label>Student Contact</label>
+                    <span>${student.contact || 'N/A'}</span>
+                  </div>
+                  <div class="contact-detail-item">
+                    <label>Student Email</label>
+                    <span>${student.email || 'N/A'}</span>
+                  </div>
+                  <div class="contact-detail-item">
+                    <label>Guardian Contact</label>
+                    <span>${student.guardianContact || 'N/A'}</span>
+                  </div>
+                  <div class="contact-detail-item">
+                    <label>Emergency Contact</label>
+                    <span>${student.emergencyContact || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="info-category">
+                <h4>Family Information</h4>
+                <div class="family-info-grid">
+                  <div class="family-detail-item">
+                    <label>Father's Name</label>
+                    <span>${student.fatherName || 'N/A'}</span>
+                  </div>
+                  <div class="family-detail-item">
+                    <label>Mother's Name</label>
+                    <span>${student.motherName || 'N/A'}</span>
+                  </div>
+                  <div class="family-detail-item">
+                    <label>Father's Occupation</label>
+                    <span>${student.fatherOccupation || 'N/A'}</span>
+                  </div>
+                  <div class="family-detail-item">
+                    <label>Mother's Occupation</label>
+                    <span>${student.motherOccupation || 'N/A'}</span>
+                  </div>
+                  <div class="family-detail-item">
+                    <label>Father's Contact</label>
+                    <span>${student.fatherContact || 'N/A'}</span>
+                  </div>
+                  <div class="family-detail-item">
+                    <label>Mother's Contact</label>
+                    <span>${student.motherContact || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="system-info-section">
+            <h3>System Information</h3>
+            <div class="system-info-content">
+              <div class="system-grid">
+                <div class="system-item">
+                  <label>Created At</label>
+                  <span>${formatDate(student.createdAt) || 'N/A'}</span>
+                </div>
+                <div class="system-item">
+                  <label>Updated At</label>
+                  <span>${formatDate(student.updatedAt) || 'N/A'}</span>
+                </div>
+                <div class="system-item">
+                  <label>Total Fees</label>
+                  <span>₹${totalFees.toLocaleString('en-IN')}</span>
+                </div>
+                <div class="system-item">
+                  <label>Fees Paid</label>
+                  <span>₹${feesPaid.toLocaleString('en-IN')}</span>
+                </div>
+                <div class="system-item">
+                  <label>Pending Fees</label>
+                  <span>₹${pendingFees.toLocaleString('en-IN')}</span>
+                </div>
+                <div class="system-item">
+                  <label>Payment Status</label>
+                  <span>${pendingFees > 0 ? 'Pending' : 'Completed'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="payments-table">
+            <h3>Payment History</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Mode</th>
+                  <th>Status</th>
+                  <th>Reference</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(student.payments && Array.isArray(student.payments) && student.payments.length > 0 
+                  ? student.payments.map(payment => `
+                    <tr>
+                      <td>${formatDate(payment.date)}</td>
+                      <td>₹${parseFloat(payment.amount).toLocaleString('en-IN')}</td>
+                      <td>${payment.mode || 'N/A'}</td>
+                      <td>
+                        <span class="status-badge status-${payment.status?.toLowerCase() || 'paid'}">
+                          ${payment.status || 'Paid'}
+                        </span>
+                      </td>
+                      <td>${payment.reference || 'N/A'}</td>
+                    </tr>`).join('')
+                  : '<tr><td colspan="5">No payment records found</td></tr>')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+      
+      // Create comprehensive print styles matching desktop template
+      const printStyles = `
+        <style>
+          @media print {
+            @page { 
+              size: A4; 
+              margin: 1cm; 
+            }
+            body { 
+              margin: 0; 
+              padding: 0; 
+              font-family: 'Times New Roman', serif; 
+              color: black; 
+            }
+            .student-profile-card { 
+              max-width: 90%; 
+              margin: 0 auto; 
+              padding: 15px; 
+              box-shadow: none; 
+              background: white; 
+              font-size: 11px; /* Professional font size */
+            }
+            .photo-upload-section { 
+              display: none; 
+            }
+            .upload-photo-btn { 
+              display: none; 
+            }
+            .upload-success-message { 
+              display: none; 
+            }
+            .watermark-container {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) rotate(-45deg);
+              pointer-events: none;
+              z-index: 1000;
+              opacity: 0.05;
+              font-size: 5em;
+              color: #cccccc;
+              font-weight: bold;
+              text-align: center;
+            }
+            .student-photo-preview {
+              width: 120px;
+              height: 120px;
+              object-fit: cover;
+              border-radius: 8px;
+              margin-bottom: 10px;
+              display: block;
+              border: 1px solid #ddd;
+            }
+            .photo-preview img {
+              width: 120px;
+              height: 120px;
+              object-fit: cover;
+              border-radius: 8px;
+            }
+            .student-header {
+              display: flex;
+              align-items: flex-start;
+              gap: 20px;
+              margin-bottom: 20px;
+              padding-bottom: 15px;
+              border-bottom: 2px solid #4e73df; /* Professional border */
+            }
+            .student-basic-info {
+              flex: 1;
+            }
+            .student-basic-info h2 {
+              margin: 0 0 8px 0;
+              font-size: 18px;
+              color: #2c3e50;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            .student-id, .student-class {
+              font-size: 12px;
+              margin: 4px 0;
+              font-weight: bold;
+            }
+            .summary-cards {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 10px;
+              margin-bottom: 20px;
+            }
+            .summary-card {
+              padding: 12px;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              margin-bottom: 0;
+              background: #f8f9fa;
+            }
+            .summary-card-title {
+              font-size: 10px;
+              margin-bottom: 5px;
+              color: #495057;
+              font-weight: bold;
+            }
+            .summary-card-value {
+              font-size: 14px;
+              font-weight: bold;
+              color: #2c3e50;
+            }
+            .payment-progress-section {
+              margin-bottom: 20px;
+              padding: 15px;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              background: #f8f9fa;
+            }
+            .payment-progress-section h3 {
+              font-size: 14px;
+              margin: 0 0 12px 0;
+              color: #2c3e50;
+              font-weight: bold;
+            }
+            .progress-container {
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            }
+            .progress-bar {
+              height: 12px;
+              background-color: #e9ecef;
+              border-radius: 6px;
+              overflow: hidden;
+            }
+            .progress-fill {
+              height: 100%;
+              background: linear-gradient(90deg, #4e73df, #224abe);
+              border-radius: 6px;
+            }
+            .progress-text {
+              font-size: 11px;
+              font-weight: bold;
+              color: #495057;
+            }
+            .personal-info-section, .system-info-section {
+              margin-bottom: 20px;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              page-break-inside: avoid;
+            }
+            .personal-info-section h3, .system-info-section h3 {
+              padding: 12px 15px;
+              margin: 0;
+              font-size: 14px;
+              background: #4e73df;
+              color: white;
+            }
+            .personal-info-content, .system-info-content {
+              padding: 15px;
+            }
+            .info-category {
+              margin-bottom: 15px;
+            }
+            .info-category h4 {
+              font-size: 12px;
+              margin: 0 0 10px 0;
+              color: #2c3e50;
+              font-weight: bold;
+              border-bottom: 1px solid #dee2e6;
+              padding-bottom: 5px;
+            }
+            .student-details-grid, .contact-info-grid, .family-info-grid, .system-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 15px;
+              margin-bottom: 10px;
+            }
+            .student-detail-item, .contact-detail-item, .family-detail-item, .system-item {
+              margin-bottom: 10px;
+              page-break-inside: avoid;
+            }
+            .student-detail-item label, .contact-detail-item label, .family-detail-item label, .system-item label {
+              display: block;
+              font-weight: bold;
+              margin-bottom: 3px;
+              font-size: 10px;
+              color: #495057;
+            }
+            .student-detail-item span, .contact-detail-item span, .family-detail-item span, .system-item span {
+              display: block;
+              padding: 6px;
+              background: #ffffff;
+              border-radius: 4px;
+              font-size: 11px;
+              border: 1px solid #dee2e6;
+              min-height: 20px;
+            }
+            .payments-table {
+              overflow-x: auto;
+              margin-top: 10px;
+            }
+            .payments-table table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            .payments-table th,
+            .payments-table td {
+              padding: 8px;
+              text-align: left;
+              border: 1px solid #dee2e6;
+              font-size: 10px;
+            }
+            .payments-table th {
+              background-color: #e9ecef;
+              font-weight: bold;
+              color: #495057;
+            }
+            .payments-table tr:nth-child(even) {
+              background-color: #f8f9fa;
+            }
+            .status-badge {
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-size: 9px;
+              font-weight: bold;
+            }
+            .status-paid {
+              background: #d4edda;
+              color: #155724;
+            }
+            .status-pending {
+              background: #fff3cd;
+              color: #856404;
+            }
+            .status-overdue {
+              background: #f8d7da;
+              color: #721c24;
+            }
+            .status-not-started {
+              background: #d1ecf1;
+              color: #0c5460;
+            }
+            .print-only {
+              display: block !important;
+            }
+            /* Ensure single page layout */
+            .student-profile-card {
+              display: block;
+              width: 100%;
+              overflow: hidden;
+            }
+            .details-section {
+              page-break-inside: avoid;
+              margin-bottom: 20px;
+            }
+          }
+          @media screen {
+            .print-only {
+              display: none;
+            }
+          }
+        </style>
+      `;
+      
+      // Create print window
+      const printWindow = window.open('', '_blank');
+      
+      // Create watermark container
+      const watermarkHtml = `
+        <div class="watermark-container">
+          ${firmName}
+        </div>
+      `;
+      
+      // Write print content with watermark and styles
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Student Profile - ${student.name}</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            ${printStyles}
+          </head>
+          <body>
+            ${watermarkHtml}
+            <div class="student-profile-card">
+              ${content}
+            </div>
+            <script>
+              // Add delay to ensure content renders before printing
+              setTimeout(() => {
+                window.print();
+                // Close after printing
+                window.close();
+              }, 500);
+            </script>
+          </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+  
   const handlePrint = async () => {
+    // Check if on mobile device
+    const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile devices, generate PDF using HTML-based approach
+      await generatePDFProfile(student, firmName);
+      return;
+    }
+    
     // For desktop, use the existing print functionality
     const printContent = document.querySelector('.student-profile-card');
     if (!printContent) {
