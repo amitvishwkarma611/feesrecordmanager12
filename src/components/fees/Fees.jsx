@@ -1119,7 +1119,7 @@ const Fees = () => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     if (isMobile) {
-      // On mobile devices, generate PDF using jsPDF
+      // On mobile devices, generate PDF using HTML-based approach
       await generatePDFReceipt(payment);
       return;
     }

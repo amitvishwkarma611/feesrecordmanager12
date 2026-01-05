@@ -18,6 +18,28 @@ const PaymentManagement = () => {
         return;
       }
       
+      // Always fetch fresh branding data to avoid any timing issues
+      let currentBrandingData = {
+        firmName: '',
+        firmAddress: '',
+        logoUrl: '',
+        signatureUrl: '',
+        stampUrl: ''
+      };
+      
+      try {
+        const fetchedBranding = await getBrandingSettings();
+        currentBrandingData = {
+          firmName: fetchedBranding.firmName || '',
+          firmAddress: fetchedBranding.firmAddress || '',
+          logoUrl: fetchedBranding.logoUrl || '',
+          signatureUrl: fetchedBranding.signatureUrl || '',
+          stampUrl: fetchedBranding.stampUrl || ''
+        };
+      } catch (error) {
+        console.warn('Could not load branding data:', error);
+      }
+      
       // Create a print-friendly version of the receipt matching the live preview template
       const printWindow = window.open('', '_blank');
       
@@ -35,11 +57,11 @@ const PaymentManagement = () => {
       const description = receiptData.description || 'N/A';
       
       // Get branding data
-      const logoUrl = brandingData?.logoUrl || null;
-      const firmName = brandingData?.firmName || 'Academy Name';
-      const firmAddress = brandingData?.firmAddress || 'Academy Address';
-      const signatureUrl = brandingData?.signatureUrl || null;
-      const stampUrl = brandingData?.stampUrl || null;
+      const logoUrl = currentBrandingData?.logoUrl || null;
+      const firmName = currentBrandingData?.firmName || 'Academy Name';
+      const firmAddress = currentBrandingData?.firmAddress || 'Academy Address';
+      const signatureUrl = currentBrandingData?.signatureUrl || null;
+      const stampUrl = currentBrandingData?.stampUrl || null;
       
       // Function to convert image to base64 to ensure it's embedded in print
       function convertImageToBase64(imageUrl) {
@@ -1564,12 +1586,21 @@ const PaymentManagement = () => {
                 <button 
                   className="print-button"
                   onClick={async () => {
+                    // Fetch fresh branding data to ensure it's up to date
+                    let currentBrandingData = {};
+                    try {
+                      currentBrandingData = await getBrandingSettings();
+                    } catch (error) {
+                      console.warn('Could not load branding data:', error);
+                      currentBrandingData = {};
+                    }
+                    
                     // Check if we're on a mobile device
                     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                     
                     if (isMobile) {
                       // On mobile devices, use jsPDF and automatically open print dialog
-                      await generatePDFReceipt(receiptData, brandingData);
+                      await generatePDFReceipt(receiptData, currentBrandingData);
                       return;
                     }
                     
@@ -1590,11 +1621,11 @@ const PaymentManagement = () => {
                     const description = receiptData.description || 'N/A';
                     
                     // Get branding data
-                    const logoUrl = brandingData?.logoUrl || null;
-                    const firmName = brandingData?.firmName || 'Academy Name';
-                    const firmAddress = brandingData?.firmAddress || 'Academy Address';
-                    const signatureUrl = brandingData?.signatureUrl || null;
-                    const stampUrl = brandingData?.stampUrl || null;
+                    const logoUrl = currentBrandingData?.logoUrl || null;
+                    const firmName = currentBrandingData?.firmName || 'Academy Name';
+                    const firmAddress = currentBrandingData?.firmAddress || 'Academy Address';
+                    const signatureUrl = currentBrandingData?.signatureUrl || null;
+                    const stampUrl = currentBrandingData?.stampUrl || null;
                     
                     // Function to convert image to base64 to ensure it's embedded in print
                     function convertImageToBase64(imageUrl) {

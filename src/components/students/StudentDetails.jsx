@@ -275,6 +275,29 @@ const StudentDetails = () => {
   // Generate PDF profile for mobile devices - matches desktop print template
   const generatePDFProfile = async (student, firmName) => {
     try {
+      // Get current branding data first to ensure it's available for both DOM and generated content
+      let brandingData = {
+        firmName: '',
+        logoUrl: '',
+        signatureUrl: '',
+        stampUrl: ''
+      };
+      
+      try {
+        // Use the getBrandingSettings function to fetch branding data
+        const branding = await getBrandingSettings();
+        // Use retrieved values
+        brandingData = {
+          firmName: branding.firmName || '',
+          logoUrl: branding.logoUrl || '',
+          signatureUrl: branding.signatureUrl || '',
+          stampUrl: branding.stampUrl || '',
+          firmAddress: branding.firmAddress || ''
+        };
+      } catch (error) {
+        console.warn('Could not load branding data:', error);
+      }
+      
       // For exact match with desktop print, try to use the same approach
       // First, try to get the content from the actual rendered component
       const printContent = document.querySelector('.student-profile-card');
@@ -283,31 +306,223 @@ const StudentDetails = () => {
       if (printContent) {
         // If the element exists in DOM, use its content like desktop print
         content = printContent.innerHTML;
+        
+        // The DOM content should already have branding applied from the UI
+        // but we need to make sure the branding data is reflected properly
+        // If branding data exists, we'll ensure it's properly applied
+        if (brandingData.logoUrl || brandingData.firmName || brandingData.signatureUrl || brandingData.stampUrl) {
+          // We have branding data, so we should regenerate the content to ensure it's properly included
+          console.log('Branding data available, regenerating content to ensure proper inclusion');
+          
+          // Calculate values
+          const totalFees = parseFloat(student.totalFees) || 0;
+          const feesPaid = parseFloat(student.feesPaid) || 0;
+          const pendingFees = totalFees - feesPaid;
+          const paymentProgress = totalFees > 0 ? Math.round((feesPaid / totalFees) * 100) : 0;
+          
+          // Create the complete student profile HTML matching the desktop print template
+          content = `
+            <div class="student-header">
+              <div class="student-photo-preview">
+                ${student.photoUrl ? `<img src="${student.photoUrl}" alt="Student Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" />` : `<div style="width: 120px; height: 120px; background: #e9ecef; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #ddd;">No Photo</div>`}
+              </div>
+              <div class="student-basic-info">
+                <h2>${student.name || 'N/A'}</h2>
+                <div class="student-id">Student ID: ${student.studentId || student.id || 'N/A'}</div>
+                <div class="student-class">Class: ${student.class || 'N/A'}</div>
+              </div>
+            </div>
+            
+            <div class="summary-cards">
+              <div class="summary-card">
+                <div class="summary-card-title">Total Fees</div>
+                <div class="summary-card-value">₹${totalFees.toLocaleString('en-IN')}</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-card-title">Fees Paid</div>
+                <div class="summary-card-value">₹${feesPaid.toLocaleString('en-IN')}</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-card-title">Pending Fees</div>
+                <div class="summary-card-value">₹${pendingFees.toLocaleString('en-IN')}</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-card-title">Payment Progress</div>
+                <div class="summary-card-value">${paymentProgress}%</div>
+              </div>
+            </div>
+            
+            <div class="payment-progress-section">
+              <h3>Payment Progress</h3>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${paymentProgress}%;"></div>
+                </div>
+                <div class="progress-text">${paymentProgress}% of total fees collected</div>
+              </div>
+            </div>
+            
+            <div class="personal-info-section">
+              <h3>Personal Information</h3>
+              <div class="personal-info-content">
+                <div class="info-category">
+                  <h4>Student Details</h4>
+                  <div class="student-details-grid">
+                    <div class="student-detail-item">
+                      <label>Name</label>
+                      <span>${student.name || 'N/A'}</span>
+                    </div>
+                    <div class="student-detail-item">
+                      <label>Student ID</label>
+                      <span>${student.studentId || student.id || 'N/A'}</span>
+                    </div>
+                    <div class="student-detail-item">
+                      <label>Class</label>
+                      <span>${student.class || 'N/A'}</span>
+                    </div>
+                    <div class="student-detail-item">
+                      <label>Roll Number</label>
+                      <span>${student.rollNumber || 'N/A'}</span>
+                    </div>
+                    <div class="student-detail-item">
+                      <label>Date of Birth</label>
+                      <span>${formatDate(student.dob) || 'N/A'}</span>
+                    </div>
+                    <div class="student-detail-item">
+                      <label>Gender</label>
+                      <span>${student.gender || 'N/A'}</span>
+                    </div>
+                    <div class="student-detail-item">
+                      <label>Admission Date</label>
+                      <span>${formatDate(student.admissionDate) || 'N/A'}</span>
+                    </div>
+                    <div class="student-detail-item">
+                      <label>Address</label>
+                      <span>${student.address || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="info-category">
+                  <h4>Contact Information</h4>
+                  <div class="contact-info-grid">
+                    <div class="contact-detail-item">
+                      <label>Student Contact</label>
+                      <span>${student.contact || 'N/A'}</span>
+                    </div>
+                    <div class="contact-detail-item">
+                      <label>Student Email</label>
+                      <span>${student.email || 'N/A'}</span>
+                    </div>
+                    <div class="contact-detail-item">
+                      <label>Guardian Contact</label>
+                      <span>${student.guardianContact || 'N/A'}</span>
+                    </div>
+                    <div class="contact-detail-item">
+                      <label>Emergency Contact</label>
+                      <span>${student.emergencyContact || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="info-category">
+                  <h4>Family Information</h4>
+                  <div class="family-info-grid">
+                    <div class="family-detail-item">
+                      <label>Father's Name</label>
+                      <span>${student.fatherName || 'N/A'}</span>
+                    </div>
+                    <div class="family-detail-item">
+                      <label>Mother's Name</label>
+                      <span>${student.motherName || 'N/A'}</span>
+                    </div>
+                    <div class="family-detail-item">
+                      <label>Father's Occupation</label>
+                      <span>${student.fatherOccupation || 'N/A'}</span>
+                    </div>
+                    <div class="family-detail-item">
+                      <label>Mother's Occupation</label>
+                      <span>${student.motherOccupation || 'N/A'}</span>
+                    </div>
+                    <div class="family-detail-item">
+                      <label>Father's Contact</label>
+                      <span>${student.fatherContact || 'N/A'}</span>
+                    </div>
+                    <div class="family-detail-item">
+                      <label>Mother's Contact</label>
+                      <span>${student.motherContact || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="system-info-section">
+              <h3>System Information</h3>
+              <div class="system-info-content">
+                <div class="system-grid">
+                  <div class="system-item">
+                    <label>Created At</label>
+                    <span>${formatDate(student.createdAt) || 'N/A'}</span>
+                  </div>
+                  <div class="system-item">
+                    <label>Updated At</label>
+                    <span>${formatDate(student.updatedAt) || 'N/A'}</span>
+                  </div>
+                  <div class="system-item">
+                    <label>Total Fees</label>
+                    <span>₹${totalFees.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div class="system-item">
+                    <label>Fees Paid</label>
+                    <span>₹${feesPaid.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div class="system-item">
+                    <label>Pending Fees</label>
+                    <span>₹${pendingFees.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div class="system-item">
+                    <label>Payment Status</label>
+                    <span>${pendingFees > 0 ? 'Pending' : 'Completed'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="payments-table">
+              <h3>Payment History</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Mode</th>
+                    <th>Status</th>
+                    <th>Reference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(student.payments && Array.isArray(student.payments) && student.payments.length > 0 
+                    ? student.payments.map(payment => `
+                      <tr>
+                        <td>${formatDate(payment.date)}</td>
+                        <td>₹${parseFloat(payment.amount).toLocaleString('en-IN')}</td>
+                        <td>${payment.mode || 'N/A'}</td>
+                        <td>
+                          <span class="status-badge status-${payment.status?.toLowerCase() || 'paid'}">
+                            ${payment.status || 'Paid'}
+                          </span>
+                        </td>
+                        <td>${payment.reference || 'N/A'}</td>
+                      </tr>`).join('')
+                    : '<tr><td colspan="5">No payment records found</td></tr>')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
       } else {
         // Fallback: create content from data if element not available
-        // Get current branding data
-        let brandingData = {
-          firmName: '',
-          logoUrl: '',
-          signatureUrl: '',
-          stampUrl: ''
-        };
-        
-        try {
-          // Use the getBrandingSettings function to fetch branding data
-          const branding = await getBrandingSettings();
-          // Use retrieved values
-          brandingData = {
-            firmName: branding.firmName || '',
-            logoUrl: branding.logoUrl || '',
-            signatureUrl: branding.signatureUrl || '',
-            stampUrl: branding.stampUrl || '',
-            firmAddress: branding.firmAddress || ''
-          };
-        } catch (error) {
-          console.warn('Could not load branding data:', error);
-        }
-        
         // Calculate values
         const totalFees = parseFloat(student.totalFees) || 0;
         const feesPaid = parseFloat(student.feesPaid) || 0;
@@ -779,10 +994,10 @@ const StudentDetails = () => {
       // Create print window
       const printWindow = window.open('', '_blank');
       
-      // Create watermark container
+      // Create watermark container with actual firm name from branding data
       const watermarkHtml = `
         <div class="watermark-container">
-          ${firmName}
+          ${brandingData.firmName || firmName}
         </div>
       `;
       
