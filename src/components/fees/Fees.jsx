@@ -3,6 +3,7 @@ import { Timestamp } from 'firebase/firestore';
 import dataManager from '../../utils/dataManager';
 import { getStudents, getPayments, addPayment, updatePayment, deletePayment } from '../../services/firebaseService';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { getBrandingSettings } from '../../services/firebaseService';
 import { db } from '../../firebase/firebaseConfig';
 import { getCurrentUserUID, isAuthenticated } from '../../utils/auth';
 import RootLayout from '../common/RootLayout';
@@ -579,11 +580,12 @@ const Fees = () => {
   // Generate PDF receipt for mobile devices
   const generatePDFReceipt = async (payment) => {
     try {
-      // Dynamically import jsPDF and jsPDF-autotable
-      const jsPDF = await import('jspdf');
-      const autoTable = await import('jspdf-autotable');
-      
-      const { jsPDF: JsPDF } = jsPDF;
+      // Validate payment data
+      if (!payment) {
+        console.error('No payment data provided for printing');
+        alert('No payment data available to print receipt');
+        return;
+      }
       
       // Get student information for fee details
       let studentInfo = null;
@@ -592,6 +594,31 @@ const Fees = () => {
       } catch (error) {
         console.error('Error fetching student info for receipt:', error);
       }
+      
+      // Get current branding data
+      let brandingData = {
+        firmName: '',
+        firmAddress: '',
+        logoUrl: '',
+        signatureUrl: '',
+        stampUrl: ''
+      };
+      
+      try {
+        // Use the getBrandingSettings function to fetch branding data
+        const branding = await getBrandingSettings();
+        
+        // Use retrieved values
+        brandingData = {
+          firmName: branding.firmName || '',
+          firmAddress: branding.firmAddress || '',
+          logoUrl: branding.logoUrl || '',
+          signatureUrl: branding.signatureUrl || '',
+          stampUrl: branding.stampUrl || ''
+        };
+      } catch (error) {
+        console.warn('Could not load branding data:', error);
+      };
       
       // Format amount in words
       const formatAmountInWords = (amount) => {
@@ -634,124 +661,453 @@ const Fees = () => {
       
       const amountInWords = formatAmountInWords(parseFloat(payment.amount || 0));
       
-      // Create a new PDF instance
-      const pdf = new JsPDF.default();
-      
-      // Get current branding data from Firestore
-      let brandingData = {
-        firmName: 'Your Academy',
-        firmAddress: 'Chinchpada, Airoli, Navi Mumbai - 400708',
-        logoUrl: ''
-      };
-      
-      try {
-        const brandingRef = doc(db, 'users', getCurrentUserUID(), 'settings', 'branding');
-        const brandingDoc = await getDoc(brandingRef);
-        
-        if (brandingDoc.exists()) {
-          const data = brandingDoc.data();
-          brandingData = {
-            firmName: data.firmName || 'Your Academy',
-            firmAddress: data.firmAddress || 'Chinchpada, Airoli, Navi Mumbai - 400708',
-            logoUrl: data.logoUrl || ''
-          };
-        }
-      } catch (error) {
-        console.warn('Could not load branding data, using defaults:', error);
-      };
-      
-      // Add header with branding
-      if (brandingData?.logoUrl) {
-        try {
-          // Convert logo to base64 for PDF embedding
-          const logoResponse = await fetch(brandingData.logoUrl);
-          const logoBlob = await logoResponse.blob();
-          const logoBase64 = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(logoBlob);
-          });
-          
-          // Add logo to PDF
-          pdf.addImage(logoBase64, 'PNG', 15, 15, 30, 15);
-        } catch (e) {
-          console.warn('Could not load logo for PDF:', e);
-        }
-      }
-      
-      // Add firm name and address
-      pdf.setFontSize(16);
-      pdf.setFont(undefined, 'bold');
-      pdf.text(brandingData?.firmName || 'Academy Name', 105, 15, { align: 'center' });
-      
-      pdf.setFontSize(12);
-      pdf.setFont(undefined, 'normal');
-      pdf.text(brandingData?.firmAddress || 'Academy Address', 105, 22, { align: 'center' });
-      
-      // Add receipt title
-      pdf.setFontSize(18);
-      pdf.setFont(undefined, 'bold');
-      pdf.setTextColor(220, 53, 69); // Red color
-      pdf.text('Fee Receipt', 105, 35, { align: 'center' });
-      
-      // Add receipt details
-      pdf.setFontSize(12);
-      pdf.setFont(undefined, 'normal');
-      pdf.setTextColor(0, 0, 0); // Black color
-      
-      const receiptDetails = [
-        ['Receipt No', payment.id || 'N/A'],
-        ['Date', new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })],
-        ['Student Name', payment.studentName || 'N/A'],
-        ['Student ID', payment.studentId || 'N/A'],
-        ['Class', studentInfo?.class || 'N/A'],
-        ['Contact', studentInfo?.contact || 'N/A'],
-        ['Amount Paid', `₹${payment.amount || '0'}`],
-        ['Payment Method', payment.method || 'N/A'],
-        ['Due Date', payment.dueDate || 'N/A'],
-        ['Status', payment.status || 'N/A'],
-        ['Description', payment.description || 'N/A']
-      ];
-      
-      // Use autoTable to create a nicely formatted table
-      autoTable.autoTable(pdf, {
-        startY: 40,
-        head: [['Field', 'Value']],
-        body: receiptDetails,
-        theme: 'grid',
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [52, 152, 219] }, // Blue header
-        margin: { left: 15, right: 15 }
+      // Get current date for receipt generation
+      const receiptDate = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
       });
       
-      // Add amount in words
-      const finalY = pdf.lastAutoTable.finalY || 40;
-      pdf.setFontSize(10);
-      pdf.setFont(undefined, 'italic');
-      pdf.text(`Amount in Words: ${amountInWords}`, 15, finalY + 10);
-      
-      // Add signature section
-      pdf.setFont(undefined, 'normal');
-      pdf.text('Authorized Signatory', 170, finalY + 30, { align: 'right' });
-      
-      // Add thank you message
-      pdf.setFont(undefined, 'italic');
-      pdf.text('Thank you for your payment!', 105, finalY + 40, { align: 'center' });
-      
-      pdf.setFont(undefined, 'normal');
-      pdf.text('This is an auto-generated receipt. No signature required.', 105, finalY + 45, { align: 'center' });
-      
-      // Instead of saving, create a blob URL to open the PDF in a new window for printing
-      const pdfBlob = pdf.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      
-      // Open the PDF in a new window and trigger print
-      const printWindow = window.open(pdfUrl);
-      
-      printWindow.onload = function() {
-        printWindow.print();
-        // Don't close the window immediately to allow users to save as PDF if needed
-      };
+      // Enhanced print functionality with professional receipt design
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Fee Receipt - ${payment.studentName}</title>
+            <style>
+              @media print {
+                @page { margin: 0; size: A4; }
+                body { margin: 0.5cm; }
+              }
+              
+              body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                max-width: 600px; 
+                margin: 0 auto; 
+                padding: 10px;
+                color: var(--text-primary);
+                line-height: 1.3;
+                font-size: 13px;
+                position: relative;
+              }
+              
+              .receipt-container {
+                border: 1px solid var(--info-color); /* Blue for neutral info */
+                border-radius: 8px;
+                padding: 15px;
+                background: white;
+                position: relative;
+                overflow: hidden;
+                box-shadow: none;
+              }
+              
+              .receipt-container::before {
+                content: "ORIGINAL COPY";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-30deg);
+                font-size: 36px;
+                font-weight: bold;
+                color: rgba(78, 115, 223, 0.05);
+                pointer-events: none;
+                z-index: 0;
+              }
+              
+              .receipt-header {
+                text-align: center;
+                border-bottom: 2px double var(--info-color); /* Blue for neutral info */
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+                position: relative;
+                background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+                border-radius: 6px;
+                margin: -15px -15px 15px -15px;
+                padding: 15px;
+                border-bottom: 2px solid var(--info-color);
+              }
+              
+              .receipt-logo {
+                max-width: 80px;
+                height: auto;
+                margin-bottom: 10px;
+              }
+              
+              .school-logo {
+                max-width: 60px;
+                max-height: 60px;
+                width: auto;
+                margin-bottom: 8px;
+                vertical-align: middle;
+              }
+              
+              .header-content {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 15px;
+                margin-bottom: 10px;
+              }
+              
+              .school-info {
+                display: flex;
+                flex-direction: column;
+                text-align: center;
+              }
+
+              .school-name {
+                font-size: 20px;
+                font-weight: bold;
+                color: var(--info-color-darker);
+                margin: 2px 0;
+              }
+
+              .school-address {
+                font-size: 13px;
+                color: var(--text-secondary);
+                margin-bottom: 8px;
+                font-weight: 500;
+              }
+
+              .receipt-title {
+                font-size: 18px;
+                font-weight: bold;
+                color: var(--danger-color); /* Red for alert/drop */
+                margin: 10px 0;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                background: linear-gradient(90deg, var(--info-color), var(--info-color-darker));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+              }
+
+              .receipt-details {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin-bottom: 15px;
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 8px;
+                border: 1px solid #e9ecef;
+              }
+
+              .detail-item {
+                display: flex;
+                flex-direction: column;
+                padding: 5px 0;
+              }
+
+              .detail-label {
+                font-size: 12px;
+                color: var(--text-secondary);
+                margin-bottom: 3px;
+                font-weight: 600;
+              }
+
+              .detail-value {
+                font-weight: 700;
+                color: var(--info-color-darker); /* Blue for neutral info */
+                font-size: 14px;
+                background: white;
+                padding: 3px 8px;
+                border-radius: 4px;
+                border: 1px solid #e9ecef;
+              }
+
+              .amount-section {
+                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                padding: 15px;
+                border-radius: 8px;
+                margin: 15px 0;
+                border: 1px solid #dee2e6;
+              }
+
+              .amount-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 5px;
+              }
+
+              .amount-row.total {
+                display: flex;
+                justify-content: space-between;
+                font-weight: bold;
+                font-size: 16px;
+                padding-top: 8px;
+                border-top: 2px solid var(--info-color);
+                margin-top: 8px;
+                color: var(--info-color-darker);
+              }
+
+              .amount-in-words {
+                margin: 15px 0;
+                padding: 10px;
+                background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+                border-radius: 6px;
+                font-style: italic;
+                font-weight: 500;
+                border: 1px solid #90caf9;
+                text-align: center;
+                color: #1976d2;
+                font-size: 12px;
+              }
+
+              .signature-section {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 25px;
+                padding-top: 15px;
+                border-top: 1px dashed var(--info-color);
+              }
+
+              .signature-box {
+                text-align: center;
+                width: 45%;
+                background: #f8f9fa;
+                padding: 10px;
+                border-radius: 6px;
+                border: 1px solid #e9ecef;
+              }
+
+              .signature-line {
+                margin-top: 25px;
+                border-top: 1px solid var(--text-primary);
+                padding-top: 5px;
+                color: var(--text-secondary);
+                font-size: 12px;
+              }
+
+/* Official Section for Signature and Stamp */
+.official-section {
+  margin: 20px 0 15px;
+  padding: 15px 0;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.official-content {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.official-item {
+  text-align: center;
+  flex: 1;
+  min-width: 100px;
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.official-label {
+  font-size: 11px;
+  color: var(--info-color-darker);
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.official-image {
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: contain;
+}
+
+.signature-preview {
+  /* Signature-specific styling if needed */
+}
+
+.stamp-preview {
+  /* Stamp-specific styling if needed */
+}
+
+.footer {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-top: 1px solid #e9ecef;
+}
+
+.note {
+  background: linear-gradient(135deg, #fff8e1, #ffecb3);
+  border: 1px solid #ffd54f;
+  border-radius: 6px;
+  padding: 10px;
+  margin: 15px 0;
+  font-size: 12px;
+  text-align: center;
+  font-weight: 500;
+  color: #e65100;
+}
+
+@media (max-width: 500px) {
+  .receipt-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .signature-section {
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .signature-box {
+    width: 100%;
+  }
+  
+  .official-content {
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+  }
+  
+  .official-item {
+    width: 100%;
+  }
+}
+
+            </style>
+          </head>
+          <body>
+            <div class="receipt-container">
+              <div class="receipt-header">
+                <div class="header-content">
+                  ${brandingData.logoUrl ? `<img src="${brandingData.logoUrl}" alt="School Logo" class="school-logo" />` : ''}
+                  <div class="school-info">
+                    <div class="school-name">${brandingData.firmName || 'Your Academy'}</div>
+                    <div class="school-address">${brandingData.firmAddress || 'Chinchpada, Airoli, Navi Mumbai - 400708'}</div>
+                  </div>
+                </div>
+                <div class="receipt-title">Fee Receipt</div>
+              </div>
+              
+              <div class="receipt-details">
+                <div class="detail-item">
+                  <span class="detail-label">Receipt No.</span>
+                  <span class="detail-value">${payment.id || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Date</span>
+                  <span class="detail-value">${receiptDate}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Student Name</span>
+                  <span class="detail-value">${payment.studentName || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Student ID</span>
+                  <span class="detail-value">${payment.studentId || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Class</span>
+                  <span class="detail-value">${payment.studentClass || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Description</span>
+                  <span class="detail-value">${payment.description || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Payment Method</span>
+                  <span class="detail-value">${payment.method || 'Cash'}</span>
+                </div>
+
+                ${studentInfo ? `
+                <div class="detail-item">
+                  <span class="detail-label">Total Fees</span>
+                  <span class="detail-value">₹${parseFloat(studentInfo.totalFees || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Fees Paid (This Payment)</span>
+                  <span class="detail-value">₹${parseFloat(payment.amount || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total Fees Paid (Cumulative)</span>
+                  <span class="detail-value">₹${parseFloat(studentInfo.feesPaid || 0).toFixed(2)}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Pending Fees</span>
+                  <span class="detail-value">₹${parseFloat((studentInfo.totalFees - studentInfo.feesPaid) || 0).toFixed(2)}</span>
+                </div>
+                ` : ''}
+              </div>
+              
+              <div class="amount-section">
+                <div class="amount-row">
+                  <span>Amount Paid (This Receipt):</span>
+                  <span>₹${parseFloat(payment.amount || 0).toFixed(2)}</span>
+                </div>
+                ${studentInfo ? `
+                <div class="amount-row">
+                  <span>Total Fees Paid (Cumulative):</span>
+                  <span>₹${parseFloat(studentInfo.feesPaid || 0).toFixed(2)}</span>
+                </div>
+                <div class="amount-row">
+                  <span>Total Fees:</span>
+                  <span>₹${parseFloat(studentInfo.totalFees || 0).toFixed(2)}</span>
+                </div>
+                <div class="amount-row">
+                  <span>Pending Fees:</span>
+                  <span>₹${parseFloat((studentInfo.totalFees - studentInfo.feesPaid) || 0).toFixed(2)}</span>
+                </div>
+                ` : ''}
+                <div class="amount-row total">
+                  <span>Balance Due:</span>
+                  <span>₹${studentInfo ? parseFloat((studentInfo.totalFees - studentInfo.feesPaid) || 0).toFixed(2) : '0.00'}</span>
+                </div>
+              </div>
+              
+              <div class="amount-in-words">
+                Amount in Words: ${amountInWords}
+              </div>
+              
+              <div class="note">
+                <strong>Note:</strong> This is a computer-generated receipt and does not require a signature.
+              </div>
+              
+              
+              <!-- Academy Signature and Stamp Section -->
+              <div class="official-section">
+                ${brandingData.signatureUrl || brandingData.stampUrl ? `
+                <div class="official-content">
+                  ${brandingData.signatureUrl ? `
+                  <div class="official-item">
+                    <img src="${brandingData.signatureUrl}" alt="Authorized Signature" class="official-image signature-preview" />
+                  </div>
+                  ` : ''}
+                  ${brandingData.stampUrl ? `
+                  <div class="official-item">
+                    <div class="official-label">Official Seal:</div>
+                    <img src="${brandingData.stampUrl}" alt="Official Stamp" class="official-image stamp-preview" />
+                  </div>
+                  ` : ''}
+                </div>
+                ` : ''}
+              </div>
+              
+              <div class="footer">
+                Thank you for your payment! For any queries, contact us at info@victorypointacademy.edu
+              </div>
+            </div>
+            
+            <script>
+              window.onload = function() {
+                // Automatically trigger the print dialog
+                window.print();
+                // Don't close the window immediately to allow users to save as PDF if needed
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');

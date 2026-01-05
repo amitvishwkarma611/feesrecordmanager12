@@ -8,105 +8,422 @@ import SkeletonLoader from './common/SkeletonLoader';
 import '../styles/PaymentManagement.css';
 
 const PaymentManagement = () => {
-  // Function to generate PDF receipt
+  // Function to print receipt
   const generatePDFReceipt = async (receiptData, brandingData) => {
     try {
-      // Dynamically import jsPDF and jsPDF-autotable
-      const jsPDF = await import('jspdf');
-      const autoTable = await import('jspdf-autotable');
+      // Validate receipt data
+      if (!receiptData) {
+        console.error('No receipt data provided for printing');
+        alert('No receipt data available to print');
+        return;
+      }
       
-      const { jsPDF: JsPDF } = jsPDF;
+      // Create a print-friendly version of the receipt matching the live preview template
+      const printWindow = window.open('', '_blank');
       
-      // Create a new PDF instance
-      const pdf = new JsPDF.default();
+      // Use the actual receipt data instead of DOM queries
+      const receiptNo = receiptData.receipt || receiptData.id || 'N/A';
+      const receiptDate = receiptData.paidDate || receiptData.date || new Date().toLocaleDateString();
+      const studentName = receiptData.studentName || 'N/A';
+      const studentId = receiptData.studentId || 'N/A';
+      const studentClass = receiptData.studentClass || 'N/A';
+      const studentContact = receiptData.studentContact || 'N/A';
+      const amountPaid = `₹${receiptData.amount || '0'}`;
+      const paymentMethod = receiptData.method || 'N/A';
+      const dueDate = receiptData.dueDate || 'N/A';
+      const status = receiptData.status || 'N/A';
+      const description = receiptData.description || 'N/A';
       
-      // Note: We'll handle the print dialog after the PDF is generated and opened in a new window
+      // Get branding data
+      const logoUrl = brandingData?.logoUrl || null;
+      const firmName = brandingData?.firmName || 'Academy Name';
+      const firmAddress = brandingData?.firmAddress || 'Academy Address';
+      const signatureUrl = brandingData?.signatureUrl || null;
+      const stampUrl = brandingData?.stampUrl || null;
       
-      // Add header with branding
-      if (brandingData?.logoUrl) {
-        try {
-          // Convert logo to base64 for PDF embedding
-          const logoResponse = await fetch(brandingData.logoUrl);
-          const logoBlob = await logoResponse.blob();
-          const logoBase64 = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(logoBlob);
-          });
+      // Function to convert image to base64 to ensure it's embedded in print
+      function convertImageToBase64(imageUrl) {
+        return new Promise((resolve) => {
+          if (!imageUrl) {
+            resolve(null);
+            return;
+          }
           
-          // Add logo to PDF
-          pdf.addImage(logoBase64, 'PNG', 15, 15, 30, 15);
-        } catch (e) {
-          console.warn('Could not load logo for PDF:', e);
-        }
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          img.src = imageUrl;
+          
+          img.onload = function() {
+            try {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              canvas.width = this.width;
+              canvas.height = this.height;
+              ctx.drawImage(this, 0, 0);
+              const dataURL = canvas.toDataURL('image/png');
+              resolve(dataURL);
+            } catch (e) {
+              console.error('Error converting image to base64:', e);
+              resolve(imageUrl); // fallback to original URL
+            }
+          };
+          
+          img.onerror = function() {
+            resolve(imageUrl); // fallback to original URL
+          };
+        });
       }
       
-      // Add firm name and address
-      pdf.setFontSize(16);
-      pdf.setFont(undefined, 'bold');
-      pdf.text(brandingData?.firmName || 'Academy Name', 105, 15, { align: 'center' });
-      
-      pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
-      pdf.text(brandingData?.firmAddress || 'Academy Address', 105, 22, { align: 'center' });
-      
-      // Add receipt title
-      pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
-      pdf.text('Fee Receipt', 105, 32, { align: 'center' });
-      
-      // Add receipt details table
-      const receiptDetails = [
-        ['Receipt No.', receiptData.id || 'N/A'],
-        ['Date', receiptData.date || new Date().toLocaleDateString()],
-        ['Student Name', receiptData.studentName || 'N/A'],
-        ['Student ID', receiptData.studentId || 'N/A'],
-        ['Class', receiptData.studentClass || 'N/A'],
-        ['Contact', receiptData.studentContact || 'N/A'],
-        ['Amount', `₹${receiptData.amount || '0'}`],
-        ['Method', receiptData.method || 'N/A'],
-        ['Due Date', receiptData.dueDate || 'N/A'],
-        ['Status', receiptData.status || 'N/A'],
-        ['Description', receiptData.description || 'N/A']
-      ];
-      
-      if (receiptData.amountInWords) {
-        receiptDetails.push(['Amount in Words', receiptData.amountInWords]);
+      // Convert logo to base64 to ensure it prints properly
+      let logoBase64Url = null;
+      if (brandingData?.logoUrl) {
+        logoBase64Url = await convertImageToBase64(brandingData.logoUrl);
       }
       
-      // Use autoTable to create a nicely formatted table
-      autoTable.autoTable(pdf, {
-        startY: 40,
-        head: [['Field', 'Value']],
-        body: receiptDetails,
-        theme: 'grid',
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [52, 152, 219] }, // Blue header
-        margin: { left: 15, right: 15 }
-      });
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Payment Receipt</title>
+          <style>
+            @media print {
+              @page { margin: 0.5cm; size: A4; }
+              body { margin: 0.5cm; }
+              
+              /* Ensure images are visible in print */
+              img {
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                print-color-adjust: exact;
+                max-height: 60px;
+                width: auto;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+              }
+              
+              .receipt-preview-logo {
+                max-width: 60px;
+                max-height: 60px;
+                width: auto;
+                margin-right: 15px;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+              }
+            }
+            
+            body { 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+              max-width: 600px; 
+              margin: 0 auto; 
+              padding: 10px;
+              color: var(--text-primary, #333);
+              line-height: 1.3;
+              font-size: 13px;
+              position: relative;
+            }
+            
+            .receipt-container {
+              border: 1px solid var(--info-color, #3498db); /* Blue for neutral info */
+              border-radius: 8px;
+              padding: 15px;
+              position: relative;
+              background: white;
+            }
+            
+            .receipt-header {
+              text-align: center;
+              margin-bottom: 15px;
+              padding-bottom: 15px;
+              border-bottom: 2px solid var(--info-color, #3498db);
+            }
+            
+            .receipt-header-content {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-bottom: 10px;
+            }
+            
+            .receipt-preview-logo {
+              max-width: 60px;
+              max-height: 60px;
+              margin-right: 15px;
+            }
+            
+            .receipt-placeholder-logo {
+              font-size: 2em;
+              margin-right: 15px;
+            }
+            
+            .receipt-academy-info {
+              text-align: left;
+            }
+            
+            .receipt-academy-name {
+              margin: 0 0 5px 0;
+              font-size: 1.3em;
+              font-weight: bold;
+              color: var(--primary-color, #2c3e50);
+            }
+            
+            .receipt-academy-address {
+              margin: 0;
+              font-size: 0.9em;
+              color: var(--text-secondary, #7f8c8d);
+            }
+            
+            .receipt-title-preview {
+              text-align: center;
+              font-size: 1.4em;
+              font-weight: bold;
+              margin: 15px 0 10px 0;
+              color: var(--success-color, #27ae60);
+            }
+            
+            .receipt-details {
+              margin: 15px 0;
+            }
+            
+            .receipt-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 8px 0;
+              padding: 4px 0;
+            }
+            
+            .detail-item {
+              display: flex;
+              justify-content: space-between;
+              margin: 6px 0;
+            }
+            
+            .detail-label {
+              font-weight: 600;
+              color: var(--text-secondary, #7f8c8d);
+              min-width: 120px;
+            }
+            
+            .detail-value {
+              font-weight: 500;
+              color: var(--text-primary, #34495e);
+              text-align: right;
+              flex: 1;
+            }
+            
+            .receipt-label {
+              font-weight: 600;
+              color: var(--text-secondary, #7f8c8d);
+            }
+            
+            .receipt-value {
+              font-weight: 500;
+              color: var(--text-primary, #34495e);
+              text-align: right;
+            }
+            
+            .receipt-amount {
+              color: var(--success-color, #27ae60);
+              font-weight: bold;
+            }
+            
+            .receipt-divider {
+              height: 1px;
+              background: var(--border-color, #e0e0e0);
+              margin: 12px 0;
+              border: none;
+            }
+            
+            .receipt-signatures {
+              display: flex;
+              justify-content: space-between;
+              margin: 25px 0 15px 0;
+              padding: 15px 0;
+              border-top: 1px solid var(--border-color, #e0e0e0);
+              border-bottom: 1px solid var(--border-color, #e0e0e0);
+            }
+            
+            .signature-section, .stamp-section, .authorized-signature-section {
+              text-align: center;
+              flex: 1;
+            }
+            
+            .receipt-signature, .receipt-stamp {
+              max-width: 120px;
+              max-height: 60px;
+              margin: 0 auto 5px;
+            }
+            
+            .signature-line {
+              width: 100px;
+              height: 1px;
+              background: #000;
+              margin: 15px auto 5px;
+            }
+            
+            .receipt-footer {
+              text-align: center;
+              margin-top: 15px;
+              padding-top: 15px;
+              border-top: 1px solid var(--border-color, #e0e0e0);
+            }
+            
+            .receipt-note {
+              font-style: italic;
+              font-size: 0.85em;
+              color: var(--text-secondary, #7f8c8d);
+              margin-top: 5px;
+            }
+            
+            /* Ensure logo is visible during printing */
+            .receipt-preview-logo {
+              display: block !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+              max-height: 60px !important;
+              width: auto !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="receipt-container">
+            <div class="receipt-header">
+              <div class="receipt-header-content">
+                ${logoBase64Url ? `<img src="${logoBase64Url}" alt="Academy Logo" class="receipt-preview-logo" />` : ''}
+                <div class="receipt-academy-info">
+                  <h4 class="receipt-academy-name">${firmName}</h4>
+                  <p class="receipt-academy-address">${firmAddress}</p>
+                </div>
+              </div>
+              <div class="receipt-title-preview">Fee Receipt</div>
+            </div>
+            
+            <div class="receipt-details">
+              <div class="detail-item">
+                <span class="detail-label">Receipt No:</span>
+                <span class="detail-value">${receiptNo}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Date:</span>
+                <span class="detail-value">${receiptDate}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Student Name:</span>
+                <span class="detail-value">${studentName}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Student ID:</span>
+                <span class="detail-value">${studentId}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Class:</span>
+                <span class="detail-value">${studentClass}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Contact:</span>
+                <span class="detail-value">${studentContact}</span>
+              </div>
+              
+              <div class="receipt-divider"></div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Amount Paid:</span>
+                <span class="detail-value receipt-amount">${amountPaid}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Payment Method:</span>
+                <span class="detail-value">${paymentMethod}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Due Date:</span>
+                <span class="detail-value">${dueDate}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">${status}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Description:</span>
+                <span class="detail-value">${description}</span>
+              </div>
+              
+              ${receiptData.paymentId ? `
+              <div class="detail-item">
+                <span class="detail-label">Payment ID:</span>
+                <span class="detail-value">${receiptData.paymentId}</span>
+              </div>` : ''}
+              
+              ${receiptData.feesStructure ? `
+              <div class="detail-item">
+                <span class="detail-label">Fees Structure:</span>
+                <span class="detail-value">${receiptData.feesStructure}</span>
+              </div>` : ''}
+              
+              ${receiptData.feesPaid ? `
+              <div class="detail-item">
+                <span class="detail-label">Fees Paid:</span>
+                <span class="detail-value">₹${receiptData.feesPaid}</span>
+              </div>` : ''}
+              
+              ${receiptData.feesDue ? `
+              <div class="detail-item">
+                <span class="detail-label">Fees Due:</span>
+                <span class="detail-value">₹${receiptData.feesDue}</span>
+              </div>` : ''}
+              
+              ${receiptData.totalFees ? `
+              <div class="detail-item">
+                <span class="detail-label">Total Fees:</span>
+                <span class="detail-value">₹${receiptData.totalFees}</span>
+              </div>` : ''}
+              
+              ${receiptData.amountInWords ? `
+              <div class="detail-item">
+                <span class="detail-label">Amount in Words:</span>
+                <span class="detail-value">${receiptData.amountInWords}</span>
+              </div>` : ''}
+            </div>
+            
+            <div class="receipt-signatures">
+              
+              ${signatureUrl ? `
+              <div class="authorized-signature-section">
+                <img src="${signatureUrl}" alt="Authorized Signature" class="receipt-signature" />
+              </div>` : ''}
+              
+              ${stampUrl ? `
+              <div class="stamp-section">
+                <img src="${stampUrl}" alt="Official Stamp" class="receipt-stamp" />
+                <p>Official Stamp</p>
+              </div>` : ''}
+            </div>
+            
+            <div class="receipt-footer">
+              <p>Thank you for your payment!</p>
+              <p class="receipt-note">This is an auto-generated receipt. No signature required.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
       
-      // Add thank you message
-      const finalY = pdf.lastAutoTable.finalY || 40;
-      pdf.setFont(undefined, 'italic');
-      pdf.text('Thank you for your payment!', 105, finalY + 15, { align: 'center' });
-      
-      pdf.setFont(undefined, 'normal');
-      pdf.text('This is an auto-generated receipt. No signature required.', 105, finalY + 20, { align: 'center' });
-      
-      // Instead of saving, create a blob URL to open the PDF in a new window for printing
-      const pdfBlob = pdf.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      
-      // Open the PDF in a new window and trigger print
-      const printWindow = window.open(pdfUrl);
-      
-      printWindow.onload = function() {
-        printWindow.print();
-        // Don't close the window immediately to allow users to save as PDF if needed
-      };
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      // printWindow.close(); // Commented out to allow PDF saving
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      console.error('Error printing receipt:', error);
+      alert('Error printing receipt. Please try again.');
     }
   };
   const navigate = useNavigate();
@@ -176,6 +493,16 @@ const PaymentManagement = () => {
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
+      
+      // Load branding settings
+      try {
+        const branding = await getBrandingSettings();
+        setBrandingData(branding);
+      } catch (error) {
+        console.error('Error fetching branding settings:', error);
+        setBrandingData({});
+      }
+      
       await refreshData();
       setIsLoading(false);
     };

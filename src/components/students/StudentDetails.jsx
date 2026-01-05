@@ -5,6 +5,7 @@ import { uploadStudentPhoto, testStorageConnection } from '../../services/fireba
 import { db } from '../../firebase/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { getCurrentUserUID, isAuthenticated } from '../../utils/auth';
+import { getBrandingSettings } from '../../services/firebaseService';
 import SkeletonLoader from '../common/SkeletonLoader';
 import './StudentDetails.css';
 
@@ -272,15 +273,6 @@ const StudentDetails = () => {
   };
 
   const handlePrint = async () => {
-    // Check if on mobile device
-    const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // On mobile devices, generate PDF using jsPDF
-      await generatePDFProfile(student, firmName);
-      return;
-    }
-    
     // For desktop, use the existing print functionality
     const printContent = document.querySelector('.student-profile-card');
     if (!printContent) {
@@ -591,157 +583,6 @@ const StudentDetails = () => {
       printWindow.document.close();
     } catch (error) {
       console.error('Error creating print window:', error);
-    }
-  };
-  
-  // Generate PDF profile for mobile devices
-  const generatePDFProfile = async (student, firmName) => {
-    try {
-      // Dynamically import jsPDF and jsPDF-autotable
-      const jsPDF = await import('jspdf');
-      const autoTable = await import('jspdf-autotable');
-      
-      const { jsPDF: JsPDF } = jsPDF;
-      
-      // Create a new PDF instance
-      const pdf = new JsPDF.default();
-      
-      // Calculate values
-      const totalFees = parseFloat(student.totalFees) || 0;
-      const feesPaid = parseFloat(student.feesPaid) || 0;
-      const pendingFees = totalFees - feesPaid;
-      const paymentProgress = totalFees > 0 ? Math.round((feesPaid / totalFees) * 100) : 0;
-      
-      // Add header with firm name
-      pdf.setFontSize(16);
-      pdf.setFont(undefined, 'bold');
-      pdf.text(firmName, 105, 15, { align: 'center' });
-      
-      // Add student profile title
-      pdf.setFontSize(18);
-      pdf.setTextColor(220, 53, 69); // Red color
-      pdf.text('Student Profile', 105, 25, { align: 'center' });
-      
-      // Add student basic info
-      pdf.setFontSize(12);
-      pdf.setFont(undefined, 'normal');
-      pdf.setTextColor(0, 0, 0); // Black color
-      
-      pdf.text(`Student Name: ${student.name || 'N/A'}`, 20, 35);
-      pdf.text(`Student ID: ${student.studentId || student.id || 'N/A'}`, 20, 42);
-      pdf.text(`Class: ${student.class || 'N/A'}`, 20, 49);
-      pdf.text(`Contact: ${student.contact || 'N/A'}`, 20, 56);
-      
-      // Add summary cards
-      const summaryY = 65;
-      pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
-      pdf.text('Summary', 20, summaryY);
-      
-      pdf.setFontSize(12);
-      pdf.setFont(undefined, 'normal');
-      pdf.text(`Total Fees: ₹${totalFees.toLocaleString('en-IN')}`, 20, summaryY + 8);
-      pdf.text(`Fees Paid: ₹${feesPaid.toLocaleString('en-IN')}`, 20, summaryY + 15);
-      pdf.text(`Pending Fees: ₹${pendingFees.toLocaleString('en-IN')}`, 20, summaryY + 22);
-      pdf.text(`Payment Progress: ${paymentProgress}%`, 20, summaryY + 29);
-      
-      // Add personal information
-      const personalInfoY = summaryY + 40;
-      pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
-      pdf.text('Personal Information', 20, personalInfoY);
-      
-      // Create table for personal information
-      const personalInfoData = [
-        ['Field', 'Value'],
-        ['Full Name', student.name || 'N/A'],
-        ['Student ID', student.studentId || student.id || 'N/A'],
-        ['Class', student.class || 'N/A'],
-        ['Contact Number', student.contact || 'N/A'],
-        ['Email', student.email || 'N/A'],
-        ['Father\'s Name', student.fatherName || 'N/A'],
-        ['Mother\'s Name', student.motherName || 'N/A'],
-        ['Address', student.address || 'N/A']
-      ];
-      
-      autoTable.autoTable(pdf, {
-        startY: personalInfoY + 8,
-        head: [personalInfoData[0]],
-        body: personalInfoData.slice(1),
-        theme: 'grid',
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [52, 152, 219] }, // Blue header
-        margin: { left: 20, right: 20 }
-      });
-      
-      // Add system information
-      const systemInfoStartY = pdf.lastAutoTable.finalY + 10;
-      pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
-      pdf.text('System Information', 20, systemInfoStartY);
-      
-      // Create table for system information
-      const systemInfoData = [
-        ['Field', 'Value'],
-        ['Created At', formatDate(student.createdAt) || 'N/A'],
-        ['Last Updated', formatDate(student.updatedAt) || 'N/A'],
-        ['Database ID', student.id || 'N/A']
-      ];
-      
-      autoTable.autoTable(pdf, {
-        startY: systemInfoStartY + 8,
-        head: [systemInfoData[0]],
-        body: systemInfoData.slice(1),
-        theme: 'grid',
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [52, 152, 219] }, // Blue header
-        margin: { left: 20, right: 20 }
-      });
-      
-      // Add payment history if available
-      if (payments && payments.length > 0) {
-        const paymentHistoryStartY = pdf.lastAutoTable.finalY + 10;
-        pdf.setFontSize(14);
-        pdf.setFont(undefined, 'bold');
-        pdf.text('Payment History', 20, paymentHistoryStartY);
-        
-        // Create table for payment history
-        const paymentHistoryData = [
-          ['Date', 'Description', 'Amount', 'Status']
-        ];
-        
-        payments.forEach(payment => {
-          paymentHistoryData.push([
-            formatDate(payment.createdAt),
-            payment.description || 'Payment',
-            `₹${formatCurrency(payment.amount).replace('₹', '')}`,
-            payment.status || 'N/A'
-          ]);
-        });
-        
-        autoTable.autoTable(pdf, {
-          startY: paymentHistoryStartY + 8,
-          head: [paymentHistoryData[0]],
-          body: paymentHistoryData.slice(1),
-          theme: 'grid',
-          styles: { fontSize: 10 },
-          headStyles: { fillColor: [52, 152, 219] }, // Blue header
-          margin: { left: 20, right: 20 }
-        });
-      }
-      
-      // Add watermark
-      pdf.setFontSize(40);
-      pdf.setTextColor(200, 200, 200);
-      pdf.setGState(new pdf.GState({ opacity: 0.05 }));
-      pdf.text(firmName, 105, 140, { align: 'center', angle: 45 });
-      pdf.setGState(new pdf.GState({ opacity: 1 })); // Reset opacity
-      
-      // Save the PDF
-      pdf.save(`student-profile-${student.name || 'student'}-${student.studentId || student.id || 'unknown'}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
     }
   };
 
