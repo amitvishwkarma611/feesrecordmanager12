@@ -7,6 +7,7 @@ import { getBrandingSettings } from '../../services/firebaseService';
 import { db } from '../../firebase/firebaseConfig';
 import { getCurrentUserUID, isAuthenticated } from '../../utils/auth';
 import RootLayout from '../common/RootLayout';
+import AcademicYearSelector from '../common/AcademicYearSelector';
 import './Fees.css';
 
 const Fees = () => {
@@ -1796,6 +1797,7 @@ const Fees = () => {
             <h1>Fee Management</h1>
           </div>
           <div className="header-right">
+            <AcademicYearSelector />
             <button className="add-btn" onClick={handleAddPayment}>
               Add Payment
             </button>

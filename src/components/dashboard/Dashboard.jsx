@@ -17,6 +17,7 @@ import HistoryModal from './HistoryModal';
 import Sparkline from '../common/Sparkline';
 import SkeletonLoader from '../common/SkeletonLoader';
 import RootLayout from '../common/RootLayout';
+import AcademicYearSelector from '../common/AcademicYearSelector';
 
 import './Dashboard.css';
 const Dashboard = () => {
@@ -740,6 +741,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="header-right">
+            <AcademicYearSelector />
             {/* Avatar dropdown */}
             <div className="avatar-dropdown">
               <div className="avatar" onClick={() => setShowUserMenu(!showUserMenu)}>

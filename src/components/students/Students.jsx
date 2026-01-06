@@ -5,6 +5,7 @@ import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import RootLayout from '../common/RootLayout';
+import AcademicYearSelector from '../common/AcademicYearSelector';
 
 import './Students.css';
 
@@ -690,6 +691,7 @@ const Students = () => {
           </div>
           <div className="header-right">
             <div className="header-actions">
+              <AcademicYearSelector />
               <button className="add-btn" onClick={handleAddNew}>
                 + Add Student
               </button>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AcademicYearSelector from './AcademicYearSelector';
 import './CommonHeader.css';
 
 const CommonHeader = ({ title, subtitle, showAvatar = true, showLogo = true, logoUrl, firmName, actions }) => {
@@ -40,6 +41,7 @@ const CommonHeader = ({ title, subtitle, showAvatar = true, showLogo = true, log
       </div>
       
       <div className="header-right">
+        <AcademicYearSelector />
         {actions && (
           <div className="header-actions">
             {actions}

@@ -29,6 +29,7 @@ import TestSubscriptionCreation from './components/TestSubscriptionCreation';
 import VerifyEmail from './components/VerifyEmail';
 import TermsAndConditions from './components/TermsAndConditions';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
+import { AcademicYearProvider } from './contexts/AcademicYearContext';
 
 import './App.css';
 
@@ -391,7 +392,9 @@ function App() {
   return (
     <Router>
       <SubscriptionProvider>
-        <AppContent />
+        <AcademicYearProvider>
+          <AppContent />
+        </AcademicYearProvider>
       </SubscriptionProvider>
     </Router>
   );

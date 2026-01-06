@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import dataManager from '../utils/dataManager';
 import { setStudentsList, setPaymentsList } from '../utils/dataStore';
+import AcademicYearSelector from './common/AcademicYearSelector';
 import '../styles/Dashboard.css';
 
 const AdminDashboard = () => {
@@ -312,6 +313,9 @@ const AdminDashboard = () => {
       <div className="main-content full-width">
         <div className="header">
           <h1>Dashboard</h1>
+          <div className="header-right">
+            <AcademicYearSelector />
+          </div>
         </div>
 
         {/* Summary Cards */}

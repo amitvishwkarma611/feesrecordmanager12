@@ -723,3 +723,90 @@ body {
   margin-top: 10px;
   max-width: 300px;
 }
+
+/* Academic Year Selector */
+.academic-year-selector {
+  margin-right: 20px;
+  position: relative;
+}
+
+.academic-year-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.academic-year-button {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.academic-year-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  transition: transform 0.3s ease;
+}
+
+.academic-year-button[aria-expanded="true"] .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.academic-year-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  z-index: 1000;
+  min-width: 180px;
+  margin-top: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.academic-year-option {
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.academic-year-option:hover {
+  background-color: var(--info-color);
+  color: white;
+}
+
+.academic-year-option:last-child {
+  border-bottom: none;
+}
+
+.academic-year-option.disabled {
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  background-color: var(--bg-primary);
+}
+
+.current-year-option {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.current-year-option:hover {
+  background-color: var(--success-color-dark);
+}

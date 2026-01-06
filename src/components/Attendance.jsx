@@ -4,6 +4,7 @@ import dataManager from '../utils/dataManager';
 import SharedTabWrapper from './common/SharedTabWrapper';
 import SharedPageWrapper from './common/SharedPageWrapper';
 import RootLayout from './common/RootLayout';
+import AcademicYearSelector from './common/AcademicYearSelector';
 import './Attendance.css';
 
 const Attendance = () => {
@@ -571,6 +572,9 @@ const Attendance = () => {
         <div className="header">
           <div className="header-content">
             <h1>Staff Attendance & Salary</h1>
+            <div className="header-right">
+              <AcademicYearSelector />
+            </div>
           </div>
           <div className="header-tabs">
             {/* Tab Navigation */}

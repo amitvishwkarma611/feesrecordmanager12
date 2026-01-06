@@ -87,8 +87,15 @@ export const addStudent = async (studentData) => {
     console.log('=== FIREBASE ADD STUDENT START ===');
     console.log('Student Data:', studentData);
     
-    const docRef = await addDoc(studentsCollection(), studentData);
-    const result = { id: docRef.id, ...studentData };
+    // Add academic year and archived fields if not present
+    const enrichedStudentData = {
+      ...studentData,
+      academicYear: studentData.academicYear || (await getAcademicYearSettings()).activeAcademicYear,
+      archived: studentData.archived !== undefined ? studentData.archived : false
+    };
+    
+    const docRef = await addDoc(studentsCollection(), enrichedStudentData);
+    const result = { id: docRef.id, ...enrichedStudentData };
     
     console.log('=== FIREBASE ADD STUDENT END SUCCESS ===');
     return result;
@@ -100,7 +107,18 @@ export const addStudent = async (studentData) => {
 
 export const getStudents = async () => {
   try {
-    const querySnapshot = await getDocs(studentsCollection());
+    // Get active academic year
+    const academicYearSettings = await getAcademicYearSettings();
+    const activeAcademicYear = academicYearSettings.activeAcademicYear;
+    
+    // Query for active (non-archived) students in the active academic year
+    const q = query(
+      studentsCollection(),
+      where('archived', '==', false),
+      where('academicYear', '==', activeAcademicYear)
+    );
+    
+    const querySnapshot = await getDocs(q);
     const students = [];
     querySnapshot.forEach((doc) => {
       students.push({ id: doc.id, ...doc.data() });
@@ -193,8 +211,15 @@ export const addPayment = async (paymentData) => {
     console.log('=== FIREBASE ADD PAYMENT START ===');
     console.log('Payment Data:', paymentData);
     
-    const docRef = await addDoc(paymentsCollection(), paymentData);
-    const result = { id: docRef.id, ...paymentData };
+    // Add academic year and archived fields if not present
+    const enrichedPaymentData = {
+      ...paymentData,
+      academicYear: paymentData.academicYear || (await getAcademicYearSettings()).activeAcademicYear,
+      archived: paymentData.archived !== undefined ? paymentData.archived : false
+    };
+    
+    const docRef = await addDoc(paymentsCollection(), enrichedPaymentData);
+    const result = { id: docRef.id, ...enrichedPaymentData };
     
     console.log('=== FIREBASE ADD PAYMENT END SUCCESS ===');
     return result;
@@ -208,7 +233,18 @@ export const getPayments = async () => {
   try {
     console.log('=== FIREBASE GET PAYMENTS START ===');
     
-    const querySnapshot = await getDocs(paymentsCollection());
+    // Get active academic year
+    const academicYearSettings = await getAcademicYearSettings();
+    const activeAcademicYear = academicYearSettings.activeAcademicYear;
+    
+    // Query for active (non-archived) payments in the active academic year
+    const q = query(
+      paymentsCollection(),
+      where('archived', '==', false),
+      where('academicYear', '==', activeAcademicYear)
+    );
+    
+    const querySnapshot = await getDocs(q);
     const payments = [];
     querySnapshot.forEach((doc) => {
       payments.push({ id: doc.id, ...doc.data() });
@@ -301,8 +337,15 @@ export const addExpenditure = async (expenditureData) => {
     console.log('=== FIREBASE ADD EXPENDITURE START ===');
     console.log('Expenditure Data:', expenditureData);
     
-    const docRef = await addDoc(expendituresCollection(), expenditureData);
-    const result = { id: docRef.id, ...expenditureData };
+    // Add academic year and archived fields if not present
+    const enrichedExpenditureData = {
+      ...expenditureData,
+      academicYear: expenditureData.academicYear || (await getAcademicYearSettings()).activeAcademicYear,
+      archived: expenditureData.archived !== undefined ? expenditureData.archived : false
+    };
+    
+    const docRef = await addDoc(expendituresCollection(), enrichedExpenditureData);
+    const result = { id: docRef.id, ...enrichedExpenditureData };
     
     console.log('=== FIREBASE ADD EXPENDITURE END SUCCESS ===');
     return result;
@@ -316,7 +359,18 @@ export const getExpenditures = async () => {
   try {
     console.log('=== FIREBASE GET EXPENDITURES START ===');
     
-    const querySnapshot = await getDocs(expendituresCollection());
+    // Get active academic year
+    const academicYearSettings = await getAcademicYearSettings();
+    const activeAcademicYear = academicYearSettings.activeAcademicYear;
+    
+    // Query for active (non-archived) expenditures in the active academic year
+    const q = query(
+      expendituresCollection(),
+      where('archived', '==', false),
+      where('academicYear', '==', activeAcademicYear)
+    );
+    
+    const querySnapshot = await getDocs(q);
     const expenditures = [];
     querySnapshot.forEach((doc) => {
       expenditures.push({ id: doc.id, ...doc.data() });
@@ -377,8 +431,15 @@ export const addAttendance = async (attendanceData) => {
     console.log('=== FIREBASE ADD ATTENDANCE START ===');
     console.log('Attendance Data:', attendanceData);
     
-    const docRef = await addDoc(attendanceCollection(), attendanceData);
-    const result = { id: docRef.id, ...attendanceData };
+    // Add academic year and archived fields if not present
+    const enrichedAttendanceData = {
+      ...attendanceData,
+      academicYear: attendanceData.academicYear || (await getAcademicYearSettings()).activeAcademicYear,
+      archived: attendanceData.archived !== undefined ? attendanceData.archived : false
+    };
+    
+    const docRef = await addDoc(attendanceCollection(), enrichedAttendanceData);
+    const result = { id: docRef.id, ...enrichedAttendanceData };
     
     console.log('=== FIREBASE ADD ATTENDANCE END SUCCESS ===');
     return result;
@@ -392,7 +453,18 @@ export const getAttendance = async () => {
   try {
     console.log('=== FIREBASE GET ATTENDANCE START ===');
     
-    const querySnapshot = await getDocs(attendanceCollection());
+    // Get active academic year
+    const academicYearSettings = await getAcademicYearSettings();
+    const activeAcademicYear = academicYearSettings.activeAcademicYear;
+    
+    // Query for active (non-archived) attendance in the active academic year
+    const q = query(
+      attendanceCollection(),
+      where('archived', '==', false),
+      where('academicYear', '==', activeAcademicYear)
+    );
+    
+    const querySnapshot = await getDocs(q);
     const attendance = [];
     querySnapshot.forEach((doc) => {
       attendance.push({ id: doc.id, ...doc.data() });
@@ -597,11 +669,18 @@ export const addStaffAttendance = async (attendanceData) => {
     console.log('=== FIREBASE ADD STAFF ATTENDANCE START ===');
     console.log('Attendance Data:', attendanceData);
     
+    // Add academic year and archived fields if not present
+    const enrichedAttendanceData = {
+      ...attendanceData,
+      academicYear: attendanceData.academicYear || (await getAcademicYearSettings()).activeAcademicYear,
+      archived: attendanceData.archived !== undefined ? attendanceData.archived : false
+    };
+    
     // Remove any undefined fields from attendanceData
     const cleanedAttendanceData = {};
-    for (const key in attendanceData) {
-      if (attendanceData[key] !== undefined) {
-        cleanedAttendanceData[key] = attendanceData[key];
+    for (const key in enrichedAttendanceData) {
+      if (enrichedAttendanceData[key] !== undefined) {
+        cleanedAttendanceData[key] = enrichedAttendanceData[key];
       } else {
         console.warn('Skipping undefined field in attendanceData:', key);
       }
@@ -623,7 +702,18 @@ export const getStaffAttendance = async () => {
   try {
     console.log('=== FIREBASE GET STAFF ATTENDANCE START ===');
     
-    const querySnapshot = await getDocs(staffAttendanceCollection());
+    // Get active academic year
+    const academicYearSettings = await getAcademicYearSettings();
+    const activeAcademicYear = academicYearSettings.activeAcademicYear;
+    
+    // Query for active (non-archived) staff attendance in the active academic year
+    const q = query(
+      staffAttendanceCollection(),
+      where('archived', '==', false),
+      where('academicYear', '==', activeAcademicYear)
+    );
+    
+    const querySnapshot = await getDocs(q);
     const attendance = [];
     querySnapshot.forEach((doc) => {
       attendance.push({ id: doc.id, ...doc.data() });
@@ -724,6 +814,170 @@ export const getBrandingSettings = async () => {
     }
   } catch (error) {
     console.error('Error getting branding settings: ', error);
+    throw error;
+  }
+};
+
+// Get academic year settings
+export const getAcademicYearSettings = async () => {
+  try {
+    console.log('=== FIREBASE GET ACADEMIC YEAR SETTINGS START ===');
+    
+    if (!isAuthenticated()) {
+      throw new Error('User not authenticated. Please sign in first.');
+    }
+    
+    const uid = getCurrentUserUID();
+    const settingsDoc = doc(db, `users/${uid}/settings/profile`);
+    const docSnap = await getDoc(settingsDoc);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log('Academic year settings data:', data);
+      console.log('=== FIREBASE GET ACADEMIC YEAR SETTINGS END SUCCESS ===');
+      return {
+        activeAcademicYear: data.activeAcademicYear || getCurrentAcademicYear(),
+        archivedYears: data.archivedYears || []
+      };
+    } else {
+      console.log('No academic year settings found, using current year');
+      const currentYear = getCurrentAcademicYear();
+      console.log('=== FIREBASE GET ACADEMIC YEAR SETTINGS END SUCCESS ===');
+      return {
+        activeAcademicYear: currentYear,
+        archivedYears: []
+      };
+    }
+  } catch (error) {
+    console.error('Error getting academic year settings: ', error);
+    throw error;
+  }
+};
+
+// Update academic year settings
+export const updateAcademicYearSettings = async (academicYearSettings) => {
+  try {
+    console.log('=== FIREBASE UPDATE ACADEMIC YEAR SETTINGS START ===');
+    
+    if (!isAuthenticated()) {
+      throw new Error('User not authenticated. Please sign in first.');
+    }
+    
+    const uid = getCurrentUserUID();
+    const settingsDoc = doc(db, `users/${uid}/settings/profile`);
+    
+    await setDoc(settingsDoc, academicYearSettings, { merge: true });
+    
+    console.log('Academic year settings updated successfully');
+    console.log('=== FIREBASE UPDATE ACADEMIC YEAR SETTINGS END SUCCESS ===');
+    return true;
+  } catch (error) {
+    console.error('Error updating academic year settings: ', error);
+    throw error;
+  }
+};
+
+// Helper function to get current academic year (e.g., "2024-25")
+export const getCurrentAcademicYear = () => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const nextYear = currentYear + 1;
+  
+  // Academic year typically starts in April (month 3) or June (month 5) in most institutions
+  // If current month is April or later, use current year to next year
+  // If current month is before April, use previous year to current year
+  if (now.getMonth() >= 3) { // April = 3 (0-indexed)
+    return `${currentYear}-${(nextYear).toString().slice(-2)}`;
+  } else {
+    const prevYear = currentYear - 1;
+    return `${prevYear}-${currentYear.toString().slice(-2)}`;
+  }
+};
+
+// Archive an academic year
+export const archiveAcademicYear = async (yearToArchive) => {
+  try {
+    console.log('=== FIREBASE ARCHIVE ACADEMIC YEAR START ===');
+    
+    if (!isAuthenticated()) {
+      throw new Error('User not authenticated. Please sign in first.');
+    }
+    
+    const uid = getCurrentUserUID();
+    
+    // Archive students
+    const studentsQuery = query(
+      collection(db, `users/${uid}/students`),
+      where('academicYear', '==', yearToArchive)
+    );
+    const studentSnapshot = await getDocs(studentsQuery);
+    
+    for (const doc of studentSnapshot.docs) {
+      await updateDoc(doc.ref, { archived: true });
+    }
+    
+    // Archive payments
+    const paymentsQuery = query(
+      collection(db, `users/${uid}/payments`),
+      where('academicYear', '==', yearToArchive)
+    );
+    const paymentSnapshot = await getDocs(paymentsQuery);
+    
+    for (const doc of paymentSnapshot.docs) {
+      await updateDoc(doc.ref, { archived: true });
+    }
+    
+    // Archive expenditures
+    const expendituresQuery = query(
+      collection(db, `users/${uid}/expenditures`),
+      where('academicYear', '==', yearToArchive)
+    );
+    const expenditureSnapshot = await getDocs(expendituresQuery);
+    
+    for (const doc of expenditureSnapshot.docs) {
+      await updateDoc(doc.ref, { archived: true });
+    }
+    
+    // Archive attendance
+    const attendanceQuery = query(
+      collection(db, `users/${uid}/attendance`),
+      where('academicYear', '==', yearToArchive)
+    );
+    const attendanceSnapshot = await getDocs(attendanceQuery);
+    
+    for (const doc of attendanceSnapshot.docs) {
+      await updateDoc(doc.ref, { archived: true });
+    }
+    
+    // Archive staff attendance
+    const staffAttendanceQuery = query(
+      collection(db, `users/${uid}/staffAttendance`),
+      where('academicYear', '==', yearToArchive)
+    );
+    const staffAttendanceSnapshot = await getDocs(staffAttendanceQuery);
+    
+    for (const doc of staffAttendanceSnapshot.docs) {
+      await updateDoc(doc.ref, { archived: true });
+    }
+    
+    // Update settings to mark year as archived
+    const settingsDoc = doc(db, `users/${uid}/settings/profile`);
+    const settingsSnapshot = await getDoc(settingsDoc);
+    let archivedYears = [];
+    if (settingsSnapshot.exists()) {
+      archivedYears = settingsSnapshot.data().archivedYears || [];
+    }
+    if (!archivedYears.includes(yearToArchive)) {
+      archivedYears.push(yearToArchive);
+    }
+    
+    await setDoc(settingsDoc, { archivedYears }, { merge: true });
+    
+    console.log(`Academic year ${yearToArchive} archived successfully`);
+    console.log('=== FIREBASE ARCHIVE ACADEMIC YEAR END SUCCESS ===');
+    return true;
+  } catch (error) {
+    console.error('Error archiving academic year: ', error);
     throw error;
   }
 };

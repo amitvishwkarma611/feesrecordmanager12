@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import dataManager from '../utils/dataManager';
 import { setStudentsList } from '../utils/dataStore';
+import AcademicYearSelector from './common/AcademicYearSelector';
 import SkeletonLoader from './common/SkeletonLoader';
 import '../styles/StudentManagement.css';
 
@@ -593,6 +594,9 @@ const StudentManagement = () => {
       <div className="main-content full-width">
         <div className="header">
           <h1>Student Management</h1>
+          <div className="header-right">
+            <AcademicYearSelector />
+          </div>
         </div>
 
         {/* Controls */}

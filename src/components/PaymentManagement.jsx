@@ -4,6 +4,7 @@ import { Timestamp } from 'firebase/firestore';
 import dataManager from '../utils/dataManager';
 import { setPaymentsList } from '../utils/dataStore';
 import { getBrandingSettings } from '../services/firebaseService';
+import AcademicYearSelector from './common/AcademicYearSelector';
 import SkeletonLoader from './common/SkeletonLoader';
 import '../styles/PaymentManagement.css';
 
@@ -1186,6 +1187,9 @@ const PaymentManagement = () => {
       <div className="main-content full-width">
         <div className="header">
           <h1>Payment Management</h1>
+          <div className="header-right">
+            <AcademicYearSelector />
+          </div>
         </div>
 
         {/* Controls */}
