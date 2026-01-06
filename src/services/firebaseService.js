@@ -709,7 +709,7 @@ export const getBrandingSettings = async () => {
     }
     
     const uid = getCurrentUserUID();
-    const settingsDoc = doc(db, `users/${uid}/settings/branding`);
+    const settingsDoc = doc(db, `users/${uid}/settings/profile`);
     const docSnap = await getDoc(settingsDoc);
     
     if (docSnap.exists()) {

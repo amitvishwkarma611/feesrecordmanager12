@@ -98,8 +98,8 @@ const PaymentManagement = () => {
       
       // Convert logo to base64 to ensure it prints properly
       let logoBase64Url = null;
-      if (brandingData?.logoUrl) {
-        logoBase64Url = await convertImageToBase64(brandingData.logoUrl);
+      if (currentBrandingData?.logoUrl) {
+        logoBase64Url = await convertImageToBase64(currentBrandingData.logoUrl);
       }
       
       printWindow.document.write(`
