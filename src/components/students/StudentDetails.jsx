@@ -792,11 +792,17 @@ const StudentDetails = () => {
               ${content}
             </div>
             <script>
-              // Add delay to ensure content renders before printing
+              // Add delay to ensure content renders
               setTimeout(() => {
-                window.print();
-                // Close after printing
-                window.close();
+                // On mobile devices, just keep the window open for user to print
+                if (window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                  // Mobile: don't automatically print, let user use browser print option
+                  console.log('Mobile print window ready. User can use browser print option.');
+                } else {
+                  // Desktop: automatically print and close
+                  window.print();
+                  window.close();
+                }
               }, 500);
             </script>
           </body>
