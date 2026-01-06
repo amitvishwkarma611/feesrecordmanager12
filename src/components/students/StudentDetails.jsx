@@ -792,15 +792,15 @@ const StudentDetails = () => {
               ${content}
             </div>
             <script>
+              // On mobile, we'll show a message and let user use browser's print option
               // Add delay to ensure content renders
               setTimeout(() => {
-                // On mobile devices, just keep the window open for user to print
+                // Try to print, but don't force close on mobile
                 if (window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                  // Mobile: don't automatically print, let user use browser print option
-                  console.log('Mobile print window ready. User can use browser print option.');
+                  alert('Please use your browser\'s print option to save as PDF');
                 } else {
-                  // Desktop: automatically print and close
                   window.print();
+                  // Close after printing on desktop only
                   window.close();
                 }
               }, 500);
@@ -810,6 +810,7 @@ const StudentDetails = () => {
       `);
       
       printWindow.document.close();
+      printWindow.focus();
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
