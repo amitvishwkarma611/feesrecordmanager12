@@ -498,166 +498,293 @@ const ExpenseTrend = () => {
 
   return (
     <div className="expense-trend-container">
-      {/* Header */}
-      <div className="trend-header">
-        <div className="header-content">
-          <div className="header-left">
-            <div className="header-text-container">
-              <h1>Expense Trend Analysis</h1>
-              <p className="subtitle">Analyze spending patterns and trends over time</p>
-            </div>
-          </div>
-          <div className="header-right">
-            <button className="back-btn" onClick={() => navigate(-1)}>
-              ← Back to Expenses
-            </button>
-          </div>
-        </div>
-        
-        <div className="year-selector">
-          <div className="year-select-group">
-            <label htmlFor="year-select">Analyze Year:</label>
-            <select 
-              id="year-select"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="year-input"
-            >
-              {[2023, 2024, 2025, 2026].map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-          <div className="year-select-group">
-            <label htmlFor="comparison-year-select">Compare With:</label>
-            <select 
-              id="comparison-year-select"
-              value={comparisonYear}
-              onChange={(e) => setComparisonYear(parseInt(e.target.value))}
-              className="year-input"
-            >
-              {[2023, 2024, 2025, 2026].map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+      {/* Welcome Row */}
+      <div className="welcome-row">
+        <h2 className="welcome-text">Welcome, <span className="accent-text">Admin</span></h2>
       </div>
       
       {/* Summary Cards */}
-      <div className="summary-cards">
-        <div className="summary-card total-spent">
-          <div className="card-header">
-            <span className="card-title">Total Spending</span>
+      <div className="summary-cards-row">
+        <div className="summary-card">
+          <div className="card-top-section">
+            <div className="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
           </div>
-          <div className="card-value">₹{yearlyTotals.total.toLocaleString()}</div>
-          <div className="card-comparison">
-            <span className={comparisonTotals.total > 0 && yearlyTotals.total >= comparisonTotals.total ? 'positive' : 'negative'}>
-              {comparisonTotals.total > 0 ? (
-                <>
-                  {yearlyTotals.total >= comparisonTotals.total ? '▲' : '▼'} 
-                  {Math.abs(((yearlyTotals.total - comparisonTotals.total) / comparisonTotals.total) * 100).toFixed(1)}% vs {comparisonYear}
-                </>
-              ) : ''}
-            </span>
+          <div className="card-bottom-section">
+            <div className="card-label">Total Expense</div>
+            <div className="card-value">₹{yearlyTotals.total.toLocaleString()}</div>
           </div>
-          <div className="card-indicator total-spent-indicator"></div>
         </div>
         
-        <div className="summary-card avg-monthly">
-          <div className="card-header">
-            <span className="card-title">Average Monthly</span>
+        <div className="summary-card">
+          <div className="card-top-section">
+            <div className="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 3V9H9M21 21V15H15M7 17L3 21M21 3L17 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
           </div>
-          <div className="card-value">₹{(yearlyTotals.total / 12).toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
-          <div className="card-comparison">
-            <span className={comparisonTotals.total > 0 && (yearlyTotals.total / 12) >= (comparisonTotals.total / 12) ? 'positive' : 'negative'}>
-              {comparisonTotals.total > 0 ? (
-                <>
-                  {(yearlyTotals.total / 12) >= (comparisonTotals.total / 12) ? '▲' : '▼'} 
-                  {Math.abs((((yearlyTotals.total / 12) - (comparisonTotals.total / 12)) / (comparisonTotals.total / 12)) * 100).toFixed(1)}% vs {comparisonYear}
-                </>
-              ) : ''}
-            </span>
+          <div className="card-bottom-section">
+            <div className="card-label">Monthly Avg</div>
+            <div className="card-value">₹{(yearlyTotals.total / 12).toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
           </div>
-          <div className="card-indicator avg-monthly-indicator"></div>
         </div>
         
-        <div className="summary-card highest-category">
-          <div className="card-header">
-            <span className="card-title">Top Expense Category</span>
+        <div className="summary-card">
+          <div className="card-top-section">
+            <div className="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13 17H21M13 7H21M3 17L7 13L3 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
           </div>
-          <div className="card-value">
-            {yearlyTotals.staffSalary >= yearlyTotals.roomRent && yearlyTotals.staffSalary >= yearlyTotals.otherExpenses ? 'Staff Salary' :
-             yearlyTotals.roomRent >= yearlyTotals.otherExpenses ? 'Room Rent' : 'Miscellaneous'}
+          <div className="card-bottom-section">
+            <div className="card-label">Categories</div>
+            <div className="card-value">
+              {Object.keys(new Set(filteredExpenses.flatMap(m => 
+                ['roomRent', 'staffSalary', 'otherExpenses', 'electricityBill', 'internetBill']))).length}
+            </div>
           </div>
-          <div className="card-indicator highest-category-indicator"></div>
+        </div>
+        
+        <div className="summary-card">
+          <div className="card-top-section">
+            <div className="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13 7H21M13 17H21M3 7L7 11L3 15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div className="card-bottom-section">
+            <div className="card-label">Highest Month</div>
+            <div className="card-value">
+              {filteredExpenses.length > 0 ? 
+                filteredExpenses.reduce((max, month) => month.total > max.total ? month : max).label : 
+                'N/A'}
+            </div>
+          </div>
+        </div>
+        
+        <div className="summary-card">
+          <div className="card-top-section">
+            <div className="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13 7H21M13 17H21M3 7L7 11L3 15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div className="card-bottom-section">
+            <div className="card-label">Lowest Month</div>
+            <div className="card-value">
+              {filteredExpenses.length > 0 ? 
+                filteredExpenses.reduce((min, month) => month.total < min.total ? month : min).label : 
+                'N/A'}
+            </div>
+          </div>
         </div>
       </div>
       
-      {/* Comparison Messages */}
-      <div className="comparison-messages">
-        {comparisonTotals.total <= 0 && (
-          <div className="no-comparison-message">
-            No data for comparison
+      {/* Two Report Cards Row */}
+      <div className="report-cards-row">
+        <div className="report-card">
+          <div className="report-card-header">
+            <h3 className="report-card-title">Overall Expense Report</h3>
           </div>
-        )}
-        {comparisonTotals.total > 0 && (
-          <div className="comparison-message">
-            vs {comparisonTotals.staffSalary >= comparisonTotals.roomRent && comparisonTotals.staffSalary >= comparisonTotals.otherExpenses ? 'Staff Salary' :
-             comparisonTotals.roomRent >= comparisonTotals.otherExpenses ? 'Room Rent' : 'Miscellaneous'} in {comparisonYear}
+          <div className="report-table">
+            <div className="table-row">
+              <div className="table-cell-label">Total Expense</div>
+              <div className="table-cell-value">₹{yearlyTotals.total.toLocaleString()}</div>
+            </div>
+            <div className="table-row">
+              <div className="table-cell-label">Paid Amount</div>
+              <div className="table-cell-value">₹{yearlyTotals.total.toLocaleString()}</div>
+            </div>
+            <div className="table-row">
+              <div className="table-cell-label">Pending Amount</div>
+              <div className="table-cell-value">₹0</div>
+            </div>
           </div>
-        )}
-      </div>
-      
-      {/* Trend Analysis */}
-      {trendAnalysis && (
-        <div className="trend-analysis">
-          <h3>Year-over-Year Analysis ({selectedYear} vs {comparisonYear})</h3>
-          <div className="analysis-cards">
-            <div className="analysis-card">
-              <div className="card-header">
-                <span className="card-title">Total Spending Change</span>
-              </div>
-              <div className={`card-value ${trendAnalysis.totalChange >= 0 ? 'positive' : 'negative'}`}>
-                {trendAnalysis.totalChange >= 0 ? '+' : ''}{trendAnalysis.totalChange.toLocaleString(undefined, {maximumFractionDigits: 0})}
-              </div>
-              <div className={`card-comparison ${trendAnalysis.totalChangePercent >= 0 ? 'positive' : 'negative'}`}>
-                {trendAnalysis.totalChangePercent >= 0 ? '+' : ''}{trendAnalysis.totalChangePercent.toFixed(1)}% change
+        </div>
+        
+        <div className="report-card">
+          <div className="report-card-header">
+            <h3 className="report-card-title">Overall Expense Summary</h3>
+          </div>
+          <div className="report-table">
+            <div className="table-row">
+              <div className="table-cell-label">Highest Expense Month</div>
+              <div className="table-cell-value">
+                {filteredExpenses.length > 0 ? 
+                  filteredExpenses.reduce((max, month) => month.total > max.total ? month : max).label : 
+                  'N/A'}
               </div>
             </div>
-            
-            <div className="analysis-card">
-              <div className="card-header">
-                <span className="card-title">Biggest Increase</span>
-              </div>
-              <div className="card-value">
-                {getCategoryDisplayName(trendAnalysis.highestIncreaseCategory)}
-              </div>
-              <div className="card-comparison positive">
-                +{trendAnalysis.categoryChanges[trendAnalysis.highestIncreaseCategory]?.changePercent.toFixed(1)}%
+            <div className="table-row">
+              <div className="table-cell-label">Lowest Expense Month</div>
+              <div className="table-cell-value">
+                {filteredExpenses.length > 0 ? 
+                  filteredExpenses.reduce((min, month) => month.total < min.total ? month : min).label : 
+                  'N/A'}
               </div>
             </div>
-            
-            <div className="analysis-card">
-              <div className="card-header">
-                <span className="card-title">Biggest Decrease</span>
-              </div>
-              <div className="card-value">
-                {getCategoryDisplayName(trendAnalysis.highestDecreaseCategory)}
-              </div>
-              <div className="card-comparison negative">
-                {trendAnalysis.categoryChanges[trendAnalysis.highestDecreaseCategory]?.changePercent.toFixed(1)}%
+            <div className="table-row">
+              <div className="table-cell-label">Total Categories</div>
+              <div className="table-cell-value">
+                {Object.keys(new Set(filteredExpenses.flatMap(m => 
+                  ['roomRent', 'staffSalary', 'otherExpenses', 'electricityBill', 'internetBill']))).length}
               </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
       
-      {/* Trend Chart */}
-      {renderTrendChart()}
-      
-      {/* Category Breakdown */}
-      {renderCategoryBreakdown()}
+      {/* Chart Section Row */}
+      <div className="chart-section-row">
+        <div className="chart-card">
+          <div className="chart-header">
+            <h2 className="chart-title">Monthly Expense Trend</h2>
+            <div className="header-controls">
+              <select 
+                value={new Date().getMonth()}
+                className="month-dropdown"
+              >
+                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => (
+                  <option key={index} value={index}>{month}</option>
+                ))}
+              </select>
+              <select 
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="year-dropdown"
+              >
+                {[2023, 2024, 2025, 2026].map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <div className="action-icon">⚙️</div>
+            </div>
+          </div>
+          <div className="chart-content">
+            {filteredExpenses.length > 0 ? renderTrendChart() : (
+              <div className="chart-placeholder">
+                <div className="placeholder-icon">📊</div>
+                <h3>No Data Available</h3>
+                <p>No expense data found for {selectedYear}</p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="chart-card">
+          <div className="chart-header">
+            <h2 className="chart-title">Monthly Expense Total</h2>
+            <div className="header-controls">
+              <select 
+                value={new Date().getMonth()}
+                className="month-dropdown"
+              >
+                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => (
+                  <option key={index} value={index}>{month}</option>
+                ))}
+              </select>
+              <select 
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="year-dropdown"
+              >
+                {[2023, 2024, 2025, 2026].map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <div className="action-icon">⚙️</div>
+            </div>
+          </div>
+          <div className="chart-content">
+            {filteredExpenses.length > 0 ? (
+              <div className="trend-chart-container">
+                <div className="chart-wrapper">
+                  <div className="y-axis">
+                    {[100, 75, 50, 25, 0].map(percent => (
+                      <div key={percent} className="y-axis-label">
+                        ₹{Math.round((Math.max(...filteredExpenses.map(m => m.total), 1) * percent / 100)).toLocaleString()}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="chart-area">
+                    <svg viewBox={`0 0 ${filteredExpenses.length * 100} 300`} className="trend-svg">
+                      {/* Grid lines */}
+                      {[0, 1, 2, 3, 4].map(i => (
+                        <line
+                          key={i}
+                          x1="0"
+                          y1={i * 75}
+                          x2={filteredExpenses.length * 100}
+                          y2={i * 75}
+                          stroke="#eee"
+                          strokeWidth="1"
+                        />
+                      ))}
+                      
+                      {/* Bars for each month */}
+                      {filteredExpenses.map((month, index) => {
+                        const maxTotal = Math.max(...filteredExpenses.map(m => m.total), 1);
+                        const barHeight = (month.total / maxTotal) * 250;
+                        const barWidth = 60;
+                        const xPosition = index * 100 + 20;
+                        
+                        return (
+                          <g key={month.key}>
+                            <rect
+                              x={xPosition}
+                              y={300 - barHeight}
+                              width={barWidth}
+                              height={barHeight}
+                              fill="var(--info-color)"
+                              rx="4"
+                              className="chart-bar"
+                            />
+                            <text
+                              x={xPosition + barWidth / 2}
+                              y={300 - barHeight - 10}
+                              textAnchor="middle"
+                              fontSize="11"
+                              fill="#333"
+                              fontWeight="600"
+                              className="data-label"
+                            >
+                              ₹{month.total.toLocaleString()}
+                            </text>
+                            <text
+                              x={xPosition + barWidth / 2}
+                              y={320}
+                              textAnchor="middle"
+                              fontSize="11"
+                              fill="#64748b"
+                              fontWeight="500"
+                              className="month-label"
+                            >
+                              {month.label.split(' ')[0]}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="chart-placeholder">
+                <div className="placeholder-icon">📊</div>
+                <h3>No Data Available</h3>
+                <p>No expense data found for {selectedYear}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

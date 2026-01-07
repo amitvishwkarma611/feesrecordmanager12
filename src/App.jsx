@@ -27,7 +27,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import FreeTrialContinue from './components/FreeTrialContinue';
 import TestSubscriptionCreation from './components/TestSubscriptionCreation';
 import VerifyEmail from './components/VerifyEmail';
-import TermsAndConditions from './components/TermsAndConditions';
+import TermsAndConditions from './components/profile/TermsAndConditions';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { AcademicYearProvider } from './contexts/AcademicYearContext';
 

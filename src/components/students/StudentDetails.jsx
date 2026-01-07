@@ -298,522 +298,499 @@ const StudentDetails = () => {
         console.warn('Could not load branding data:', error);
       }
       
-      // For exact match with desktop print, try to use the same approach
-      // First, try to get the content from the actual rendered component
-      const printContent = document.querySelector('.student-profile-card');
-      
-      let content;
-      if (printContent) {
-        // If the element exists in DOM, use its content like desktop print
-        content = printContent.innerHTML;
-      } else {
-        // Fallback: create content from data if element not available
-        // Calculate values
-        const totalFees = parseFloat(student.totalFees) || 0;
-        const feesPaid = parseFloat(student.feesPaid) || 0;
-        const pendingFees = totalFees - feesPaid;
-        const paymentProgress = totalFees > 0 ? Math.round((feesPaid / totalFees) * 100) : 0;
-        
-        // Create the complete student profile HTML matching the desktop print template
-        content = `
-          <div class="student-header">
-            <div class="student-photo-preview">
-              ${student.photoUrl ? `<img src="${student.photoUrl}" alt="Student Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" />` : `<div style="width: 120px; height: 120px; background: #e9ecef; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #ddd;">No Photo</div>`}
-            </div>
-            <div class="student-basic-info">
-              <h2>${student.name || 'N/A'}</h2>
-              <div class="student-id">Student ID: ${student.studentId || student.id || 'N/A'}</div>
-              <div class="student-class">Class: ${student.class || 'N/A'}</div>
-            </div>
-          </div>
+      // Function to convert image to base64 to ensure it's embedded in print
+      function convertImageToBase64(imageUrl) {
+        return new Promise((resolve) => {
+          if (!imageUrl) {
+            resolve(null);
+            return;
+          }
           
-          <div class="summary-cards">
-            <div class="summary-card">
-              <div class="summary-card-title">Total Fees</div>
-              <div class="summary-card-value">₹${totalFees.toLocaleString('en-IN')}</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-card-title">Fees Paid</div>
-              <div class="summary-card-value">₹${feesPaid.toLocaleString('en-IN')}</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-card-title">Pending Fees</div>
-              <div class="summary-card-value">₹${pendingFees.toLocaleString('en-IN')}</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-card-title">Payment Progress</div>
-              <div class="summary-card-value">${paymentProgress}%</div>
-            </div>
-          </div>
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          img.src = imageUrl;
           
-          <div class="payment-progress-section">
-            <h3>Payment Progress</h3>
-            <div class="progress-container">
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${paymentProgress}%;"></div>
-              </div>
-              <div class="progress-text">${paymentProgress}% of total fees collected</div>
-            </div>
-          </div>
+          img.onload = function() {
+            try {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              canvas.width = this.width;
+              canvas.height = this.height;
+              ctx.drawImage(this, 0, 0);
+              const dataURL = canvas.toDataURL('image/png');
+              resolve(dataURL);
+            } catch (e) {
+              console.error('Error converting image to base64:', e);
+              resolve(imageUrl); // fallback to original URL
+            }
+          };
           
-          <div class="personal-info-section">
-            <h3>Personal Information</h3>
-            <div class="personal-info-content">
-              <div class="info-category">
-                <h4>Student Details</h4>
-                <div class="student-details-grid">
-                  <div class="student-detail-item">
-                    <label>Name</label>
-                    <span>${student.name || 'N/A'}</span>
-                  </div>
-                  <div class="student-detail-item">
-                    <label>Student ID</label>
-                    <span>${student.studentId || student.id || 'N/A'}</span>
-                  </div>
-                  <div class="student-detail-item">
-                    <label>Class</label>
-                    <span>${student.class || 'N/A'}</span>
-                  </div>
-                  <div class="student-detail-item">
-                    <label>Roll Number</label>
-                    <span>${student.rollNumber || 'N/A'}</span>
-                  </div>
-                  <div class="student-detail-item">
-                    <label>Date of Birth</label>
-                    <span>${formatDate(student.dob) || 'N/A'}</span>
-                  </div>
-                  <div class="student-detail-item">
-                    <label>Gender</label>
-                    <span>${student.gender || 'N/A'}</span>
-                  </div>
-                  <div class="student-detail-item">
-                    <label>Admission Date</label>
-                    <span>${formatDate(student.admissionDate) || 'N/A'}</span>
-                  </div>
-                  <div class="student-detail-item">
-                    <label>Address</label>
-                    <span>${student.address || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="info-category">
-                <h4>Contact Information</h4>
-                <div class="contact-info-grid">
-                  <div class="contact-detail-item">
-                    <label>Student Contact</label>
-                    <span>${student.contact || 'N/A'}</span>
-                  </div>
-                  <div class="contact-detail-item">
-                    <label>Student Email</label>
-                    <span>${student.email || 'N/A'}</span>
-                  </div>
-                  <div class="contact-detail-item">
-                    <label>Guardian Contact</label>
-                    <span>${student.guardianContact || 'N/A'}</span>
-                  </div>
-                  <div class="contact-detail-item">
-                    <label>Emergency Contact</label>
-                    <span>${student.emergencyContact || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="info-category">
-                <h4>Family Information</h4>
-                <div class="family-info-grid">
-                  <div class="family-detail-item">
-                    <label>Father's Name</label>
-                    <span>${student.fatherName || 'N/A'}</span>
-                  </div>
-                  <div class="family-detail-item">
-                    <label>Mother's Name</label>
-                    <span>${student.motherName || 'N/A'}</span>
-                  </div>
-                  <div class="family-detail-item">
-                    <label>Father's Occupation</label>
-                    <span>${student.fatherOccupation || 'N/A'}</span>
-                  </div>
-                  <div class="family-detail-item">
-                    <label>Mother's Occupation</label>
-                    <span>${student.motherOccupation || 'N/A'}</span>
-                  </div>
-                  <div class="family-detail-item">
-                    <label>Father's Contact</label>
-                    <span>${student.fatherContact || 'N/A'}</span>
-                  </div>
-                  <div class="family-detail-item">
-                    <label>Mother's Contact</label>
-                    <span>${student.motherContact || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="system-info-section">
-            <h3>System Information</h3>
-            <div class="system-info-content">
-              <div class="system-grid">
-                <div class="system-item">
-                  <label>Created At</label>
-                  <span>${formatDate(student.createdAt) || 'N/A'}</span>
-                </div>
-                <div class="system-item">
-                  <label>Updated At</label>
-                  <span>${formatDate(student.updatedAt) || 'N/A'}</span>
-                </div>
-                <div class="system-item">
-                  <label>Total Fees</label>
-                  <span>₹${totalFees.toLocaleString('en-IN')}</span>
-                </div>
-                <div class="system-item">
-                  <label>Fees Paid</label>
-                  <span>₹${feesPaid.toLocaleString('en-IN')}</span>
-                </div>
-                <div class="system-item">
-                  <label>Pending Fees</label>
-                  <span>₹${pendingFees.toLocaleString('en-IN')}</span>
-                </div>
-                <div class="system-item">
-                  <label>Payment Status</label>
-                  <span>${pendingFees > 0 ? 'Pending' : 'Completed'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="payments-table">
-            <h3>Payment History</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Amount</th>
-                  <th>Mode</th>
-                  <th>Status</th>
-                  <th>Reference</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(student.payments && Array.isArray(student.payments) && student.payments.length > 0 
-                  ? student.payments.map(payment => `
-                    <tr>
-                      <td>${formatDate(payment.date)}</td>
-                      <td>₹${parseFloat(payment.amount).toLocaleString('en-IN')}</td>
-                      <td>${payment.mode || 'N/A'}</td>
-                      <td>
-                        <span class="status-badge status-${payment.status?.toLowerCase() || 'paid'}">
-                          ${payment.status || 'Paid'}
-                        </span>
-                      </td>
-                      <td>${payment.reference || 'N/A'}</td>
-                    </tr>`).join('')
-                  : '<tr><td colspan="5">No payment records found</td></tr>')}
-              </tbody>
-            </table>
-          </div>
-        `;
+          img.onerror = function() {
+            resolve(imageUrl); // fallback to original URL
+          };
+        });
       }
       
-      // Create comprehensive print styles matching desktop template
-      const printStyles = `
-        <style>
-          @media print {
-            @page { 
-              size: A4; 
-              margin: 1cm; 
+      // Convert logo to base64 to ensure it prints properly
+      let logoBase64Url = null;
+      if (brandingData?.logoUrl) {
+        logoBase64Url = await convertImageToBase64(brandingData.logoUrl);
+      }
+      
+      // Calculate values
+      const totalFees = parseFloat(student.totalFees) || 0;
+      const feesPaid = parseFloat(student.feesPaid) || 0;
+      const pendingFees = totalFees - feesPaid;
+      const paymentProgress = totalFees > 0 ? Math.round((feesPaid / totalFees) * 100) : 0;
+      
+      // Create a print-friendly version of the student profile matching the receipt format
+      const printWindow = window.open('', '_blank');
+      
+      // Get branding data
+      const logoUrl = brandingData?.logoUrl || null;
+      const firmNameValue = brandingData?.firmName || firmName || '';
+      const firmAddress = brandingData?.firmAddress || '';
+      const signatureUrl = brandingData?.signatureUrl || null;
+      const stampUrl = brandingData?.stampUrl || null;
+      
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Student Profile - ${student.name}</title>
+          <style>
+            @media print {
+              @page { margin: 0.5cm; size: A4; }
+              body { margin: 0.5cm; }
+              
+              /* Ensure images are visible in print */
+              img {
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                print-color-adjust: exact;
+                max-height: 60px;
+                width: auto;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+              }
+              
+              .receipt-preview-logo {
+                max-width: 60px;
+                max-height: 60px;
+                width: auto;
+                margin-right: 15px;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+              }
             }
+            
             body { 
-              margin: 0; 
-              padding: 0; 
-              font-family: 'Times New Roman', serif; 
-              color: black; 
-            }
-            .student-profile-card { 
-              max-width: 90%; 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+              max-width: 600px; 
               margin: 0 auto; 
-              padding: 15px; 
-              box-shadow: none; 
-              background: white; 
-              font-size: 11px; /* Professional font size */
+              padding: 10px;
+              color: var(--text-primary, #333);
+              line-height: 1.3;
+              font-size: 13px;
+              position: relative;
             }
-            .photo-upload-section { 
-              display: none; 
+            
+            .receipt-container {
+              border: 1px solid var(--info-color, #3498db); /* Blue for neutral info */
+              border-radius: 8px;
+              padding: 15px;
+              position: relative;
+              background: white;
             }
-            .upload-photo-btn { 
-              display: none; 
-            }
-            .upload-success-message { 
-              display: none; 
-            }
-            .watermark-container {
-              position: fixed;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%) rotate(-45deg);
-              pointer-events: none;
-              z-index: 1000;
-              opacity: 0.05;
-              font-size: 5em;
-              color: #cccccc;
-              font-weight: bold;
+            
+            .receipt-header {
               text-align: center;
-            }
-            .student-photo-preview {
-              width: 120px;
-              height: 120px;
-              object-fit: cover;
-              border-radius: 8px;
-              margin-bottom: 10px;
-              display: block;
-              border: 1px solid #ddd;
-            }
-            .photo-preview img {
-              width: 120px;
-              height: 120px;
-              object-fit: cover;
-              border-radius: 8px;
-            }
-            .student-header {
-              display: flex;
-              align-items: flex-start;
-              gap: 20px;
-              margin-bottom: 20px;
+              margin-bottom: 15px;
               padding-bottom: 15px;
-              border-bottom: 2px solid #4e73df; /* Professional border */
+              border-bottom: 2px solid var(--info-color, #3498db);
             }
-            .student-basic-info {
+            
+            .receipt-header-content {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-bottom: 10px;
+            }
+            
+            .receipt-preview-logo {
+              max-width: 60px;
+              max-height: 60px;
+              margin-right: 15px;
+            }
+            
+            .receipt-placeholder-logo {
+              font-size: 2em;
+              margin-right: 15px;
+            }
+            
+            .receipt-academy-info {
+              text-align: left;
+            }
+            
+            .receipt-academy-name {
+              margin: 0 0 5px 0;
+              font-size: 1.3em;
+              font-weight: bold;
+              color: var(--primary-color, #2c3e50);
+            }
+            
+            .receipt-academy-address {
+              margin: 0;
+              font-size: 0.9em;
+              color: var(--text-secondary, #7f8c8d);
+            }
+            
+            .receipt-title-preview {
+              text-align: center;
+              font-size: 1.4em;
+              font-weight: bold;
+              margin: 15px 0 10px 0;
+              color: var(--success-color, #27ae60);
+            }
+            
+            .receipt-details {
+              margin: 15px 0;
+            }
+            
+            .receipt-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 8px 0;
+              padding: 4px 0;
+            }
+            
+            .detail-item {
+              display: flex;
+              justify-content: space-between;
+              margin: 6px 0;
+            }
+            
+            .detail-label {
+              font-weight: 600;
+              color: var(--text-secondary, #7f8c8d);
+              min-width: 120px;
+            }
+            
+            .detail-value {
+              font-weight: 500;
+              color: var(--text-primary, #34495e);
+              text-align: right;
               flex: 1;
             }
-            .student-basic-info h2 {
-              margin: 0 0 8px 0;
-              font-size: 18px;
-              color: #2c3e50;
-              font-weight: bold;
-              text-transform: uppercase;
+            
+            .receipt-label {
+              font-weight: 600;
+              color: var(--text-secondary, #7f8c8d);
             }
-            .student-id, .student-class {
-              font-size: 12px;
-              margin: 4px 0;
-              font-weight: bold;
+            
+            .receipt-value {
+              font-weight: 500;
+              color: var(--text-primary, #34495e);
+              text-align: right;
             }
-            .summary-cards {
-              display: grid;
-              grid-template-columns: repeat(4, 1fr);
-              gap: 10px;
-              margin-bottom: 20px;
-            }
-            .summary-card {
-              padding: 12px;
-              border: 1px solid #ddd;
-              border-radius: 6px;
-              margin-bottom: 0;
-              background: #f8f9fa;
-            }
-            .summary-card-title {
-              font-size: 10px;
-              margin-bottom: 5px;
-              color: #495057;
+            
+            .receipt-amount {
+              color: var(--success-color, #27ae60);
               font-weight: bold;
             }
-            .summary-card-value {
-              font-size: 14px;
-              font-weight: bold;
-              color: #2c3e50;
+            
+            .receipt-divider {
+              height: 1px;
+              background: var(--border-color, #e0e0e0);
+              margin: 12px 0;
+              border: none;
             }
-            .payment-progress-section {
-              margin-bottom: 20px;
-              padding: 15px;
-              border: 1px solid #ddd;
-              border-radius: 6px;
-              background: #f8f9fa;
-            }
-            .payment-progress-section h3 {
-              font-size: 14px;
-              margin: 0 0 12px 0;
-              color: #2c3e50;
-              font-weight: bold;
-            }
-            .progress-container {
+            
+            .receipt-signatures {
               display: flex;
-              flex-direction: column;
-              gap: 6px;
+              justify-content: space-between;
+              margin: 25px 0 15px 0;
+              padding: 15px 0;
+              border-top: 1px solid var(--border-color, #e0e0e0);
+              border-bottom: 1px solid var(--border-color, #e0e0e0);
             }
+            
+            .signature-section, .stamp-section, .authorized-signature-section {
+              text-align: center;
+              flex: 1;
+            }
+            
+            .receipt-signature, .receipt-stamp {
+              max-width: 120px;
+              max-height: 60px;
+              margin: 0 auto 5px;
+            }
+            
+            .signature-line {
+              width: 100px;
+              height: 1px;
+              background: #000;
+              margin: 15px auto 5px;
+            }
+            
+            .receipt-footer {
+              text-align: center;
+              margin-top: 15px;
+              padding-top: 15px;
+              border-top: 1px solid var(--border-color, #e0e0e0);
+            }
+            
+            .receipt-note {
+              font-style: italic;
+              font-size: 0.85em;
+              color: var(--text-secondary, #7f8c8d);
+              margin-top: 5px;
+            }
+            
+            /* Ensure logo is visible during printing */
+            .receipt-preview-logo {
+              display: block !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+              max-height: 60px !important;
+              width: auto !important;
+            }
+            
+            /* Student photo styling */
+            .student-photo {
+              max-width: 100px;
+              max-height: 100px;
+              border-radius: 8px;
+              border: 1px solid #ddd;
+              object-fit: cover;
+              display: block;
+              margin: 0 auto 10px;
+            }
+            
+            /* Summary card styling */
+            .summary-section {
+              background: #f8f9fa;
+              border-radius: 6px;
+              padding: 10px;
+              margin: 10px 0;
+            }
+            
+            .summary-title {
+              font-weight: bold;
+              margin-bottom: 8px;
+              color: #2c3e50;
+              border-bottom: 1px solid #dee2e6;
+              padding-bottom: 5px;
+            }
+            
+            .summary-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 5px 0;
+            }
+            
+            .summary-label {
+              font-weight: 600;
+              color: #495057;
+            }
+            
+            .summary-value {
+              font-weight: 500;
+              color: #2c3e50;
+            }
+            
             .progress-bar {
               height: 12px;
               background-color: #e9ecef;
               border-radius: 6px;
               overflow: hidden;
+              margin: 8px 0;
             }
+            
             .progress-fill {
               height: 100%;
               background: linear-gradient(90deg, #4e73df, #224abe);
               border-radius: 6px;
             }
-            .progress-text {
-              font-size: 11px;
-              font-weight: bold;
-              color: #495057;
-            }
-            .personal-info-section, .system-info-section {
-              margin-bottom: 20px;
-              border: 1px solid #ddd;
-              border-radius: 6px;
-              page-break-inside: avoid;
-            }
-            .personal-info-section h3, .system-info-section h3 {
-              padding: 12px 15px;
-              margin: 0;
-              font-size: 14px;
-              background: #4e73df;
-              color: white;
-            }
-            .personal-info-content, .system-info-content {
-              padding: 15px;
-            }
-            .info-category {
-              margin-bottom: 15px;
-            }
-            .info-category h4 {
-              font-size: 12px;
-              margin: 0 0 10px 0;
-              color: #2c3e50;
-              font-weight: bold;
-              border-bottom: 1px solid #dee2e6;
-              padding-bottom: 5px;
-            }
-            .student-details-grid, .contact-info-grid, .family-info-grid, .system-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 15px;
-              margin-bottom: 10px;
-            }
-            .student-detail-item, .contact-detail-item, .family-detail-item, .system-item {
-              margin-bottom: 10px;
-              page-break-inside: avoid;
-            }
-            .student-detail-item label, .contact-detail-item label, .family-detail-item label, .system-item label {
-              display: block;
-              font-weight: bold;
-              margin-bottom: 3px;
-              font-size: 10px;
-              color: #495057;
-            }
-            .student-detail-item span, .contact-detail-item span, .family-detail-item span, .system-item span {
-              display: block;
-              padding: 6px;
-              background: #ffffff;
-              border-radius: 4px;
-              font-size: 11px;
-              border: 1px solid #dee2e6;
-              min-height: 20px;
-            }
-            .payments-table {
-              overflow-x: auto;
-              margin-top: 10px;
-            }
-            .payments-table table {
-              width: 100%;
-              border-collapse: collapse;
-            }
-            .payments-table th,
-            .payments-table td {
-              padding: 8px;
-              text-align: left;
-              border: 1px solid #dee2e6;
-              font-size: 10px;
-            }
-            .payments-table th {
-              background-color: #e9ecef;
-              font-weight: bold;
-              color: #495057;
-            }
-            .payments-table tr:nth-child(even) {
-              background-color: #f8f9fa;
-            }
-            .status-badge {
-              padding: 4px 8px;
-              border-radius: 4px;
-              font-size: 9px;
-              font-weight: bold;
-            }
-            .status-paid {
-              background: #d4edda;
-              color: #155724;
-            }
-            .status-pending {
-              background: #fff3cd;
-              color: #856404;
-            }
-            .status-overdue {
-              background: #f8d7da;
-              color: #721c24;
-            }
-            .status-not-started {
-              background: #d1ecf1;
-              color: #0c5460;
-            }
-            .print-only {
-              display: block !important;
-            }
-            /* Ensure single page layout */
-            .student-profile-card {
-              display: block;
-              width: 100%;
-              overflow: hidden;
-            }
-            .details-section {
-              page-break-inside: avoid;
-              margin-bottom: 20px;
-            }
-          }
-          @media screen {
-            .print-only {
-              display: none;
-            }
-          }
-        </style>
-      `;
-      
-      // Create print window
-      const printWindow = window.open('', '_blank');
-      
-      // Write print content with styles (no watermark)
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Student Profile - ${student.name}</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            ${printStyles}
-          </head>
-          <body>
-            <div class="student-profile-card">
-              ${content}
+          </style>
+        </head>
+        <body>
+          <div class="receipt-container">
+            <div class="receipt-header">
+              <div class="receipt-header-content">
+                ${logoBase64Url ? `<img src="${logoBase64Url}" alt="Academy Logo" class="receipt-preview-logo" />` : ''}
+                <div class="receipt-academy-info">
+                  <h4 class="receipt-academy-name">${firmNameValue}</h4>
+                  <p class="receipt-academy-address">${firmAddress}</p>
+                </div>
+              </div>
+              <div class="receipt-title-preview">Student Profile</div>
             </div>
-            <script>
-              // On mobile, we'll show a message and let user use browser's print option
-              // Add delay to ensure content renders
-              setTimeout(() => {
-                // Try to print, but don't force close on mobile
-                if (window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                  alert('Please use your browser\'s print option to save as PDF');
-                } else {
-                  window.print();
-                  // Close after printing on desktop only
-                  window.close();
-                }
-              }, 500);
-            </script>
-          </body>
+            
+            <div class="receipt-details">
+              <!-- Student Photo -->
+              ${student.photoUrl ? `<img src="${student.photoUrl}" alt="Student Photo" class="student-photo" />` : ''}
+              
+              <div class="detail-item">
+                <span class="detail-label">Student Name:</span>
+                <span class="detail-value">${student.name || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Student ID:</span>
+                <span class="detail-value">${student.studentId || student.id || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Class:</span>
+                <span class="detail-value">${student.class || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Roll Number:</span>
+                <span class="detail-value">${student.rollNumber || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Date of Birth:</span>
+                <span class="detail-value">${formatDate(student.dob) || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Gender:</span>
+                <span class="detail-value">${student.gender || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Admission Date:</span>
+                <span class="detail-value">${formatDate(student.admissionDate) || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Address:</span>
+                <span class="detail-value">${student.address || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Contact:</span>
+                <span class="detail-value">${student.contact || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">${student.email || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Father's Name:</span>
+                <span class="detail-value">${student.fatherName || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Mother's Name:</span>
+                <span class="detail-value">${student.motherName || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Father's Contact:</span>
+                <span class="detail-value">${student.fatherContact || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Mother's Contact:</span>
+                <span class="detail-value">${student.motherContact || 'N/A'}</span>
+              </div>
+              
+              <div class="receipt-divider"></div>
+              
+              <!-- Summary Section -->
+              <div class="summary-section">
+                <div class="summary-title">Financial Summary</div>
+                
+                <div class="summary-row">
+                  <span class="summary-label">Total Fees:</span>
+                  <span class="summary-value">₹${totalFees.toLocaleString('en-IN')}</span>
+                </div>
+                
+                <div class="summary-row">
+                  <span class="summary-label">Fees Paid:</span>
+                  <span class="summary-value">₹${feesPaid.toLocaleString('en-IN')}</span>
+                </div>
+                
+                <div class="summary-row">
+                  <span class="summary-label">Pending Fees:</span>
+                  <span class="summary-value">₹${pendingFees.toLocaleString('en-IN')}</span>
+                </div>
+                
+                <div class="summary-row">
+                  <span class="summary-label">Payment Progress:</span>
+                  <span class="summary-value">${paymentProgress}%</span>
+                </div>
+                
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${paymentProgress}%;"></div>
+                </div>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Payment Status:</span>
+                <span class="detail-value">${pendingFees > 0 ? 'Pending' : 'Completed'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Created At:</span>
+                <span class="detail-value">${formatDate(student.createdAt) || 'N/A'}</span>
+              </div>
+              
+              <div class="detail-item">
+                <span class="detail-label">Updated At:</span>
+                <span class="detail-value">${formatDate(student.updatedAt) || 'N/A'}</span>
+              </div>
+              
+              <!-- Payment History -->
+              ${(student.payments && Array.isArray(student.payments) && student.payments.length > 0 ? `
+              <div class="summary-section">
+                <div class="summary-title">Payment History</div>
+                ${student.payments.map(payment => `
+                <div class="detail-item">
+                  <div class="detail-label">${formatDate(payment.date)}</div>
+                  <div class="detail-value">₹${parseFloat(payment.amount).toLocaleString('en-IN')} (${payment.mode || 'N/A'})</div>
+                </div>`).join('')}
+              </div>` : '')}
+            </div>
+            
+            <div class="receipt-signatures">
+              
+              ${signatureUrl ? `
+              <div class="authorized-signature-section">
+                <img src="${signatureUrl}" alt="Authorized Signature" class="receipt-signature" />
+              </div>` : ''}
+              
+              ${stampUrl ? `
+              <div class="stamp-section">
+                <img src="${stampUrl}" alt="Official Stamp" class="receipt-stamp" />
+                <p>Official Stamp</p>
+              </div>` : ''}
+            </div>
+            
+            <div class="receipt-footer">
+              <p>Student Profile Report</p>
+              <p class="receipt-note">This is an auto-generated report. No signature required.</p>
+            </div>
+          </div>
+        </body>
         </html>
       `);
       
       printWindow.document.close();
       printWindow.focus();
+      printWindow.print();
+      // printWindow.close(); // Commented out to allow PDF saving
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      console.error('Error printing student profile:', error);
+      alert('Error printing student profile. Please try again.');
     }
   };
   

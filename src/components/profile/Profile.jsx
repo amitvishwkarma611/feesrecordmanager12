@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import './Profile.css';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase/firebaseConfig';
 import { getStudents, getPayments, getUserProfile } from '../../services/firebaseService';
@@ -566,6 +567,10 @@ const Profile = () => {
   const handleContactSupport = () => {
     navigate('/feedback-support');
   };
+  
+  const handleTermsAndConditions = () => {
+    navigate('/terms-and-conditions');
+  };
 
   const handleEditProfile = () => {
     alert('Opening profile edit modal... (This would open a form in a real app)');
@@ -906,6 +911,9 @@ const Profile = () => {
       <div className="profile-actions">
         <button className="action-btn contact-btn" onClick={handleContactSupport}>
           Contact Support
+        </button>
+        <button className="action-btn terms-btn" onClick={handleTermsAndConditions}>
+          Terms & Conditions
         </button>
         <button className="action-btn logout-btn" onClick={handleLogout}>
           Logout

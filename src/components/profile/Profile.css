@@ -465,6 +465,17 @@ input:checked + .slider:before {
   box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
 }
 
+.terms-btn {
+  background: linear-gradient(90deg, var(--info-color) 0%, var(--info-color-dark) 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.terms-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
 .print-btn {
   background: linear-gradient(90deg, var(--warning-color) 0%, var(--warning-color-dark) 100%);
   color: white;
