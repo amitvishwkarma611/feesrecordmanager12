@@ -30,7 +30,10 @@ const Students = () => {
     fatherName: '',
     motherName: '',
     totalFees: '',
-    feesPaid: ''
+    feesPaid: '',
+    feesStructure: '',
+    feesCollectionDate: '',
+    customCollectionDate: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -53,6 +56,28 @@ const Students = () => {
 
   useEffect(() => {
     fetchStudents();
+    
+    // Check for overdue students filter from dashboard
+    const overdueFilter = localStorage.getItem('overdueStudentsFilter');
+    if (overdueFilter) {
+      try {
+        const overdueStudentIds = JSON.parse(overdueFilter);
+        if (Array.isArray(overdueStudentIds) && overdueStudentIds.length > 0) {
+          // Set a temporary filter to show only overdue students
+          setSearchTerm(''); // Clear any existing search
+          setClassFilter(''); // Clear any existing class filter
+          
+          // We'll filter the students after they're loaded in the filterAndSortStudents function
+          setTimeout(() => {
+            // Remove the filter from localStorage after using it
+            localStorage.removeItem('overdueStudentsFilter');
+          }, 1000);
+        }
+      } catch (e) {
+        console.warn('Error parsing overdue students filter:', e);
+        localStorage.removeItem('overdueStudentsFilter');
+      }
+    }
     
     // Listen for students updated event
     const handleStudentsUpdated = () => {
@@ -111,20 +136,42 @@ const Students = () => {
   const filterAndSortStudents = () => {
     let filtered = [...students];
     
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(student => 
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.class.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (student.contact && student.contact.includes(searchTerm)) ||
-        (student.email && student.email.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-    
-    // Apply class filter
-    if (classFilter) {
-      filtered = filtered.filter(student => student.class.toLowerCase() === classFilter.toLowerCase());
+    // Check for overdue students filter from localStorage
+    const overdueFilter = localStorage.getItem('overdueStudentsFilter');
+    if (overdueFilter) {
+      try {
+        const overdueStudentIds = JSON.parse(overdueFilter);
+        if (Array.isArray(overdueStudentIds) && overdueStudentIds.length > 0) {
+          // Filter to show only overdue students
+          filtered = filtered.filter(student => 
+            overdueStudentIds.includes(student.id)
+          );
+          
+          // Clear the filter from localStorage after applying it
+          setTimeout(() => {
+            localStorage.removeItem('overdueStudentsFilter');
+          }, 100);
+        }
+      } catch (e) {
+        console.warn('Error parsing overdue students filter in filter function:', e);
+        localStorage.removeItem('overdueStudentsFilter');
+      }
+    } else {
+      // Apply search filter (only if no overdue filter)
+      if (searchTerm) {
+        filtered = filtered.filter(student => 
+          student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student.class.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (student.contact && student.contact.includes(searchTerm)) ||
+          (student.email && student.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+      }
+      
+      // Apply class filter (only if no overdue filter)
+      if (classFilter) {
+        filtered = filtered.filter(student => student.class.toLowerCase() === classFilter.toLowerCase());
+      }
     }
     
     // Apply sorting
@@ -268,7 +315,9 @@ const Students = () => {
         ...formData,
         totalFees: totalFees,
         feesPaid: feesPaid,
-        feesDue: totalFees - feesPaid
+        feesDue: totalFees - feesPaid,
+        feesStructure: formData.feesStructure,
+        feesCollectionDate: formData.feesCollectionDate
       };
       
       console.log('Student data to save:', studentData);
@@ -295,7 +344,10 @@ const Students = () => {
         fatherName: '',
         motherName: '',
         totalFees: '',
-        feesPaid: ''
+        feesPaid: '',
+        feesStructure: '',
+        feesCollectionDate: '',
+        customCollectionDate: ''
       });
       
       // Refresh student list
@@ -334,7 +386,10 @@ const Students = () => {
       fatherName: '',
       motherName: '',
       totalFees: '',
-      feesPaid: ''
+      feesPaid: '',
+      feesStructure: '',
+      feesCollectionDate: '',
+      customCollectionDate: ''
     });
     setShowForm(true);
   };
@@ -351,7 +406,10 @@ const Students = () => {
       fatherName: student.fatherName || '',
       motherName: student.motherName || '',
       totalFees: student.totalFees !== undefined ? student.totalFees.toString() : '',
-      feesPaid: student.feesPaid !== undefined ? student.feesPaid.toString() : ''
+      feesPaid: student.feesPaid !== undefined ? student.feesPaid.toString() : '',
+      feesStructure: student.feesStructure || '',
+      feesCollectionDate: student.feesCollectionDate || '',
+      customCollectionDate: student.customCollectionDate || ''
     });
     setShowForm(true);
   };
@@ -939,6 +997,56 @@ const Students = () => {
                 </div>
               </div>
               
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Fee Structure</label>
+                  <select
+                    name="feesStructure"
+                    value={formData.feesStructure}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">Select Fee Structure</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Quarterly">Quarterly</option>
+                    <option value="Semi-Annual">Semi-Annual</option>
+                    <option value="Annual">Annual</option>
+                    <option value="One-Time">One-Time</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label>Fees Collection Frequency</label>
+                  <select
+                    name="feesCollectionDate"
+                    value={formData.feesCollectionDate}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">Select Frequency</option>
+                    <option value="Every Month">Every Month</option>
+                    <option value="Every 2 Month">Every 2 Month</option>
+                    <option value="Every 3 Month">Every 3 Month</option>
+                    <option value="Every 4 Month">Every 4 Month</option>
+                    <option value="Custom Date">Custom Date</option>
+                  </select>
+                  
+                  {/* Custom Date Picker - shown when Custom Date is selected */}
+                  {formData.feesCollectionDate === 'Custom Date' && (
+                    <div className="custom-date-picker">
+                      <label>Enter Custom Date:</label>
+                      <input
+                        type="date"
+                        name="customCollectionDate"
+                        value={formData.customCollectionDate || ''}
+                        onChange={handleInputChange}
+                        className="custom-date-input"
+                        min={new Date().toISOString().split('T')[0]}
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               <div className="form-actions">
                 <button 
                   type="button" 
@@ -1095,6 +1203,38 @@ const Students = () => {
                           title="Edit student"
                         >
                           ✏️
+                        </button>
+                        <button 
+                          className="whatsapp-btn"
+                          onClick={() => {
+                            const pendingAmount = (student.totalFees || 0) - (student.feesPaid || 0);
+                            if (pendingAmount > 0 && student.contact) {
+                              const message = `Hello ${student.fatherName || student.motherName || 'Parent'} 👋
+${student.name} ki ${new Date().toLocaleString('default', { month: 'long' })} ki fees ₹${pendingAmount} pending hai.
+
+Kindly fees clear karein.
+– Victory Point Academy`;
+                              const encodedMessage = encodeURIComponent(message);
+                              const cleanNumber = student.contact.toString().replace(/\D/g, '');
+                              let fullNumber;
+                              if (cleanNumber.length === 10) {
+                                fullNumber = `91${cleanNumber}`;
+                              } else if (cleanNumber.length === 12 && cleanNumber.startsWith('91')) {
+                                fullNumber = cleanNumber;
+                              } else {
+                                alert('Invalid mobile number format');
+                                return;
+                              }
+                              const whatsappUrl = `https://wa.me/${fullNumber}?text=${encodedMessage}`;
+                              window.open(whatsappUrl, '_blank');
+                            } else {
+                              alert('Cannot send reminder: either no pending amount or missing contact number');
+                            }
+                          }}
+                          title="Send WhatsApp reminder"
+                          disabled={(student.totalFees || 0) - (student.feesPaid || 0) <= 0 || !student.contact}
+                        >
+                          💬
                         </button>
                         <button 
                           className="delete-btn"

@@ -4,14 +4,22 @@ import './Chart.css';
 const BarChart = ({ data, width = "100%", height = 300 }) => {
   const [tooltip, setTooltip] = useState(null);
 
-  // Define fixed months to ensure all months are shown
-  const fixedMonths = ['Sep 2025', 'Oct 2025', 'Nov 2025', 'Dec 2025'];
+  // Use actual months from data to ensure correct representation
+  const completeData = data || [];
   
-  // Ensure data includes all months, adding zero values for missing months
-  const completeData = fixedMonths.map(month => {
-    const monthData = data.find(item => item.month === month);
-    return monthData || { month, collected: 0, pending: 0 };
-  });
+  // Calculate max value from actual data to set appropriate scale
+  const dataMaxValue = completeData.length > 0 
+    ? Math.max(...completeData.map(item => Math.max(item.collected, item.pending))) 
+    : 10000;
+  
+  // Set maxValue to be a round number higher than the max data value
+  const maxValue = Math.ceil(dataMaxValue / 2000) * 2000; // Round up to nearest 2000
+  
+  // Create ticks at 2000 intervals up to the maxValue
+  const yAxisTicks = [];
+  for (let i = 0; i <= maxValue; i += 2000) {
+    yAxisTicks.push(i);
+  }
 
   // Chart dimensions
   const padding = { top: 30, right: 20, bottom: 50, left: 60 };
@@ -20,14 +28,14 @@ const BarChart = ({ data, width = "100%", height = 300 }) => {
   const chartWidth = svgWidth - padding.left - padding.right;
   const chartHeight = svgHeight - padding.top - padding.bottom;
 
-  // Fixed Y-axis ticks: ₹0, ₹10k, ₹20k, ₹30k, ₹40k
-  const yAxisTicks = [0, 10000, 20000, 30000, 40000];
-  const maxValue = 40000; // Fixed max value for consistent scaling
+  // Y-axis ticks and maxValue are now dynamically calculated above
 
   // Bar dimensions
   const barWidth = 20;
   const groupWidth = barWidth * 2.5;
-  const gapBetweenGroups = (chartWidth - (groupWidth * completeData.length)) / (completeData.length - 1);
+  const gapBetweenGroups = completeData.length > 1 
+    ? (chartWidth - (groupWidth * completeData.length)) / (completeData.length - 1)
+    : 0;  // Handle case where there's only one data point
 
   // Generate bars
   const bars = [];
@@ -43,11 +51,11 @@ const BarChart = ({ data, width = "100%", height = 300 }) => {
       y: collectedY,
       width: barWidth,
       height: collectedHeight,
-      value: month.collected,
+      value: month.collected, // Keep original value for tooltip
       month: month.month,
       type: 'Collected',
       color: '#1cc88a', // muted green
-      isCurrent: month.month === 'Dec 2025'
+      isCurrent: month.month.includes('Dec')
     });
     
     // Pending bar
@@ -63,20 +71,20 @@ const BarChart = ({ data, width = "100%", height = 300 }) => {
       month: month.month,
       type: 'Pending',
       color: '#f6c23e', // soft orange
-      isCurrent: month.month === 'Dec 2025'
+      isCurrent: month.month.includes('Dec')
     });
   });
 
   // Handle mouse events for tooltip
   const handleMouseOver = (bar, event) => {
-    // Find the group data for this month
-    const monthData = completeData.find(item => item.month === bar.month);
+    // Find the original data for this month to show actual values in tooltip
+    const originalMonthData = data.find(item => item.month === bar.month);
     setTooltip({
       x: event.clientX,
       y: event.clientY,
       month: bar.month,
-      collected: monthData.collected,
-      pending: monthData.pending
+      collected: originalMonthData ? originalMonthData.collected : 0,
+      pending: originalMonthData ? originalMonthData.pending : 0
     });
   };
 
@@ -138,12 +146,12 @@ const BarChart = ({ data, width = "100%", height = 300 }) => {
               x={padding.left - 10}
               y={y + 4}
               textAnchor="end"
-              fontSize="16"  // Increased font size for better visibility
+              fontSize="18"  // Increased font size for better visibility
               fill="#495057"
               fontFamily="sans-serif"
-              fontWeight="500"
+              fontWeight="600"
             >
-              ₹{tick === 0 ? '0' : tick >= 1000 ? `${tick/1000}k` : tick}
+              ₹{tick >= 1000 ? `${tick/1000}k` : tick}
             </text>
           );
         })}
@@ -193,20 +201,20 @@ const BarChart = ({ data, width = "100%", height = 300 }) => {
                 x={groupX}
                 y={svgHeight - padding.bottom + 20}
                 textAnchor="middle"
-                fontSize="16"  // Increased font size for better visibility
+                fontSize="18"  // Increased font size for better visibility
                 fill="#495057"
                 fontFamily="sans-serif"
-                fontWeight="500"
+                fontWeight="600"
               >
                 {month.month.split(' ')[0]}
               </text>
               {/* Current month indicator */}
-              {month.month === 'Dec 2025' && (
+              {month.month.includes('Dec') && (
                 <text
                   x={groupX}
                   y={svgHeight - padding.bottom + 35}
                   textAnchor="middle"
-                  fontSize="14"  // Increased font size for better visibility
+                  fontSize="16"  // Increased font size for better visibility
                   fill="#1cc88a"
                   fontWeight="600"
                   fontFamily="sans-serif"

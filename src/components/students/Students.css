@@ -851,6 +851,58 @@
   align-items: center;
 }
 
+.whatsapp-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 4px #0000001a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0;
+  margin: 0 2px;
+  background: linear-gradient(90deg, #25D366, #128C7E);
+  color: #fff;
+}
+
+.whatsapp-btn:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #ffffff33, #ffffff66);
+  transform: translate(-100%);
+  transition: transform 0.6s ease;
+}
+
+.whatsapp-btn:hover:after {
+  transform: translate(100%);
+}
+
+.whatsapp-btn:hover {
+  background: linear-gradient(90deg, #25D366, #128C7E);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px #25D3664d;
+}
+
+.whatsapp-btn:disabled {
+  background: var(--border-color);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
 .edit-btn, .view-btn {
   width: 32px;
   height: 32px;
@@ -1711,5 +1763,50 @@
 
 .export-option:first-child {
   border-bottom: 1px solid #e2e8f0;
+}
+
+/* Custom Date Picker Styles */
+.custom-date-picker {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.custom-date-picker label {
+  display: block;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.custom-date-input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.custom-date-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  transition: background 0.2s;
+}
+
+.custom-date-input::-webkit-calendar-picker-indicator:hover {
+  background: #e2e8f0;
 }
 

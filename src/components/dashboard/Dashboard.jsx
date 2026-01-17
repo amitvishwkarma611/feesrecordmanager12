@@ -79,6 +79,8 @@ const Dashboard = () => {
   const [showInsights, setShowInsights] = useState(true);
   // State for user menu dropdown
   const [showUserMenu, setShowUserMenu] = useState(false);
+  // State for overdue students
+  const [overdueStudents, setOverdueStudents] = useState([]);
 
   const insightsContentRef = useRef(null);
 
@@ -162,6 +164,10 @@ const Dashboard = () => {
       const payments = await getPayments();
       const expenditures = await getExpenditures();
       
+      // Detect overdue students
+      const detectedOverdueStudents = detectOverdueStudents(students, payments);
+      setOverdueStudents(detectedOverdueStudents);
+      
       // Calculate statistics
       const totalStudents = students.length;
       const totalFees = students.reduce((sum, student) => sum + (parseFloat(student.totalFees) || 0), 0);
@@ -178,13 +184,22 @@ const Dashboard = () => {
       const todayNormalized = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
       let todayCollections = 0;
       
-      // Count overdue payments
+      // Count students with overdue payments
       let overduePayments = 0;
       // Count completed payments
       let completedPayments = 0;
       // Calculate average payment amount
       let totalPaymentAmount = 0;
       let paymentCount = 0;
+      
+      // Track unique students with overdue payments
+      const studentsWithOverduePayments = new Set();
+      
+      // Create a mapping of student IDs to their fees collection frequency
+      const studentFrequencyMap = {};
+      students.forEach(student => {
+        studentFrequencyMap[student.id] = student.feesCollectionDate || '';
+      });
       
       payments.forEach(payment => {
         // Count payments for statistics
@@ -193,7 +208,93 @@ const Dashboard = () => {
           totalPaymentAmount += parseFloat(payment.amount) || 0;
           paymentCount++;
         } else if (payment.status === 'overdue') {
-          overduePayments++;
+          // Check if this payment's student has a frequency that affects overdue status
+          const studentFrequency = studentFrequencyMap[payment.studentId];
+          if (studentFrequency === 'Every 2 Month' || studentFrequency === 'Every 3 Month' || studentFrequency === 'Every 4 Month') {
+            // For longer frequencies, reduce overdue count since late payments are expected
+            // For this implementation, we'll still count as overdue but could adjust based on frequency
+            studentsWithOverduePayments.add(payment.studentId);
+          } else {
+            // Standard overdue count
+            studentsWithOverduePayments.add(payment.studentId);
+          }
+        } else if (payment.status === 'pending') {
+          // Check if pending payment should be considered overdue based on frequency
+          const studentFrequency = studentFrequencyMap[payment.studentId];
+          if (studentFrequency === 'Every Month') {
+            // For monthly frequency, check if current date is past the 1st of the current month
+            if (payment.dueDate) {
+              const dueDate = typeof payment.dueDate === 'string' ? new Date(payment.dueDate) : payment.dueDate;
+              const currentDate = new Date();
+              
+              // Check if the current date is past the 1st of the current month
+              const firstOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+              if (currentDate >= firstOfCurrentMonth) {
+                studentsWithOverduePayments.add(payment.studentId);
+              }
+            } else {
+              // If no due date set, still count as pending, not overdue
+            }
+          } else {
+            // For other frequencies, check if payment is overdue based on frequency
+            if (payment.dueDate) {
+              const dueDate = typeof payment.dueDate === 'string' ? new Date(payment.dueDate) : payment.dueDate;
+              const currentDate = new Date();
+                        
+              // Adjust overdue calculation based on frequency
+              if (dueDate < currentDate) {
+                // Check frequency and adjust accordingly
+                if (studentFrequency === 'Every 2 Month') {
+                  // For every 2 month, check if current date is past the 1st of the expected month
+                  const paymentMonth = dueDate.getMonth();
+                  const currentMonth = currentDate.getMonth();
+                  const monthDiff = (currentDate.getFullYear() - dueDate.getFullYear()) * 12 + (currentMonth - paymentMonth);
+                            
+                  // If the difference in months is divisible by 2, check if we're past the 1st of that month
+                  if (monthDiff >= 2 && monthDiff % 2 === 0) {
+                    const expectedDueDate = new Date(currentDate.getFullYear(), currentMonth, 1);
+                    if (currentDate >= expectedDueDate) {
+                      studentsWithOverduePayments.add(payment.studentId);
+                    }
+                  } else if (monthDiff > 2 && monthDiff % 2 !== 0) {
+                    // If odd number of months passed, check the previous even month
+                    const prevEvenMonth = currentMonth - (monthDiff % 2);
+                    const expectedDueDate = new Date(currentDate.getFullYear(), prevEvenMonth, 1);
+                    if (currentDate >= expectedDueDate) {
+                      studentsWithOverduePayments.add(payment.studentId);
+                    }
+                  }
+                } else if (studentFrequency === 'Every 3 Month') {
+                  // For every 3 month, check if current date is past the 1st of the expected month
+                  const paymentMonth = dueDate.getMonth();
+                  const currentMonth = currentDate.getMonth();
+                  const monthDiff = (currentDate.getFullYear() - dueDate.getFullYear()) * 12 + (currentMonth - paymentMonth);
+                            
+                  if (monthDiff >= 3 && monthDiff % 3 === 0) {
+                    const expectedDueDate = new Date(currentDate.getFullYear(), currentMonth, 1);
+                    if (currentDate >= expectedDueDate) {
+                      studentsWithOverduePayments.add(payment.studentId);
+                    }
+                  }
+                } else if (studentFrequency === 'Every 4 Month') {
+                  // For every 4 month, check if current date is past the 1st of the expected month
+                  const paymentMonth = dueDate.getMonth();
+                  const currentMonth = currentDate.getMonth();
+                  const monthDiff = (currentDate.getFullYear() - dueDate.getFullYear()) * 12 + (currentMonth - paymentMonth);
+                            
+                  if (monthDiff >= 4 && monthDiff % 4 === 0) {
+                    const expectedDueDate = new Date(currentDate.getFullYear(), currentMonth, 1);
+                    if (currentDate >= expectedDueDate) {
+                      studentsWithOverduePayments.add(payment.studentId);
+                    }
+                  }
+                } else {
+                  // Standard overdue check
+                  studentsWithOverduePayments.add(payment.studentId);
+                }
+              }
+            }
+          }
         }
         
         // NEW: Calculate today's collections based on when payments were CREATED (not paid)
@@ -241,13 +342,16 @@ const Dashboard = () => {
       // Calculate average payment amount
       const avgPaymentAmount = paymentCount > 0 ? totalPaymentAmount / paymentCount : 0;
       
+      // Set overdue payments to the number of unique students with overdue payments
+      const uniqueStudentsWithOverduePayments = studentsWithOverduePayments.size;
+      
       setStats({
         totalStudents,
         totalFees,
         collectedFees,
         pendingFees,
         todayCollections,
-        overduePayments,
+        overduePayments: uniqueStudentsWithOverduePayments,
         completedPayments,
         avgPaymentAmount: Math.round(avgPaymentAmount)
       });
@@ -266,10 +370,26 @@ const Dashboard = () => {
       });
       
       // Prepare payment status data for new chart
+      // Count pending payments separately to match the new overdue calculation logic
+      let pendingPaymentCount = 0;
+      const studentsWithPendingPayments = new Set();
+      
+      payments.forEach(payment => {
+        if (payment.status === 'pending') {
+          const studentFrequency = studentFrequencyMap[payment.studentId];
+          // Count as pending if not yet considered overdue based on frequency
+          pendingPaymentCount++;  
+          // Track unique students with pending payments
+          studentsWithPendingPayments.add(payment.studentId);
+        }
+      });
+      
+      const uniqueStudentsWithPendingPayments = studentsWithPendingPayments.size;
+      
       const statusData = [
         { name: 'Completed', value: completedPayments, color: 'var(--success-color)' },
-        { name: 'Pending', value: payments.filter(p => p.status === 'pending').length, color: 'var(--warning-color)' },
-        { name: 'Overdue', value: overduePayments, color: 'var(--danger-color)' }
+        { name: 'Pending', value: uniqueStudentsWithPendingPayments, color: 'var(--warning-color)' },
+        { name: 'Overdue', value: uniqueStudentsWithOverduePayments, color: 'var(--danger-color)' }
       ];
       setPaymentStatusData(statusData);
       
@@ -690,6 +810,51 @@ const Dashboard = () => {
     return suggestions;
   };
 
+  // Function to detect overdue students based on monthly fees system
+  const detectOverdueStudents = (students, payments) => {
+    const currentDate = new Date();
+    const currentMonthDueDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); // 1st of current month
+    
+    const overdueStudents = [];
+    
+    students.forEach(student => {
+      // Calculate total pending amount for this student
+      const studentPayments = payments.filter(p => p.studentId === student.id);
+      const pendingAmount = studentPayments
+        .filter(p => p.status === 'pending')
+        .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      
+      // Check if student has pending fees and today is past the due date
+      if (pendingAmount > 0 && currentDate > currentMonthDueDate) {
+        overdueStudents.push({
+          ...student,
+          pendingAmount: pendingAmount,
+          overdueSince: currentMonthDueDate
+        });
+      }
+    });
+    
+    return overdueStudents;
+  };
+
+  // Function to generate next steps for collection rate
+  const getCollectionRateNextSteps = (rate, overdueStudents = []) => {
+    const overdueCount = overdueStudents.length;
+    
+    if (overdueCount > 0) {
+      // If there are overdue students, prioritize that message
+      return `Action Needed: Fees overdue for ${overdueCount} students. Send WhatsApp reminders.`;
+    } else if (rate >= 95) {
+      return 'Maintain current strategy - excellent collection rate!';
+    } else if (rate >= 85) {
+      return 'Continue monitoring, reach out to remaining students.';
+    } else if (rate >= 70) {
+      return 'Send reminder messages to parents with pending fees.';
+    } else {
+      return 'Urgent: Contact parents of all students with outstanding fees.';
+    }
+  };
+
   // Function to determine collection health description
   const getCollectionHealth = () => {
     const collectionRate = stats.totalFees > 0 ? (stats.collectedFees / stats.totalFees) * 100 : 0;
@@ -761,10 +926,10 @@ const Dashboard = () => {
           </div>
         </div>
       
-      {/* Main KPI Cards - Exactly 5 cards */}
+      {/* Main KPI Cards - 6 cards */}
       <div className="kpi-cards-grid">
         {loading ? (
-          <SkeletonLoader type="card" count={5} />
+          <SkeletonLoader type="card" count={6} />
         ) : (
           <>
             <div className="kpi-card">
@@ -857,6 +1022,28 @@ const Dashboard = () => {
               </div>
               <div className="kpi-trend positive">
                 <span>↑ 2.3%</span>
+              </div>
+            </div>
+            
+            <div className="kpi-card next-steps double-width">
+              <div className="kpi-content">
+                <div className="kpi-title">What to do next</div>
+                <div className="next-steps-content">
+                  {getCollectionRateNextSteps(displayStats.collectionRate, overdueStudents)}
+                </div>
+                {overdueStudents.length > 0 && (
+                  <button 
+                    className="send-reminder-btn"
+                    onClick={() => {
+                      // Store overdue students in localStorage for access on students page
+                      localStorage.setItem('overdueStudentsFilter', JSON.stringify(overdueStudents.map(s => s.id)));
+                      // Navigate to students page
+                      navigate('/students');
+                    }}
+                  >
+                    Send Reminder
+                  </button>
+                )}
               </div>
             </div>
           </>

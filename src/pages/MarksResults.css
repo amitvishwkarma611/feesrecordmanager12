@@ -1,0 +1,312 @@
+.marks-results-container {
+  padding: 20px;
+  background: linear-gradient(to bottom right, #f8faff, #eef2ff);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.marks-results-header {
+  margin-bottom: 28px;
+  background: linear-gradient(to right, #6366f1, #3b82f6);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  color: white;
+}
+
+.marks-results-header h1 {
+  margin: 0;
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.header-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  margin: 10px 0 0 0;
+  font-weight: 400;
+}
+
+.marks-results-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 6px 25px var(--shadow-color);
+  padding: 30px;
+  border: 1px solid var(--border-color);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.filters-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.filter-section {
+  margin-bottom: 25px;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  flex: 1;
+  min-width: 250px;
+}
+
+.filter-section .form-label {
+  display: block;
+  color: var(--header-text);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.filter-section .form-input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--header-text);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.filter-section .form-select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--header-text);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-label {
+  display: block;
+  color: var(--header-text);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--input-bg);
+  color: var(--header-text);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.exams-results-section h3 {
+  color: var(--header-text);
+  margin: 20px 0 15px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.exam-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-color);
+}
+
+.exam-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.exam-header h4 {
+  margin: 0;
+  color: var(--header-text);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.exam-summary {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.summary-item strong {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-bottom: 3px;
+}
+
+.result-pass {
+  color: var(--success-color) !important;
+}
+
+.result-fail {
+  color: var(--danger-color) !important;
+}
+
+.subjects-table {
+  overflow-x: auto;
+}
+
+.subjects-table-content {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.subjects-table-content th {
+  background: var(--accent-color);
+  color: white;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.subjects-table-content td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.subjects-table-content tr:last-child td {
+  border-bottom: none;
+}
+
+.subjects-table-content tr:hover {
+  background: var(--bg-hover);
+}
+
+.exam-actions {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.btn-print {
+  background: linear-gradient(90deg, var(--success-color) 0%, var(--success-color-dark) 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-print:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.error-message {
+  background: var(--danger-color-light);
+  color: var(--danger-color);
+  padding: 15px;
+  border-radius: 12px;
+  margin: 20px 0;
+  text-align: center;
+  font-weight: 600;
+  border: 1px solid var(--danger-color);
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .marks-results-container {
+    padding: 15px;
+  }
+  
+  .marks-results-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .marks-results-card {
+    padding: 20px;
+  }
+  
+  .exam-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .exam-summary {
+    width: 100%;
+    justify-content: space-around;
+  }
+  
+  .subjects-table-content {
+    font-size: 0.8rem;
+  }
+  
+  .subjects-table-content th,
+  .subjects-table-content td {
+    padding: 8px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .marks-results-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .marks-results-card {
+    padding: 15px;
+  }
+  
+  .exam-summary {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .subjects-table-content {
+    font-size: 0.75rem;
+  }
+}

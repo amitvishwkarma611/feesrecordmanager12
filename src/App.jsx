@@ -28,8 +28,11 @@ import FreeTrialContinue from './components/FreeTrialContinue';
 import TestSubscriptionCreation from './components/TestSubscriptionCreation';
 import VerifyEmail from './components/VerifyEmail';
 import TermsAndConditions from './components/profile/TermsAndConditions';
+import MarksEntry from './pages/MarksEntry';
+import MarksResults from './pages/MarksResults';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { AcademicYearProvider } from './contexts/AcademicYearContext';
+import './utils/whatsappReminder'; // Import WhatsApp reminder functionality
 
 import './App.css';
 
@@ -95,6 +98,9 @@ const AuthenticatedApp = () => {
         return 'fees';
       case '/expenses':
         return 'expenses';
+      case '/marks-entry':
+        return 'marks-entry';
+
       case '/profile':
         return 'profile';
       case '/settings':
@@ -173,6 +179,10 @@ const AuthenticatedApp = () => {
       case 'attendance':
         navigate('/attendance');
         break;
+      case 'marks-entry':
+        alert('Coming Soon: Marks Entry feature will be available in the next update');
+        break;
+
       case 'profile':
         navigate('/profile');
         break;
@@ -201,6 +211,8 @@ const AuthenticatedApp = () => {
       case 'fees': return '💰';
       case 'expenses': return '📊';
       case 'attendance': return '📋';
+      case 'marks-entry': return '🔜';
+
       case 'profile': return '👤';
       case 'settings': return '⚙️';
       default: return '🏠';
@@ -214,6 +226,8 @@ const AuthenticatedApp = () => {
       case 'fees': return 'Fees';
       case 'expenses': return 'Expenses';
       case 'attendance': return 'Attendance';
+      case 'marks-entry': return 'Marks Entry (Soon)';
+
       case 'profile': return 'Profile';
       case 'settings': return 'Settings';
       default: return 'Home';
@@ -231,7 +245,7 @@ const AuthenticatedApp = () => {
 
       {/* Sidebar Navigation */}
       <div className="sidebar">
-        {['dashboard', 'students', 'fees', 'expenses', 'attendance', 'profile', 'settings'].map((tab) => (
+        {['dashboard', 'students', 'fees', 'expenses', 'attendance', 'marks-entry', 'profile', 'settings'].map((tab) => (
           <button 
             key={tab}
             className={`nav-item ${activeTab === tab ? 'active' : ''}`}
@@ -284,6 +298,8 @@ const AuthenticatedApp = () => {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login-new" element={<LoginNew />} />
           <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/marks-entry" element={<ProtectedRoute><MarksEntry /></ProtectedRoute>} />
+          <Route path="/marks-results" element={<ProtectedRoute><MarksResults /></ProtectedRoute>} />
         </Routes>
       </div>
     

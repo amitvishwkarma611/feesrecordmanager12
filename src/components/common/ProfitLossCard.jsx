@@ -77,22 +77,44 @@ const ProfitLossCard = ({ totalFees, collectedFees }) => {
       </div>
       <div className="card-content">
         <div className="financial-summary">
-          <div className="summary-item">
-            <span className="label">Total Income (Fees)</span>
-            <span className="value income">₹{totalFees.toLocaleString()}</span>
-          </div>
-          <div className="summary-item">
-            <span className="label">Total Expenditure</span>
-            <span className="value expenditure">₹{totalExpenditures.toLocaleString()}</span>
-          </div>
-          <div className={`summary-item ${isProfit ? 'profit' : 'loss'}`}>
-            <div>
-              <div className="label">Net {isProfit ? 'Profit' : 'Loss'}</div>
-              <div className="helper-text">Financial health indicator</div>
+          <div className="summary-row">
+            <div className="label-column">
+              <span className="label">Total Income (Fees)</span>
+              <span className="label">Total Expenditure</span>
+              <div className="net-label-container">
+                <div className="label">Net {isProfit ? 'Profit' : 'Loss'}</div>
+                <div className="helper-text">Financial health indicator</div>
+              </div>
             </div>
-            <span className={`value ${isProfit ? 'profit' : 'loss'}`}>
-              ₹{Math.abs(profitLoss).toLocaleString()}
-            </span>
+            <div className="value-column">
+              <span className="value income">₹{totalFees.toLocaleString()}</span>
+              <span className="value expenditure">₹{totalExpenditures.toLocaleString()}</span>
+              <span className={`value ${isProfit ? 'profit' : 'loss'}`}>
+                {isProfit ? '₹' : '-₹'}{Math.abs(profitLoss).toLocaleString()}
+              </span>
+            </div>
+          </div>
+          
+          {/* Visual indicator bar */}
+          <div className="financial-ratio-bar">
+            <div className="ratio-labels">
+              <span>Income</span>
+              <span>Expenditure</span>
+            </div>
+            <div className="ratio-container">
+              <div 
+                className="income-bar" 
+                style={{ width: `${totalFees > 0 ? (totalFees / (totalFees + totalExpenditures)) * 100 : 50}%` }}
+              ></div>
+              <div 
+                className="expenditure-bar" 
+                style={{ width: `${totalExpenditures > 0 ? (totalExpenditures / (totalFees + totalExpenditures)) * 100 : 50}%` }}
+              ></div>
+            </div>
+            <div className="ratio-percentages">
+              <span>{totalFees > 0 ? Math.round((totalFees / (totalFees + totalExpenditures)) * 100) : 50}%</span>
+              <span>{totalExpenditures > 0 ? Math.round((totalExpenditures / (totalFees + totalExpenditures)) * 100) : 50}%</span>
+            </div>
           </div>
         </div>
         

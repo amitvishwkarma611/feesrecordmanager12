@@ -154,8 +154,9 @@ const LineChart = ({ data, width = "100%", height = 500 }) => {
             x={point.x}
             y={svgHeight - padding + 20}
             textAnchor="middle"
-            fontSize="10"
+            fontSize="16"
             fill="var(--text-secondary)"
+            fontWeight="600"
             className="axis-label"
           >
             {point.month}

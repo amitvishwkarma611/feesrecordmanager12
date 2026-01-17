@@ -43,7 +43,7 @@
   z-index: 2;
 }
 
-.back-button, .edit-button, .print-button {
+.back-button, .edit-button {
   padding: 12px 24px;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -62,16 +62,54 @@
   overflow: hidden;
 }
 
-.print-button {
-  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker)); /* Blue for print */
-  border: none;
-  backdrop-filter: none;
-}
-
 .edit-button {
   background: linear-gradient(90deg, var(--success-color), var(--success-color-dark)); /* Green for success/collected */
   border: none;
   backdrop-filter: none;
+}
+
+.print-button {
+  padding: 12px 24px;
+  background: linear-gradient(90deg, var(--info-color), var(--info-color-darker)); /* Blue for neutral info */
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.print-button:hover {
+  background: linear-gradient(90deg, var(--info-color-darker), var(--info-color));
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.print-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.18);
+}
+
+.print-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.print-button:hover::before {
+  left: 100%;
 }
 
 .back-button::before {
@@ -85,12 +123,7 @@
   transition: left 0.5s;
 }
 
-.header-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.back-button:hover, .edit-button:hover, .print-button:hover {
+.back-button:hover, .edit-button:hover {
   background: rgba(255, 255, 255, 0.25);
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);

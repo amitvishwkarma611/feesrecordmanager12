@@ -8,10 +8,12 @@ admin.initializeApp();
 //const { sendWhatsAppFeeReminders } = require('./src/whatsappReminder');
 const { sendMonthlyEmailReport } = require('./src/monthlyEmailReport');
 const { deleteUnverifiedUsers } = require('./src/deleteUnverifiedUsers');
+const { generateStudentMarksheetPDF } = require('./src/marksheet/generateMarksheet');
 //const { sendSupportQueryNotification } = require('./src/supportQueryNotification');
 
 // Export functions
 //exports.sendWhatsAppFeeReminders = sendWhatsAppFeeReminders;
 exports.sendMonthlyEmailReport = sendMonthlyEmailReport;
 //exports.deleteUnverifiedUsers = deleteUnverifiedUsers;
+exports.generateStudentMarksheetPDF = generateStudentMarksheetPDF;
 //exports.sendSupportQueryNotification = sendSupportQueryNotification;
