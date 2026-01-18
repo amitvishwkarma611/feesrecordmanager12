@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import dataManager from '../../utils/dataManager';
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import RootLayout from '../common/RootLayout';
 import AcademicYearSelector from '../common/AcademicYearSelector';
+import whatsappReminder from '../../utils/whatsappReminder';
 
 import './Students.css';
 
@@ -33,7 +34,8 @@ const Students = () => {
     feesPaid: '',
     feesStructure: '',
     feesCollectionDate: '',
-    customCollectionDate: ''
+    customCollectionDate: '',
+    admissionDate: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -53,30 +55,18 @@ const Students = () => {
   const [tempClassFilter, setTempClassFilter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false); // Add this state for anti-double-submit
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchStudents();
     
-    // Check for overdue students filter from dashboard
-    const overdueFilter = localStorage.getItem('overdueStudentsFilter');
-    if (overdueFilter) {
-      try {
-        const overdueStudentIds = JSON.parse(overdueFilter);
-        if (Array.isArray(overdueStudentIds) && overdueStudentIds.length > 0) {
-          // Set a temporary filter to show only overdue students
-          setSearchTerm(''); // Clear any existing search
-          setClassFilter(''); // Clear any existing class filter
-          
-          // We'll filter the students after they're loaded in the filterAndSortStudents function
-          setTimeout(() => {
-            // Remove the filter from localStorage after using it
-            localStorage.removeItem('overdueStudentsFilter');
-          }, 1000);
-        }
-      } catch (e) {
-        console.warn('Error parsing overdue students filter:', e);
-        localStorage.removeItem('overdueStudentsFilter');
-      }
+    // Check for URL parameters for filtering
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterParam = urlParams.get('filter');
+    
+    if (filterParam === 'overdue') {
+      // Will be handled in filterAndSortStudents function
+      console.log('Overdue filter activated via URL parameter');
     }
     
     // Listen for students updated event
@@ -108,6 +98,18 @@ const Students = () => {
     filterAndSortStudents();
   }, [students, searchTerm, sortBy, sortOrder, classFilter]);
 
+  // Re-filter when URL changes (needed for navigation from Dashboard)
+  useEffect(() => {
+    // Check if URL contains filter parameter
+    const urlParams = new URLSearchParams(location.search);
+    const filterParam = urlParams.get('filter');
+    
+    if (filterParam === 'overdue') {
+      // Trigger re-filtering when overdue filter is detected
+      filterAndSortStudents();
+    }
+  }, [location.search]); // Monitor location.search to react to URL changes
+
   // Handle clicks outside export dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -136,26 +138,13 @@ const Students = () => {
   const filterAndSortStudents = () => {
     let filtered = [...students];
     
-    // Check for overdue students filter from localStorage
-    const overdueFilter = localStorage.getItem('overdueStudentsFilter');
-    if (overdueFilter) {
-      try {
-        const overdueStudentIds = JSON.parse(overdueFilter);
-        if (Array.isArray(overdueStudentIds) && overdueStudentIds.length > 0) {
-          // Filter to show only overdue students
-          filtered = filtered.filter(student => 
-            overdueStudentIds.includes(student.id)
-          );
-          
-          // Clear the filter from localStorage after applying it
-          setTimeout(() => {
-            localStorage.removeItem('overdueStudentsFilter');
-          }, 100);
-        }
-      } catch (e) {
-        console.warn('Error parsing overdue students filter in filter function:', e);
-        localStorage.removeItem('overdueStudentsFilter');
-      }
+    // Check for URL parameters for filtering
+    const urlParams = new URLSearchParams(location.search);
+    const filterParam = urlParams.get('filter');
+    
+    if (filterParam === 'overdue') {
+      // Filter to show only overdue students using universal WhatsApp reminder logic
+      filtered = filtered.filter(student => whatsappReminder.isOverdue(student));
     } else {
       // Apply search filter (only if no overdue filter)
       if (searchTerm) {
@@ -267,8 +256,8 @@ const Students = () => {
       console.log('Form data before processing:', formData);
       console.log('Editing student:', editingStudent);
       console.log('Is editing student:', !!editingStudent);
-      console.log('Editing student ID:', editingStudent?.id);
-      console.log('Editing student studentId:', editingStudent?.studentId);
+      console.log('Editing student ID:', editingStudent ? editingStudent.id : undefined);
+      console.log('Editing student studentId:', editingStudent ? editingStudent.studentId : undefined);
       
       // Validate required fields
       if (!formData.name || !formData.class || formData.totalFees === '' || formData.totalFees === undefined) {
@@ -313,10 +302,13 @@ const Students = () => {
       // Prepare student data
       const studentData = {
         ...formData,
+        id: editingStudent?.id, // Include the ID when editing
         totalFees: totalFees,
         feesPaid: feesPaid,
         feesDue: totalFees - feesPaid,
         feesStructure: formData.feesStructure,
+        feesCollectionFrequency: formData.feesCollectionDate, // Map to correct field name
+        customDueDate: formData.customCollectionDate, // Map to correct field name
         feesCollectionDate: formData.feesCollectionDate
       };
       
@@ -325,11 +317,25 @@ const Students = () => {
       // Save student data
       if (editingStudent) {
         console.log('Updating existing student');
-        await dataManager.updateStudent(editingStudent.id, studentData);
+        console.log('Editing student object:', editingStudent);
+        console.log('Editing student ID:', editingStudent.id);
+        console.log('Editing student ID type:', typeof editingStudent.id);
+        
+        if (!editingStudent.id) {
+          const error = new Error('Student ID is missing for update operation');
+          console.error('Validation error:', error.message);
+          console.error('Full editingStudent object:', editingStudent);
+          throw error;
+        }
+        
+        await dataManager.updateStudent(studentData);
       } else {
         console.log('Adding new student');
         
-        await dataManager.addStudent(studentData);
+        // When adding a new student, don't include the id field
+        const studentDataForAdd = { ...studentData };
+        delete studentDataForAdd.id;
+        await dataManager.addStudent(studentDataForAdd);
       }
       
       // Reset form and refresh data
@@ -396,6 +402,17 @@ const Students = () => {
 
   const handleEdit = (student) => {
     console.log('Editing student:', student);
+    console.log('Student ID:', student.id);
+    console.log('Student ID type:', typeof student.id);
+    console.log('Student keys:', Object.keys(student));
+    
+    // Validate that student has an ID
+    if (!student.id) {
+      console.error('Student object missing ID:', student);
+      alert('Error: Cannot edit student - missing student ID. Please refresh the page and try again.');
+      return;
+    }
+    
     setEditingStudent(student);
     setFormData({
       name: student.name || '',
@@ -408,8 +425,9 @@ const Students = () => {
       totalFees: student.totalFees !== undefined ? student.totalFees.toString() : '',
       feesPaid: student.feesPaid !== undefined ? student.feesPaid.toString() : '',
       feesStructure: student.feesStructure || '',
-      feesCollectionDate: student.feesCollectionDate || '',
-      customCollectionDate: student.customCollectionDate || ''
+      feesCollectionDate: student.feesCollectionFrequency || student.feesCollectionDate || '',
+      customCollectionDate: student.customDueDate || student.customCollectionDate || '',
+      admissionDate: student.admissionDate || ''
     });
     setShowForm(true);
   };
@@ -947,6 +965,17 @@ const Students = () => {
                 />
               </div>
               
+              <div className="form-group">
+                <label>Admission Date</label>
+                <input
+                  type="date"
+                  name="admissionDate"
+                  value={formData.admissionDate}
+                  onChange={handleInputChange}
+                  className="admission-date-input"
+                />
+              </div>
+              
               <div className="form-row">
                 <div className="form-group">
                   <label>Father's Name</label>
@@ -1022,7 +1051,7 @@ const Students = () => {
                     onChange={handleInputChange}
                   >
                     <option value="">Select Frequency</option>
-                    <option value="Every Month">Every Month</option>
+                    <option value="Monthly">Monthly</option>
                     <option value="Every 2 Month">Every 2 Month</option>
                     <option value="Every 3 Month">Every 3 Month</option>
                     <option value="Every 4 Month">Every 4 Month</option>
@@ -1032,7 +1061,7 @@ const Students = () => {
                   {/* Custom Date Picker - shown when Custom Date is selected */}
                   {formData.feesCollectionDate === 'Custom Date' && (
                     <div className="custom-date-picker">
-                      <label>Enter Custom Date:</label>
+                      <label>Enter Custom Due Date:</label>
                       <input
                         type="date"
                         name="customCollectionDate"
@@ -1141,7 +1170,7 @@ const Students = () => {
           <tbody>
             {filteredStudents.length === 0 ? (
               <tr className="students-table-grid">
-                <td colSpan="9" className="no-data-container">
+                <td colSpan="8" className="no-data-container">
                   <div className="no-data">
                     No students found. Add a new student to get started.
                   </div>
@@ -1154,9 +1183,20 @@ const Students = () => {
                   status: calculateStudentStatus(student)
                 };
                 const pendingFees = (student.totalFees || 0) - (student.feesPaid || 0);
+                const statusBadgeClass = `status-badge status-${studentWithStatus.status.toLowerCase().replace(' ', '-')}`;
                 
                 return (
-                  <tr key={student.id} className="student-row students-table-grid">
+                  <tr key={student.id} className="student-row students-table-grid" 
+                      data-student-id={student.id}
+                      data-student-name={student.name}
+                      data-student-class={student.class}
+                      data-student-contact={student.contact}
+                      data-father-name={student.fatherName}
+                      data-total-fees={student.totalFees}
+                      data-fees-paid={student.feesPaid}
+                      data-fees-frequency={student.feesCollectionFrequency || student.feesCollectionDate}
+                      data-custom-due-date={student.customDueDate || student.customCollectionDate}
+                      data-admission-date={student.admissionDate}>
                     <td>
                       <input
                         type="checkbox"
@@ -1173,12 +1213,12 @@ const Students = () => {
                       </div>
                     </td>
                     <td>{student.class}</td>
-      
+        
                     <td>₹{parseFloat(student.totalFees || 0).toLocaleString()}</td>
                     <td>₹{parseFloat(student.feesPaid || 0).toLocaleString()}</td>
                     <td>₹{pendingFees.toLocaleString()}</td>
                     <td>
-                      <span className={`status-badge status-${studentWithStatus.status.toLowerCase().replace(' ', '-')}`}>
+                      <span className={statusBadgeClass}>
                         {
                           studentWithStatus.status === "Pending" 
                             ? "⏳ Pending" 
@@ -1207,29 +1247,8 @@ const Students = () => {
                         <button 
                           className="whatsapp-btn"
                           onClick={() => {
-                            const pendingAmount = (student.totalFees || 0) - (student.feesPaid || 0);
-                            if (pendingAmount > 0 && student.contact) {
-                              const message = `Hello ${student.fatherName || student.motherName || 'Parent'} 👋
-${student.name} ki ${new Date().toLocaleString('default', { month: 'long' })} ki fees ₹${pendingAmount} pending hai.
-
-Kindly fees clear karein.
-– Victory Point Academy`;
-                              const encodedMessage = encodeURIComponent(message);
-                              const cleanNumber = student.contact.toString().replace(/\D/g, '');
-                              let fullNumber;
-                              if (cleanNumber.length === 10) {
-                                fullNumber = `91${cleanNumber}`;
-                              } else if (cleanNumber.length === 12 && cleanNumber.startsWith('91')) {
-                                fullNumber = cleanNumber;
-                              } else {
-                                alert('Invalid mobile number format');
-                                return;
-                              }
-                              const whatsappUrl = `https://wa.me/${fullNumber}?text=${encodedMessage}`;
-                              window.open(whatsappUrl, '_blank');
-                            } else {
-                              alert('Cannot send reminder: either no pending amount or missing contact number');
-                            }
+                            // Use the universal WhatsApp reminder logic
+                            whatsappReminder.sendSingleReminder(student);
                           }}
                           title="Send WhatsApp reminder"
                           disabled={(student.totalFees || 0) - (student.feesPaid || 0) <= 0 || !student.contact}

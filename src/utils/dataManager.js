@@ -138,6 +138,11 @@ class DataManager {
             // WhatsApp reminder fields
             reminderEnabled: student.reminderEnabled !== undefined ? student.reminderEnabled : true, // Default to true
             lastReminderSent: student.lastReminderSent || null,
+            // Universal reminder logic fields
+            feesCollectionFrequency: student.feesCollectionFrequency || student.feesCollectionDate || '',
+            customDueDate: student.customDueDate || student.customCollectionDate || '',
+            // Admission date field
+            admissionDate: student.admissionDate || null,
             createdAt: Timestamp.now(), // Add creation timestamp
             updatedAt: Timestamp.now(), // Add update timestamp
             ownerId: getCurrentUserUID() // Add owner ID for security rules
@@ -220,6 +225,8 @@ class DataManager {
             // WhatsApp reminder fields
             reminderEnabled: updatedStudent.reminderEnabled !== undefined ? updatedStudent.reminderEnabled : true,
             lastReminderSent: updatedStudent.lastReminderSent || null,
+            // Admission date field
+            admissionDate: updatedStudent.admissionDate || null,
             updatedAt: Timestamp.now(), // Always update the timestamp
             ownerId: getCurrentUserUID() // Add owner ID for security rules
           };
@@ -229,17 +236,25 @@ class DataManager {
             studentWithNumericValues.photoURL = updatedStudent.photoURL;
           }
           
-          // Preserve createdAt if it exists
-          if (updatedStudent.createdAt) {
-            studentWithNumericValues.createdAt = updatedStudent.createdAt;
-          }
-          
           // Preserve WhatsApp reminder fields if they exist
           if (updatedStudent.reminderEnabled !== undefined) {
             studentWithNumericValues.reminderEnabled = updatedStudent.reminderEnabled;
           }
           if (updatedStudent.lastReminderSent) {
             studentWithNumericValues.lastReminderSent = updatedStudent.lastReminderSent;
+          }
+          
+          // Preserve WhatsApp reminder fields if they exist
+          if (updatedStudent.feesCollectionFrequency !== undefined) {
+            studentWithNumericValues.feesCollectionFrequency = updatedStudent.feesCollectionFrequency;
+          }
+          if (updatedStudent.customDueDate !== undefined) {
+            studentWithNumericValues.customDueDate = updatedStudent.customDueDate;
+          }
+          
+          // Preserve createdAt if it exists
+          if (updatedStudent.createdAt) {
+            studentWithNumericValues.createdAt = updatedStudent.createdAt;
           }
           
           console.log('Prepared student data for Firebase:', studentWithNumericValues);

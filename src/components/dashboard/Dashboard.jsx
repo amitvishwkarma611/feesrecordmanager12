@@ -18,6 +18,7 @@ import Sparkline from '../common/Sparkline';
 import SkeletonLoader from '../common/SkeletonLoader';
 import RootLayout from '../common/RootLayout';
 import AcademicYearSelector from '../common/AcademicYearSelector';
+import whatsappReminder from '../../utils/whatsappReminder';
 
 import './Dashboard.css';
 const Dashboard = () => {
@@ -164,8 +165,8 @@ const Dashboard = () => {
       const payments = await getPayments();
       const expenditures = await getExpenditures();
       
-      // Detect overdue students
-      const detectedOverdueStudents = detectOverdueStudents(students, payments);
+      // Detect overdue students using universal WhatsApp reminder logic
+      const detectedOverdueStudents = students.filter(student => whatsappReminder.isOverdue(student));
       setOverdueStudents(detectedOverdueStudents);
       
       // Calculate statistics
@@ -739,7 +740,7 @@ const Dashboard = () => {
       if (pendingFees > 0) {
         if (pendingFees > pendingThreshold) {
           suggestions.push({
-            text: "Send payment reminders to students with pending dues",
+            text: "Send WhatsApp fee reminders to students with pending dues",
             priority: "High"
           });
           suggestions.push({
@@ -783,7 +784,7 @@ const Dashboard = () => {
           priority: "High"
         });
         suggestions.push({
-          text: "Send reminder messages for upcoming payment deadlines",
+          text: "Send WhatsApp reminder messages for upcoming payment deadlines",
           priority: "Medium"
         });
       }
@@ -837,13 +838,13 @@ const Dashboard = () => {
     return overdueStudents;
   };
 
-  // Function to generate next steps for collection rate
+  // Function to generate next steps for collection rate using universal WhatsApp logic
   const getCollectionRateNextSteps = (rate, overdueStudents = []) => {
     const overdueCount = overdueStudents.length;
     
     if (overdueCount > 0) {
-      // If there are overdue students, prioritize that message
-      return `Action Needed: Fees overdue for ${overdueCount} students. Send WhatsApp reminders.`;
+      // If there are overdue students, show actionable message
+      return `Action Needed: Fees overdue for ${overdueCount} students. Contact parents immediately.`;
     } else if (rate >= 95) {
       return 'Maintain current strategy - excellent collection rate!';
     } else if (rate >= 85) {
@@ -1035,10 +1036,8 @@ const Dashboard = () => {
                   <button 
                     className="send-reminder-btn"
                     onClick={() => {
-                      // Store overdue students in localStorage for access on students page
-                      localStorage.setItem('overdueStudentsFilter', JSON.stringify(overdueStudents.map(s => s.id)));
-                      // Navigate to students page
-                      navigate('/students');
+                      // Navigate to students page with filter parameter
+                      navigate('/students?filter=overdue');
                     }}
                   >
                     Send Reminder
