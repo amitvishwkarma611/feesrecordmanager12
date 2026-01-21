@@ -32,10 +32,10 @@ const Students = () => {
     motherName: '',
     totalFees: '',
     feesPaid: '',
-    feesStructure: '',
     feesCollectionDate: '',
     customCollectionDate: '',
-    admissionDate: ''
+    admissionDate: '',
+    feesFrequencyAmount: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -141,10 +141,16 @@ const Students = () => {
     // Check for URL parameters for filtering
     const urlParams = new URLSearchParams(location.search);
     const filterParam = urlParams.get('filter');
+    const classParam = urlParams.get('class'); // Get class parameter from URL
     
     if (filterParam === 'overdue') {
       // Filter to show only overdue students using universal WhatsApp reminder logic
       filtered = filtered.filter(student => whatsappReminder.isOverdue(student));
+      
+      // If class parameter is present, further filter by class
+      if (classParam) {
+        filtered = filtered.filter(student => student.class.toLowerCase() === classParam.toLowerCase());
+      }
     } else {
       // Apply search filter (only if no overdue filter)
       if (searchTerm) {
@@ -206,7 +212,7 @@ const Students = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Special handling for numeric fields
+    // Update form data first
     if (name === 'totalFees' || name === 'feesPaid') {
       // For numeric fields, we want to allow empty values but validate numbers
       if (value === '' || value === null || value === undefined) {
@@ -214,21 +220,17 @@ const Students = () => {
           ...prev,
           [name]: ''
         }));
-        return;
-      }
-      
-      // Parse the value as a float
-      const numValue = parseFloat(value);
-      
-      // If it's a valid number, use it; otherwise keep the original value
-      if (!isNaN(numValue)) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value // Keep as string to maintain input behavior
-        }));
       } else {
-        // If not a valid number, don't update
-        return;
+        // Parse the value as a float
+        const numValue = parseFloat(value);
+        
+        // If it's a valid number, use it; otherwise keep the original value
+        if (!isNaN(numValue)) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: value // Keep as string to maintain input behavior
+          }));
+        }
       }
     } else {
       // For non-numeric fields, use the value as-is
@@ -237,6 +239,104 @@ const Students = () => {
         [name]: value
       }));
     }
+    
+    // Calculate fees frequency amount automatically when totalFees or feesCollectionDate changes
+    if (name === 'totalFees' || name === 'feesCollectionDate') {
+      // Calculate immediately with updated values
+      setTimeout(() => {
+        // Create temporary updated form data for calculation
+        const updatedFormData = {
+          ...formData,
+          [name]: value
+        };
+        
+        // Perform calculation with updated values
+        let totalFees = parseFloat(updatedFormData.totalFees) || 0;
+        let frequency = updatedFormData.feesCollectionDate;
+        
+        if (totalFees <= 0 || !frequency) {
+          setFormData(prev => ({
+            ...prev,
+            feesFrequencyAmount: ''
+          }));
+          return;
+        }
+        
+        let divisor = 10; // Default for monthly (10 months academic year)
+        
+        switch (frequency) {
+          case 'Monthly':
+            divisor = 10;
+            break;
+          case '2 installments':
+            divisor = 2;
+            break;
+          case '3 installments':
+            divisor = 3;
+            break;
+          case '4 installments':
+            divisor = 4;
+            break;
+          case 'Custom Date':
+            divisor = 1; // Single installment
+            break;
+          default:
+            divisor = 10;
+        }
+        
+        const frequencyAmount = totalFees / divisor;
+        // Round to nearest integer to avoid decimals and ensure no negative numbers
+        const roundedAmount = Math.round(Math.abs(frequencyAmount));
+        setFormData(prev => ({
+          ...prev,
+          feesFrequencyAmount: roundedAmount.toString()
+        }));
+      }, 0);
+    }
+  };
+  
+  // Calculate fees frequency amount based on total fees and collection frequency
+  const calculateFeesFrequencyAmount = () => {
+    const totalFees = parseFloat(formData.totalFees) || 0;
+    const frequency = formData.feesCollectionDate;
+    
+    if (totalFees <= 0 || !frequency) {
+      setFormData(prev => ({
+        ...prev,
+        feesFrequencyAmount: ''
+      }));
+      return;
+    }
+    
+    let divisor = 10; // Default for monthly (10 months academic year)
+    
+    switch (frequency) {
+      case 'Monthly':
+        divisor = 10;
+        break;
+      case '2 installments':
+        divisor = 2;
+        break;
+      case '3 installments':
+        divisor = 3;
+        break;
+      case '4 installments':
+        divisor = 4;
+        break;
+      case 'Custom Date':
+        divisor = 1; // Single installment
+        break;
+      default:
+        divisor = 10;
+    }
+    
+    const frequencyAmount = totalFees / divisor;
+    // Round to nearest integer to avoid decimals and ensure no negative numbers
+    const roundedAmount = Math.round(Math.abs(frequencyAmount));
+    setFormData(prev => ({
+      ...prev,
+      feesFrequencyAmount: roundedAmount.toString()
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -306,10 +406,10 @@ const Students = () => {
         totalFees: totalFees,
         feesPaid: feesPaid,
         feesDue: totalFees - feesPaid,
-        feesStructure: formData.feesStructure,
         feesCollectionFrequency: formData.feesCollectionDate, // Map to correct field name
         customDueDate: formData.customCollectionDate, // Map to correct field name
-        feesCollectionDate: formData.feesCollectionDate
+        feesCollectionDate: formData.feesCollectionDate,
+        feesFrequencyAmount: parseFloat(formData.feesFrequencyAmount) || 0
       };
       
       console.log('Student data to save:', studentData);
@@ -351,9 +451,11 @@ const Students = () => {
         motherName: '',
         totalFees: '',
         feesPaid: '',
-        feesStructure: '',
+
         feesCollectionDate: '',
-        customCollectionDate: ''
+        customCollectionDate: '',
+        admissionDate: '',
+        feesFrequencyAmount: ''
       });
       
       // Refresh student list
@@ -393,9 +495,10 @@ const Students = () => {
       motherName: '',
       totalFees: '',
       feesPaid: '',
-      feesStructure: '',
       feesCollectionDate: '',
-      customCollectionDate: ''
+      customCollectionDate: '',
+      admissionDate: '',
+      feesFrequencyAmount: ''
     });
     setShowForm(true);
   };
@@ -424,10 +527,11 @@ const Students = () => {
       motherName: student.motherName || '',
       totalFees: student.totalFees !== undefined ? student.totalFees.toString() : '',
       feesPaid: student.feesPaid !== undefined ? student.feesPaid.toString() : '',
-      feesStructure: student.feesStructure || '',
+
       feesCollectionDate: student.feesCollectionFrequency || student.feesCollectionDate || '',
       customCollectionDate: student.customDueDate || student.customCollectionDate || '',
-      admissionDate: student.admissionDate || ''
+      admissionDate: student.admissionDate || '',
+      feesFrequencyAmount: student.feesFrequencyAmount !== undefined ? student.feesFrequencyAmount.toString() : ''
     });
     setShowForm(true);
   };
@@ -1028,22 +1132,6 @@ const Students = () => {
               
               <div className="form-row">
                 <div className="form-group">
-                  <label>Fee Structure</label>
-                  <select
-                    name="feesStructure"
-                    value={formData.feesStructure}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select Fee Structure</option>
-                    <option value="Monthly">Monthly</option>
-                    <option value="Quarterly">Quarterly</option>
-                    <option value="Semi-Annual">Semi-Annual</option>
-                    <option value="Annual">Annual</option>
-                    <option value="One-Time">One-Time</option>
-                  </select>
-                </div>
-                
-                <div className="form-group">
                   <label>Fees Collection Frequency</label>
                   <select
                     name="feesCollectionDate"
@@ -1051,10 +1139,10 @@ const Students = () => {
                     onChange={handleInputChange}
                   >
                     <option value="">Select Frequency</option>
-                    <option value="Monthly">Monthly</option>
-                    <option value="Every 2 Month">Every 2 Month</option>
-                    <option value="Every 3 Month">Every 3 Month</option>
-                    <option value="Every 4 Month">Every 4 Month</option>
+                    <option value="Monthly">monthly</option>
+                    <option value="2 installments">2 installments</option>
+                    <option value="3 installments">3 installments</option>
+                    <option value="4 installments">4 installments</option>
                     <option value="Custom Date">Custom Date</option>
                   </select>
                   
@@ -1073,6 +1161,24 @@ const Students = () => {
                       />
                     </div>
                   )}
+                </div>
+                
+                <div className="form-group">
+                  <label>Fees Frequency Amount (₹)</label>
+                  <input
+                    type="number"
+                    name="feesFrequencyAmount"
+                    value={formData.feesFrequencyAmount}
+                    onChange={handleInputChange}
+                    readOnly
+                    className="readonly-input"
+                    placeholder="Auto-calculated based on frequency"
+                    step="0.01"
+                    min="0"
+                  />
+                  <div className="helper-text">
+                    Automatically calculated: Total Fees ÷ Installments
+                  </div>
                 </div>
               </div>
               

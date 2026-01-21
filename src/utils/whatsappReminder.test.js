@@ -17,9 +17,9 @@ describe('WhatsApp Reminder Helper - Universal Logic', () => {
 
   test('getCycleMonths should return correct month counts', () => {
     expect(whatsappReminder.getCycleMonths('MONTHLY')).toBe(1);
-    expect(whatsappReminder.getCycleMonths('EVERY_2_MONTH')).toBe(2);
-    expect(whatsappReminder.getCycleMonths('EVERY_3_MONTH')).toBe(3);
-    expect(whatsappReminder.getCycleMonths('EVERY_4_MONTH')).toBe(4);
+    expect(whatsappReminder.getCycleMonths('2_INSTALLMENTS')).toBe(2);
+    expect(whatsappReminder.getCycleMonths('3_INSTALLMENTS')).toBe(3);
+    expect(whatsappReminder.getCycleMonths('4_INSTALLMENTS')).toBe(4);
     expect(whatsappReminder.getCycleMonths('UNKNOWN')).toBe(1); // Default
   });
 

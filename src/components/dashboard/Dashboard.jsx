@@ -82,6 +82,8 @@ const Dashboard = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   // State for overdue students
   const [overdueStudents, setOverdueStudents] = useState([]);
+  const [selectedClass, setSelectedClass] = useState('');
+  const [showClassDropdown, setShowClassDropdown] = useState(false);
 
   const insightsContentRef = useRef(null);
 
@@ -115,11 +117,15 @@ const Dashboard = () => {
     };
   }, []);
   
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showUserMenu && event.target.closest('.avatar-dropdown') === null) {
         setShowUserMenu(false);
+      }
+        
+      if (showClassDropdown && event.target.closest('.send-reminder-container') === null) {
+        setShowClassDropdown(false);
       }
     };
   
@@ -127,7 +133,7 @@ const Dashboard = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showUserMenu]);
+  }, [showUserMenu, showClassDropdown]);
 
   // Animate numbers when stats change
   useEffect(() => {
@@ -211,7 +217,7 @@ const Dashboard = () => {
         } else if (payment.status === 'overdue') {
           // Check if this payment's student has a frequency that affects overdue status
           const studentFrequency = studentFrequencyMap[payment.studentId];
-          if (studentFrequency === 'Every 2 Month' || studentFrequency === 'Every 3 Month' || studentFrequency === 'Every 4 Month') {
+          if (studentFrequency === '2 installments' || studentFrequency === '3 installments' || studentFrequency === '4 installments') {
             // For longer frequencies, reduce overdue count since late payments are expected
             // For this implementation, we'll still count as overdue but could adjust based on frequency
             studentsWithOverduePayments.add(payment.studentId);
@@ -245,7 +251,7 @@ const Dashboard = () => {
               // Adjust overdue calculation based on frequency
               if (dueDate < currentDate) {
                 // Check frequency and adjust accordingly
-                if (studentFrequency === 'Every 2 Month') {
+                if (studentFrequency === '2 installments') {
                   // For every 2 month, check if current date is past the 1st of the expected month
                   const paymentMonth = dueDate.getMonth();
                   const currentMonth = currentDate.getMonth();
@@ -265,7 +271,7 @@ const Dashboard = () => {
                       studentsWithOverduePayments.add(payment.studentId);
                     }
                   }
-                } else if (studentFrequency === 'Every 3 Month') {
+                } else if (studentFrequency === '3 installments') {
                   // For every 3 month, check if current date is past the 1st of the expected month
                   const paymentMonth = dueDate.getMonth();
                   const currentMonth = currentDate.getMonth();
@@ -277,7 +283,7 @@ const Dashboard = () => {
                       studentsWithOverduePayments.add(payment.studentId);
                     }
                   }
-                } else if (studentFrequency === 'Every 4 Month') {
+                } else if (studentFrequency === '4 installments') {
                   // For every 4 month, check if current date is past the 1st of the expected month
                   const paymentMonth = dueDate.getMonth();
                   const currentMonth = currentDate.getMonth();
@@ -669,8 +675,14 @@ const Dashboard = () => {
       effectiveUserRole
     });
     
+    // ALL FEES UP TO DATE (GREEN)
+    if (pendingPercentage <= 0 && collectionRate >= 95) {
+      level = "success";
+      icon = "🎉";
+      message = "Excellent! All fees are up to date. Great collection performance. Consider focusing on student engagement and academic planning.";
+    }
     // HIGH RISK (RED / WARNING)
-    if (pendingPercentage > 25 || collectionRate < 70) {
+    else if (pendingPercentage > 25 || collectionRate < 70) {
       level = "danger";
       icon = "⚠️";
       message = "Collections at risk. Pending fees are high. Immediate follow-ups required to protect cash flow.";
@@ -734,78 +746,117 @@ const Dashboard = () => {
     
     const suggestions = [];
     
-    // Role-based suggestions
-    if (userRole === 'Administrator') {
-      // Admin view - strategic actions
-      if (pendingFees > 0) {
-        if (pendingFees > pendingThreshold) {
+    // Check if all fees are up to date (no pending fees and good collection rate)
+    const allFeesUpToDate = pendingFees <= 0 && collectionRate >= 90;
+    
+    if (allFeesUpToDate) {
+      // Positive suggestions when everything is up to date
+      if (userRole === 'Administrator') {
+        suggestions.push({
+          text: "Review and update student progress reports",
+          priority: "Medium"
+        });
+        suggestions.push({
+          text: "Plan upcoming academic events or programs",
+          priority: "Medium"
+        });
+        suggestions.push({
+          text: "Update student records and documents",
+          priority: "Low"
+        });
+        suggestions.push({
+          text: "Prepare curriculum or material updates",
+          priority: "Low"
+        });
+      } else {
+        // Staff view positive suggestions
+        suggestions.push({
+          text: "Update student attendance and progress records",
+          priority: "Medium"
+        });
+        suggestions.push({
+          text: "Prepare reports for administration",
+          priority: "Medium"
+        });
+        suggestions.push({
+          text: "Review and organize student documents",
+          priority: "Low"
+        });
+      }
+    } else {
+      // Role-based suggestions for when there are pending fees
+      if (userRole === 'Administrator') {
+        // Admin view - strategic actions
+        if (pendingFees > 0) {
+          if (pendingFees > pendingThreshold) {
+            suggestions.push({
+              text: "Send WhatsApp fee reminders to students with pending dues",
+              priority: "High"
+            });
+            suggestions.push({
+              text: "Prioritize follow-ups for high-amount pending payments",
+              priority: "High"
+            });
+          } else {
+            suggestions.push({
+              text: "Monitor pending payments to prevent accumulation",
+              priority: "Medium"
+            });
+          }
+        }
+        
+        if (collectionRate >= 75) {
           suggestions.push({
-            text: "Send WhatsApp fee reminders to students with pending dues",
-            priority: "High"
+            text: "Maintain follow-up consistency to sustain collection performance",
+            priority: "Medium"
           });
           suggestions.push({
-            text: "Prioritize follow-ups for high-amount pending payments",
-            priority: "High"
+            text: "Consider early reminders to reduce next month's pending fees",
+            priority: "Medium"
           });
         } else {
           suggestions.push({
-            text: "Monitor pending payments to prevent accumulation",
+            text: "Review and optimize collection process for better results",
+            priority: "High"
+          });
+        }
+        
+        // Generic strategic suggestion
+        suggestions.push({
+          text: "Analyze collection trends to identify improvement opportunities",
+          priority: "Medium"
+        });
+      } else {
+        // Staff view - task-based actions
+        if (pendingFees > 0) {
+          suggestions.push({
+            text: "Call students with pending fees to discuss payment options",
+            priority: "High"
+          });
+          suggestions.push({
+            text: "Send WhatsApp reminder messages for upcoming payment deadlines",
             priority: "Medium"
           });
         }
-      }
-      
-      if (collectionRate >= 75) {
+        
+        if (collectionRate >= 75) {
+          suggestions.push({
+            text: "Continue regular follow-ups with all assigned accounts",
+            priority: "Medium"
+          });
+        } else {
+          suggestions.push({
+            text: "Increase frequency of follow-ups for better collections",
+            priority: "High"
+          });
+        }
+        
+        // Generic task-based suggestion
         suggestions.push({
-          text: "Maintain follow-up consistency to sustain collection performance",
-          priority: "Medium"
-        });
-        suggestions.push({
-          text: "Consider early reminders to reduce next month's pending fees",
-          priority: "Medium"
-        });
-      } else {
-        suggestions.push({
-          text: "Review and optimize collection process for better results",
-          priority: "High"
-        });
-      }
-      
-      // Generic strategic suggestion
-      suggestions.push({
-        text: "Analyze collection trends to identify improvement opportunities",
-        priority: "Medium"
-      });
-    } else {
-      // Staff view - task-based actions
-      if (pendingFees > 0) {
-        suggestions.push({
-          text: "Call students with pending fees to discuss payment options",
-          priority: "High"
-        });
-        suggestions.push({
-          text: "Send WhatsApp reminder messages for upcoming payment deadlines",
-          priority: "Medium"
+            text: "Update payment records after each successful collection",
+            priority: "Medium"
         });
       }
-      
-      if (collectionRate >= 75) {
-        suggestions.push({
-          text: "Continue regular follow-ups with all assigned accounts",
-          priority: "Medium"
-        });
-      } else {
-        suggestions.push({
-          text: "Increase frequency of follow-ups for better collections",
-          priority: "High"
-        });
-      }
-      
-      // Generic task-based suggestion
-      suggestions.push({
-          text: "Update payment records after each successful collection",
-          priority: "Medium"
-      });
     }
     
     return suggestions;
@@ -841,10 +892,14 @@ const Dashboard = () => {
   // Function to generate next steps for collection rate using universal WhatsApp logic
   const getCollectionRateNextSteps = (rate, overdueStudents = []) => {
     const overdueCount = overdueStudents.length;
+    const pendingFees = stats.pendingFees || 0;
     
     if (overdueCount > 0) {
       // If there are overdue students, show actionable message
       return `Action Needed: Fees overdue for ${overdueCount} students. Contact parents immediately.`;
+    } else if (pendingFees <= 0 && overdueCount <= 0) {
+      // If no pending fees and no overdue students, show positive suggestions
+      return 'Great job! All fees are up to date. Consider these next steps: Review student progress, plan upcoming events, or update student records.';
     } else if (rate >= 95) {
       return 'Maintain current strategy - excellent collection rate!';
     } else if (rate >= 85) {
@@ -852,7 +907,7 @@ const Dashboard = () => {
     } else if (rate >= 70) {
       return 'Send reminder messages to parents with pending fees.';
     } else {
-      return 'Urgent: Contact parents of all students with outstanding fees.';
+      return 'Consider reaching out to parents with pending fees to maintain good collection rates.';
     }
   };
 
@@ -1033,15 +1088,46 @@ const Dashboard = () => {
                   {getCollectionRateNextSteps(displayStats.collectionRate, overdueStudents)}
                 </div>
                 {overdueStudents.length > 0 && (
-                  <button 
-                    className="send-reminder-btn"
-                    onClick={() => {
-                      // Navigate to students page with filter parameter
-                      navigate('/students?filter=overdue');
-                    }}
-                  >
-                    Send Reminder
-                  </button>
+                  <div className="send-reminder-container">
+                    <button 
+                      className="send-reminder-btn"
+                      onClick={() => {
+                        // Navigate to students page with filter parameter
+                        navigate('/students?filter=overdue');
+                      }}
+                    >
+                      Send Reminder to All Classes
+                    </button>
+                    <div className="class-dropdown-trigger">
+                      <button 
+                        className="send-reminder-btn secondary"
+                        onClick={() => setShowClassDropdown(!showClassDropdown)}
+                      >
+                        Send Reminder by Class ▼
+                      </button>
+                      
+                      {showClassDropdown && (
+                        <div className="class-dropdown">
+                          <div className="class-options">
+                            {[
+                              ...new Set(overdueStudents.map(s => s.class))
+                            ].sort().map(className => (
+                              <button
+                                key={className}
+                                className="class-option"
+                                onClick={() => {
+                                  navigate(`/students?filter=overdue&class=${encodeURIComponent(className)}`);
+                                  setShowClassDropdown(false);
+                                }}
+                              >
+                                {className}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

@@ -46,13 +46,155 @@ class WhatsAppReminderHelper {
   getFrequencyGap(frequency) {
     const cycleMap = {
       'Monthly': 1,
-      'Every 2 Month': 2,
-      'Every 3 Month': 3,
-      'Every 4 Month': 4,
+      '2 installments': 2,
+      '3 installments': 3,
+      '4 installments': 4,
       'Custom Date': 0 // Special case for custom dates
     };
     
     return cycleMap[frequency] || 1; // Default to monthly if unknown
+  }
+
+  /**
+   * Calculate installment schedule based on admission date and frequency
+   * @param {string|Date} admissionDate - Student's admission date
+   * @param {string} frequency - Fee collection frequency
+   * @returns {Array} Array of installment due dates
+   */
+  calculateInstallmentSchedule(admissionDate, frequency) {
+    const admission = new Date(admissionDate);
+    if (isNaN(admission.getTime())) {
+      return [];
+    }
+    
+    const schedule = [];
+    
+    switch (frequency) {
+      case 'Monthly':
+        // 10 monthly installments
+        for (let i = 1; i <= 10; i++) {
+          const dueDate = new Date(admission);
+          dueDate.setMonth(dueDate.getMonth() + i);
+          schedule.push({
+            installmentNumber: i,
+            dueDate: dueDate,
+            label: `${i}${this.getNumberSuffix(i)} installment`
+          });
+        }
+        break;
+        
+      case '2 installments':
+        // 2 installments: after 5 months and 10 months
+        schedule.push({
+          installmentNumber: 1,
+          dueDate: new Date(admission.getFullYear(), admission.getMonth() + 5, admission.getDate()),
+          label: '1st installment'
+        });
+        schedule.push({
+          installmentNumber: 2,
+          dueDate: new Date(admission.getFullYear(), admission.getMonth() + 10, admission.getDate()),
+          label: '2nd installment'
+        });
+        break;
+        
+      case '3 installments':
+        // 3 installments: after 3, 6, and 10 months
+        schedule.push({
+          installmentNumber: 1,
+          dueDate: new Date(admission.getFullYear(), admission.getMonth() + 3, admission.getDate()),
+          label: '1st installment'
+        });
+        schedule.push({
+          installmentNumber: 2,
+          dueDate: new Date(admission.getFullYear(), admission.getMonth() + 6, admission.getDate()),
+          label: '2nd installment'
+        });
+        schedule.push({
+          installmentNumber: 3,
+          dueDate: new Date(admission.getFullYear(), admission.getMonth() + 10, admission.getDate()),
+          label: '3rd installment'
+        });
+        break;
+        
+      case '4 installments':
+        // 4 installments: after 2, 5, 7, and 10 months
+        schedule.push({
+          installmentNumber: 1,
+          dueDate: new Date(admission.getFullYear(), admission.getMonth() + 2, admission.getDate()),
+          label: '1st installment'
+        });
+        schedule.push({
+          installmentNumber: 2,
+          dueDate: new Date(admission.getFullYear(), admission.getMonth() + 5, admission.getDate()),
+          label: '2nd installment'
+        });
+        schedule.push({
+          installmentNumber: 3,
+          dueDate: new Date(admission.getFullYear(), admission.getMonth() + 7, admission.getDate()),
+          label: '3rd installment'
+        });
+        schedule.push({
+          installmentNumber: 4,
+          dueDate: new Date(admission.getFullYear(), admission.getMonth() + 10, admission.getDate()),
+          label: '4th installment'
+        });
+        break;
+        
+      case 'Custom Date':
+        // Single installment on custom date
+        // This will be handled separately
+        break;
+        
+      default:
+        // Default to monthly
+        for (let i = 1; i <= 10; i++) {
+          const dueDate = new Date(admission);
+          dueDate.setMonth(dueDate.getMonth() + i);
+          schedule.push({
+            installmentNumber: i,
+            dueDate: dueDate,
+            label: `${i}${this.getNumberSuffix(i)} installment`
+          });
+        }
+    }
+    
+    return schedule;
+  }
+
+  /**
+   * Helper function to get ordinal suffix for numbers
+   * @param {number} number - Number to get suffix for
+   * @returns {string} Ordinal suffix (st, nd, rd, th)
+   */
+  getNumberSuffix(number) {
+    if (number > 3 && number < 21) return 'th';
+    switch (number % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  }
+
+  /**
+   * Calculate installment amount for a student
+   * @param {number} totalFees - Total fees amount
+   * @param {string} frequency - Fee collection frequency
+   * @returns {number} Amount per installment
+   */
+  getInstallmentAmount(totalFees, frequency) {
+    const totalFeesNum = parseFloat(totalFees) || 0;
+    
+    const installmentCounts = {
+      'Monthly': 10,
+      '2 installments': 2,
+      '3 installments': 3,
+      '4 installments': 4,
+      'Custom Date': 1
+    };
+    
+    const installmentCount = installmentCounts[frequency] || 10;
+    return Math.round(totalFeesNum / installmentCount);
   }
 
   /**
@@ -63,9 +205,9 @@ class WhatsAppReminderHelper {
   getTotalInstallments(frequency) {
     const installmentMap = {
       'Monthly': 10, // 10 months academic year
-      'Every 2 Month': 5, // 10/2 = 5 installments
-      'Every 3 Month': 4, // 10/3 ≈ 3.33, rounded down to 4 (covers 12 months)
-      'Every 4 Month': 3, // 10/4 = 2.5, rounded down to 3 (covers 12 months)
+      '2 installments': 5, // 10/2 = 5 installments
+      '3 installments': 4, // 10/3 ≈ 3.33, rounded down to 4 (covers 12 months)
+      '4 installments': 3, // 10/4 = 2.5, rounded down to 3 (covers 12 months)
       'Custom Date': 1  // Single installment
     };
     
@@ -85,6 +227,46 @@ class WhatsAppReminderHelper {
     if (totalInstallments <= 0) return 0;
     
     return totalFees / totalInstallments;
+  }
+
+  /**
+   * Get next due installment for a student
+   * @param {Object} student - Student object with fee information
+   * @returns {Object|null} Next unpaid installment or null if none
+   */
+  getNextDueInstallment(student) {
+    const frequency = student.feesCollectionFrequency || student.feesCollectionDate || 'Monthly';
+    const admissionDate = student.admissionDate;
+    const totalFees = parseFloat(student.totalFees || 0);
+    const feesPaid = parseFloat(student.feesPaid || 0);
+    
+    if (!admissionDate) {
+      return null;
+    }
+    
+    const schedule = this.calculateInstallmentSchedule(admissionDate, frequency);
+    const today = new Date();
+    
+    // Calculate cumulative amount paid for each installment
+    let cumulativePaid = feesPaid;
+    
+    for (const installment of schedule) {
+      // Calculate how much should be paid by this installment
+      const installmentAmount = this.getInstallmentAmount(totalFees, frequency);
+      const expectedPaidByThisInstallment = installment.installmentNumber * installmentAmount;
+      
+      // Check if this installment is due and unpaid
+      if (installment.dueDate <= today && cumulativePaid < expectedPaidByThisInstallment) {
+        return {
+          ...installment,
+          amount: installmentAmount,
+          expectedPaid: expectedPaidByThisInstallment,
+          pendingAmount: Math.max(0, expectedPaidByThisInstallment - cumulativePaid)
+        };
+      }
+    }
+    
+    return null;
   }
 
   /**
@@ -229,8 +411,8 @@ class WhatsAppReminderHelper {
   }
 
   /**
-   * Check if a student is overdue based on expected fees till today
-   * A student is overdue ONLY IF: pendingFees > 0 AND expectedFees > 0 AND feesPaid < expectedFees
+   * Check if a student is overdue based on installment logic
+   * A student is overdue if they have a due installment that hasn't been paid
    * @param {Object} student - Student object with fee information
    * @returns {boolean} True if student is overdue, false otherwise
    */
@@ -246,14 +428,11 @@ class WhatsAppReminderHelper {
         return false;
       }
       
-      // Calculate expected fees till today based on admission date and payment schedule
-      const expectedFees = this.expectedFeesTillNow(student);
+      // Check if there's a next due installment
+      const nextDueInstallment = this.getNextDueInstallment(student);
       
-      // Student is overdue only if:
-      // 1. Pending fees > 0 (already checked above)
-      // 2. Expected fees > 0 (student has passed at least one payment cycle)
-      // 3. Fees paid < expected fees
-      return expectedFees > 0 && feesPaid < expectedFees;
+      // Student is overdue if there's a due installment that hasn't been fully paid
+      return nextDueInstallment !== null && nextDueInstallment.pendingAmount > 0;
     } catch (error) {
       console.error('Error checking if student is overdue:', error);
       return false;
@@ -261,7 +440,7 @@ class WhatsAppReminderHelper {
   }
 
   /**
-   * Build WhatsApp message with due date information
+   * Build WhatsApp message with installment information
    * @param {Object} student - Student object with fee information
    * @returns {string} Formatted WhatsApp message
    */
@@ -270,33 +449,43 @@ class WhatsAppReminderHelper {
       const parentName = student.fatherName || 'Parent';
       const studentName = student.name || 'Student';
       const className = student.class || 'N/A';
-      const pendingAmount = (parseFloat(student.totalFees || 0) - parseFloat(student.feesPaid || 0)).toString();
       const instituteName = this.brandingInfo?.firmName || 'Our Institute';
       
+      // Get next due installment info
+      const nextInstallment = this.getNextDueInstallment(student);
+      const installmentAmount = nextInstallment ? nextInstallment.amount : this.getInstallmentAmount(student.totalFees, student.feesCollectionFrequency || student.feesCollectionDate || 'Monthly');
+      const installmentLabel = nextInstallment ? nextInstallment.label : 'installment';
+      
+      // Format the message according to the required format
       return `Dear ${parentName},
 
-We hope this message finds you well. We would like to inform you that fees amounting to ₹${pendingAmount} for ${studentName} (${className}) are currently pending.
+Greetings from ${instituteName}! We hope this message finds you in good health.
+
+We would like to inform you that the ${installmentLabel} amount of ₹${installmentAmount} for ${studentName} (Class: ${className}) is currently pending.
 
 We kindly request you to arrange the payment at your earliest convenience.
 
-Best regards,
+Warm regards,
 ${instituteName}`;
     } catch (error) {
       console.error('Error building WhatsApp message:', error);
-      // Fallback to exact required format
+      // Fallback to required format
       const parentName = student.fatherName || 'Parent';
       const studentName = student.name || 'Student';
       const className = student.class || 'N/A';
-      const pendingAmount = (parseFloat(student.totalFees || 0) - parseFloat(student.feesPaid || 0)).toString();
       const instituteName = this.brandingInfo?.firmName || 'Our Institute';
+      
+      const installmentAmount = this.getInstallmentAmount(student.totalFees, student.feesCollectionFrequency || student.feesCollectionDate || 'Monthly');
       
       return `Dear ${parentName},
 
-We hope this message finds you well. We would like to inform you that fees amounting to ₹${pendingAmount} for ${studentName} (${className}) are currently pending.
+Greetings from ${instituteName}! We hope this message finds you in good health.
+
+We would like to inform you that the installment amount of ₹${installmentAmount} for ${studentName} (Class: ${className}) is currently pending.
 
 We kindly request you to arrange the payment at your earliest convenience.
 
-Best regards,
+Warm regards,
 ${instituteName}`;
     }
   }
@@ -313,11 +502,13 @@ ${instituteName}`;
     
     return `Dear ${parentName},
 
-We hope this message finds you well. We would like to inform you that fees amounting to ₹${pendingAmount} for ${studentName} are currently pending.
+Greetings from ${instituteName}! We hope this message finds you in good health.
+
+We would like to inform you that fees amounting to ₹${pendingAmount} for ${studentName} are currently pending.
 
 We kindly request you to arrange the payment at your earliest convenience.
 
-Best regards,
+Warm regards,
 ${instituteName}`;
   }
 
